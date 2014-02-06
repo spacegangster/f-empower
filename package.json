@@ -1,0 +1,7 @@
+{
+  "name": "f-empower",
+  "version": "1.0.0",
+  "description": "Standard functions that are simpler to compose",
+  "keywords": [ "functional", "functions", "util" ],
+  "main": "f-empower.js"
+}
