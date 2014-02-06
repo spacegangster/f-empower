@@ -49,7 +49,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 (has_flaw ['ok', 'good', 'flaw']) # -> true
 ```
 
-##Function index
+##Function index (very incomplete)
 - apply
 - bind
 - each
