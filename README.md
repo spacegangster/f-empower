@@ -1,7 +1,9 @@
-=F-EMPOWER
-==A set of functions oriented towards functional composition
+#F-EMPOWER
+##A set of functions oriented towards functional composition
 It makes your code lighter and easier to read, while improving performance.
 Use it to precompile functions, or make partial functions before their usage.
+
+The set is very small, and I use it WITH lodash.
 
 CommonJS and AMD loaders are supported
 No support for lots of runtime scenarios like lodash does
@@ -10,8 +12,8 @@ Prerequisites:
   You understand CoffeeScript compilation well
   You are not a hater
 
-==F-EMPOWER vs ECMA 5 / underscore / lodash
-===Map a collection of sads into doges
+##F-EMPOWER vs ECMA 5 / underscore / lodash
+###Map a collection of sads into doges
 ```coffeescript
 # ECMA 5
 # ... some battle logics, lots of code, etc ...
@@ -31,7 +33,7 @@ doges = (map_sads_into_doges sads)
 ```
 That's it. Less symbols, less code, less distraction when you read your code year after.
 
-===Check if collection contains item
+###Check if collection contains item
 ```coffeescript
 # Plain JS
 has_flaw = (coll) ->
@@ -47,12 +49,12 @@ has_flaw = (f.partial f.contains, 'flaw')
 (has_flaw ['ok', 'good', 'flaw']) # -> true
 ```
 
-The lib is very small, and I use it WITH lodash.
-
-===Function index
+##Function index
 - apply
 - bind
 - each
 - map
 - partial
 - str: (list_of_strings) - join list of strings with a whitespace into one string
+
+## License : MIT
