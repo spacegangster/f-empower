@@ -1,3 +1,11 @@
+###
+  F-EMPOWER
+  A set of functions to harness the power and benefits of functional
+  programming in JS.
+  Author: Ivan Fedorov <sharp.maestro@gmail.com>
+  License: MIT
+###
+
 wrapper = ->
 
   Errors =

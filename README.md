@@ -1,5 +1,5 @@
-#F-EMPOWER
-##A set of functions oriented towards functional composition
+# F-EMPOWER
+## A set of functions oriented towards functional composition
 It makes your code lighter and easier to read, while improving performance.
 Use it to precompile functions, or make partial functions before their usage.
 
@@ -8,12 +8,36 @@ The set is very small, and I use it WITH lodash.
 CommonJS and AMD loaders are supported
 No support for lots of runtime scenarios like lodash does
 
-Prerequisites: 
-  You understand CoffeeScript compilation well
-  You are not a hater
+## Install
+`npm install f-empower`
+## Use
+### NodeJS
+```coffeescript
+functions = require "f-empower"
+{ apply
+  bind }  = functions
+array1 = [ 1, 2, 3 ]
+push_to_array1 = (bind array1.push, array1)
 
-##F-EMPOWER vs ECMA 5 / underscore / lodash
-###Map a collection of sads into doges
+(apply push_to_array1, [ 4, 5, 6 ])
+console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
+```
+### Browser (require.js)
+require.config
+  paths:
+    'f-empower': 'path/to/f-empower'
+
+define [ 'f-empower' ], (functions) ->
+  { apply
+    bind }  = functions
+  array1 = [ 1, 2, 3 ]
+  push_to_array1 = (bind array1.push, array1)
+
+  (apply push_to_array1, [ 4, 5, 6 ])
+  console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
+
+## F-EMPOWER vs ECMA 5 / underscore / lodash
+### Map a collection of sads into doges
 ```coffeescript
 # ECMA 5
 # ... some battle logics, lots of code, etc ...
@@ -33,7 +57,7 @@ doges = (map_sads_into_doges sads)
 ```
 That's it. Less symbols, less code, less distraction when you read your code year after.
 
-###Check if collection contains item
+### Check if collection contains item
 ```coffeescript
 # Plain JS
 has_flaw = (coll) ->
@@ -49,7 +73,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 (has_flaw ['ok', 'good', 'flaw']) # -> true
 ```
 
-##Function index
+## Function index
 - apply       : applies arguments to function
 - bind
 - butlast     : slice all but last elements of array
