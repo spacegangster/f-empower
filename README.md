@@ -77,6 +77,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - partial
 - recurse
 - remap
+- second
 - slice        : same as JS slice
 - str          : (list_of_strings) - join list of strings with a whitespace into one string
 - str_breplace

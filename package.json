@@ -1,6 +1,6 @@
 {
   "name"        : "f-empower"
-, "version"     : "1.1.0"
+, "version"     : "1.4.0"
 , "description" : "Standard functions that are simpler to compose"
 
 , "keywords"    : [ "functional"
@@ -11,6 +11,8 @@
 
 , "repository"  : { "type" : "git"
                   , "url"  : "https://github.com/ognivo/f-empower" }
+
+, "scripts"     : { "prepublish": "coffee -cb . " }
 
 , "author"      : "Ivan Fedorov <sharp.maestro@gmail.com>"
 , "license"     : "MIT"

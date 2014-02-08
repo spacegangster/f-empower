@@ -83,8 +83,6 @@ wrapper = ->
 
   butlast = (array) ->
     (slice array, 0, array.length - 1)
-
-  first = (array) -> array[0]
   
   cat = (array) ->
     array.concat.apply(array, (slice arguments, 1))
@@ -102,6 +100,9 @@ wrapper = ->
     for item in array
       (fn item)
     return
+
+  first = (array) ->
+    array[0]
 
   last = (list) -> list[list.length - 1]
 
@@ -123,6 +124,8 @@ wrapper = ->
       array[item_idx] = (fn item)
     array
 
+  second = (array) ->
+    array[1]
 
   # ============================================================
   # CATEGORY: COLLECTIONS
@@ -227,6 +230,7 @@ wrapper = ->
   , partial
   , recurse
   , remap
+  , second
   , slice
   , str
   , str_breplace
