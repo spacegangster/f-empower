@@ -1,11 +1,14 @@
 wrapper = ->
+
+  Errors =
+    NOT_FUNCTION : new TypeError('Something is not function')
   
   native_slice = Array::slice
 
   slice = (array_or_arguments, idx) ->
     native_slice.call(array_or_arguments, idx)
 
-  bind = (fn, this_arg) ->
+  bind = (fn, this_arg) -> # TODO make dumb
     other_args = (slice arguments, 2)
     arguments.length <= 2 &&
       (-> fn.apply(this_arg, arguments)) ||
@@ -17,21 +20,69 @@ wrapper = ->
     ->
       fn.apply(null, args.concat((slice arguments)))
 
+  
+  # ============================================================
+  # CATEGORY: FUNCTIONAL
+  # ============================================================
 
+  # Calls a function with specified args list
   apply = (fn, args_list) ->
     fn.apply(null, args_list)
+
+  # Composes a list of functions into one
+  compose = ->
+    functions = arguments
+    # PRAGMA DEV
+    for item in functions
+      if (not_function item)
+        throw Errors.NOT_FUNCTION
+    # /PRAGMA DEV
+    ->
+      memo = arguments
+      i = functions.length
+      while --i >= 0
+        memo = [ functions[i].apply(null, memo) ]
+      (first memo)
   
+  complement = (predicate) ->
+    ->
+      !(apply predicate, arguments)
+
+  flow = ->
+    functions = arguments
+    # PRAGMA DEV
+    for item in functions
+      if (not_function item)
+        throw Errors.NOT_FUNCTION
+    # /PRAGMA DEV
+    ->
+      memo = arguments
+      len = functions.length
+      i = -1
+      while ++i < len
+        memo = [ functions[i].apply(null, memo) ]
+      (first memo)
 
   # ============================================================
   # CATEGORY: PREDICATES
   # ============================================================
 
-  not_empty = (list) ->
-    list.length > 0
+  is_empty = (list) ->
+    list.length == 0
+
+  is_function = (candidate) ->
+    'function' == typeof candidate
+
+  not_empty = (complement is_empty)
+
+  not_function = (complement is_function)
 
   # ============================================================
   # CATEGORY: ARRAYS
   # ============================================================
+
+  butlast = (array) ->
+    (slice array, 0, array.length - 1)
 
   first = (array) -> array[0]
   
@@ -51,6 +102,8 @@ wrapper = ->
     for item in array
       (fn item)
     return
+
+  last = (list) -> list[list.length - 1]
 
   # Produces list from arguments and then applies compact
   # function (which removes all falsies)
@@ -120,6 +173,11 @@ wrapper = ->
   # CATEGORY: MISCELLANEOUS
   # ============================================================
 
+  jquery_wrap_to_array = (jquery_wrap) ->
+    wrap_len = jquery_wrap.length
+    i = -1
+    while ++i < wrap_len
+      jquery_wrap.eq(i)
   
   mk_regexp = (rx_str, rx_settings) ->
     rx_settings = rx_settings || ""
@@ -143,28 +201,37 @@ wrapper = ->
     root
 
   { apply
-   ,bind
-   ,cat
-   ,contains
-   ,count
-   ,each
-   ,fastbind: bind
-   ,first
-   ,invoke
-   ,keys
-   ,list_compact
-   ,map
-   ,match
-   ,mk_regexp
-   ,not_empty
-   ,partial
-   ,recurse
-   ,remap
-   ,slice
-   ,str
-   ,str_breplace
-   ,str_join
-   ,varynum }
+  , bind
+  , butlast
+  , cat
+  , compose
+  , complement
+  , contains
+  , count
+  , each
+  , fastbind: bind
+  , flow
+  , first
+  , invoke
+  , is_empty
+  , is_function
+  , jquery_wrap_to_array
+  , keys
+  , last
+  , list_compact
+  , map
+  , match
+  , mk_regexp
+  , not_empty
+  , not_function
+  , partial
+  , recurse
+  , remap
+  , slice
+  , str
+  , str_breplace
+  , str_join
+  , varynum }
 
 # AMD loader support
 if (('undefined' != typeof define) && define.amd)

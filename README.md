@@ -49,12 +49,38 @@ has_flaw = (f.partial f.contains, 'flaw')
 (has_flaw ['ok', 'good', 'flaw']) # -> true
 ```
 
-##Function index (very incomplete)
-- apply
+##Function index
+- apply       : applies arguments to function
 - bind
+- butlast     : slice all but last elements of array
+- cat
+- compose
+- complement
+- contains
+- count
 - each
+- fastbind    -> bind
+- flow
+- first
+- jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
+- invoke
+- is_empty
+- is_function
+- keys
+- last
+- list_compact
 - map
+- match
+- mk_regexp
+- not_empty
+- not_function
 - partial
-- str: (list_of_strings) - join list of strings with a whitespace into one string
+- recurse
+- remap
+- slice        : same as JS slice
+- str          : (list_of_strings) - join list of strings with a whitespace into one string
+- str_breplace
+- str_join
+- varynum
 
 ## License : MIT

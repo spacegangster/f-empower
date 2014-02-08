@@ -1,7 +1,18 @@
 {
-  "name": "f-empower",
-  "version": "1.0.0",
-  "description": "Standard functions that are simpler to compose",
-  "keywords": [ "functional", "functions", "util" ],
-  "main": "f-empower.js"
+  "name"        : "f-empower"
+, "version"     : "1.1.0"
+, "description" : "Standard functions that are simpler to compose"
+
+, "keywords"    : [ "functional"
+                  , "functional programming"
+                  , "functions"
+                  , "utility"
+                  , "utility belt" ]
+
+, "repository"  : { "type" : "git"
+                  , "url"  : "https://github.com/ognivo/f-empower" }
+
+, "author"      : "Ivan Fedorov <sharp.maestro@gmail.com>"
+, "license"     : "MIT"
+, "main"        : "f-empower.js"
 }
