@@ -91,7 +91,7 @@ wrapper = function() {
   not_empty = complement(is_empty);
   not_function = complement(is_function);
   butlast = function(array) {
-    return slice(array, 0, array.length - 1);
+    return slice(array, 0, array.length - 2);
   };
   cat = function(array) {
     return array.concat.apply(array, slice(arguments, 1));

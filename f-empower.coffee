@@ -90,7 +90,7 @@ wrapper = ->
   # ============================================================
 
   butlast = (array) ->
-    (slice array, 0, array.length - 1)
+    (slice array, 0, array.length - 2)
   
   cat = (array) ->
     array.concat.apply(array, (slice arguments, 1))
