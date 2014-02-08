@@ -23,6 +23,7 @@ push_to_array1 = (bind array1.push, array1)
 console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
 ```
 ### Browser (require.js)
+```coffeescript
 require.config
   paths:
     'f-empower': 'path/to/f-empower'
@@ -35,6 +36,7 @@ define [ 'f-empower' ], (functions) ->
 
   (apply push_to_array1, [ 4, 5, 6 ])
   console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
+```
 
 ## F-EMPOWER vs ECMA 5 / underscore / lodash
 ### Map a collection of sads into doges
