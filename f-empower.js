@@ -15,8 +15,8 @@ wrapper = function() {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
   native_slice = Array.prototype.slice;
-  slice = function(array_or_arguments, idx) {
-    return native_slice.call(array_or_arguments, idx);
+  slice = function(array_or_arguments, start_idx, end_idx) {
+    return native_slice.call(array_or_arguments, start_idx, end_idx);
   };
   bind = function(fn, this_arg) {
     var other_args;
@@ -91,7 +91,7 @@ wrapper = function() {
   not_empty = complement(is_empty);
   not_function = complement(is_function);
   butlast = function(array) {
-    return slice(array, 0, array.length - 2);
+    return slice(array, 0, array.length - 1);
   };
   cat = function(array) {
     return array.concat.apply(array, slice(arguments, 1));

@@ -5,7 +5,6 @@
   Author: Ivan Fedorov <sharp.maestro@gmail.com>
   License: MIT
 ###
-
 wrapper = ->
 
   Errors =
@@ -13,8 +12,8 @@ wrapper = ->
   
   native_slice = Array::slice
 
-  slice = (array_or_arguments, idx) ->
-    native_slice.call(array_or_arguments, idx)
+  slice = (array_or_arguments, start_idx, end_idx) ->
+    native_slice.call(array_or_arguments, start_idx, end_idx)
 
   bind = (fn, this_arg) -> # TODO make dumb
     other_args = (slice arguments, 2)
@@ -90,7 +89,7 @@ wrapper = ->
   # ============================================================
 
   butlast = (array) ->
-    (slice array, 0, array.length - 2)
+    (slice array, 0, array.length - 1)
   
   cat = (array) ->
     array.concat.apply(array, (slice arguments, 1))
