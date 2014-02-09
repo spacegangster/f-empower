@@ -99,6 +99,12 @@ wrapper = ->
       if searched_item == item
         return true
     false
+
+  a_contains = (array, searched_item) ->
+    for item in array
+      if searched_item == item
+        return true
+    false
     
   count = (array) ->
     array.length
@@ -161,7 +167,6 @@ wrapper = ->
   # ============================================================
   # CATEGORY: STRINGS
   # ============================================================
-
   
   match = (source_str, regexp) ->
     source_str.match(regexp)
@@ -179,6 +184,7 @@ wrapper = ->
   str_join = (join_string, array_to_join) ->
     array_to_join.join(join_string)
 
+
   # ============================================================
   # CATEGORY: MISCELLANEOUS
   # ============================================================
@@ -192,6 +198,9 @@ wrapper = ->
   mk_regexp = (rx_str, rx_settings) ->
     rx_settings = rx_settings || ""
     new RegExp(rx_str, rx_settings)
+
+  read = (prop_name, hash) ->
+    hash[prop_name]
   
   ###
   This is a function that iterates with another function 
@@ -210,7 +219,8 @@ wrapper = ->
       (recurse func, son, depth + 1)
     root
 
-  { apply
+  { a_contains
+  , apply
   , bind
   , butlast
   , cat
@@ -235,6 +245,7 @@ wrapper = ->
   , not_empty
   , not_function
   , partial
+  , read
   , recurse
   , remap
   , second

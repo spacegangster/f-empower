@@ -10,7 +10,7 @@
 var wrapper;
 
 wrapper = function() {
-  var Errors, apply, bind, butlast, cat, complement, compose, contains, count, each, first, flow, invoke, is_empty, is_function, jquery_wrap_to_array, keys, last, list_compact, map, match, mk_regexp, native_slice, not_empty, not_function, partial, recurse, remap, second, slice, str, str_breplace, str_join, varynum;
+  var Errors, a_contains, apply, bind, butlast, cat, complement, compose, contains, count, each, first, flow, invoke, is_empty, is_function, jquery_wrap_to_array, keys, last, list_compact, map, match, mk_regexp, native_slice, not_empty, not_function, partial, read, recurse, remap, second, slice, str, str_breplace, str_join, varynum;
   Errors = {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
@@ -97,6 +97,16 @@ wrapper = function() {
     return array.concat.apply(array, slice(arguments, 1));
   };
   contains = function(searched_item, array) {
+    var item, _i, _len;
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (searched_item === item) {
+        return true;
+      }
+    }
+    return false;
+  };
+  a_contains = function(array, searched_item) {
     var item, _i, _len;
     for (_i = 0, _len = array.length; _i < _len; _i++) {
       item = array[_i];
@@ -206,6 +216,9 @@ wrapper = function() {
     rx_settings = rx_settings || "";
     return new RegExp(rx_str, rx_settings);
   };
+  read = function(prop_name, hash) {
+    return hash[prop_name];
+  };
 
   /*
   This is a function that iterates with another function 
@@ -233,6 +246,7 @@ wrapper = function() {
     return root;
   };
   return {
+    a_contains: a_contains,
     apply: apply,
     bind: bind,
     butlast: butlast,
@@ -258,6 +272,7 @@ wrapper = function() {
     not_empty: not_empty,
     not_function: not_function,
     partial: partial,
+    read: read,
     recurse: recurse,
     remap: remap,
     second: second,

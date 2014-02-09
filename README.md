@@ -76,6 +76,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 ```
 
 ## Function index
+- a_contains  : array centric `contains`, like in underscore
 - apply       : applies arguments to function
 - bind
 - butlast     : slice all but last elements of array
@@ -101,12 +102,15 @@ has_flaw = (f.partial f.contains, 'flaw')
 - not_empty
 - not_function
 - partial
+- read         : (prop_name, hash) - will read a property with specified name
 - recurse
 - remap
 - second
 - slice        : same as JS slice
 - str          : (list_of_strings) - join list of strings with a whitespace into one string
-- str_breplace
+- str_breplace : (replace_map, string) - string bulk character replace.
+Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
+and string `'bafbaffab'` will output `'ифаифаафи'`.
 - str_join
 - varynum
 
