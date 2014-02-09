@@ -12,9 +12,7 @@
 , "repository"  : { "type" : "git"
                   , "url"  : "https://github.com/ognivo/f-empower" }
 
-, "scripts"     : { "prepublish": "coffee -cb . " }
-
-, "author"      : "Ivan Fedorov <sharp.maestro@gmail.com>"
+, "authors"     : [ "Ivan Fedorov <sharp.maestro@gmail.com>" ]
 , "license"     : "MIT"
 , "main"        : "f-empower.js"
 }
