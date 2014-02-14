@@ -7,10 +7,11 @@
   Author: Ivan Fedorov <sharp.maestro@gmail.com>
   License: MIT
  */
-var wrapper;
+var wrapper,
+  __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, apply, bind, butlast, cat, complement, compose, contains, count, each, first, flow, invoke, is_empty, is_function, jquery_wrap_to_array, keys, last, list_compact, map, match, mk_regexp, native_slice, not_empty, not_function, partial, read, recurse, remap, second, slice, str, str_breplace, str_join, varynum;
+  var Errors, a_contains, a_each, a_map, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, first, flow, invoke, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_empty, not_function, partial, read, recurse, remap, second, slice, str, str_breplace, str_join, varynum;
   Errors = {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
@@ -116,6 +117,23 @@ wrapper = function() {
     }
     return false;
   };
+  a_each = function(array, fn) {
+    return each(fn, array);
+  };
+  a_map = function(array, fn) {
+    return map(fn, array);
+  };
+  compact = function(coll) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = coll.length; _i < _len; _i++) {
+      item = coll[_i];
+      if (item) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
   count = function(array) {
     return array.length;
   };
@@ -131,6 +149,11 @@ wrapper = function() {
   };
   last = function(list) {
     return list[list.length - 1];
+  };
+  list = function() {
+    var args;
+    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+    return args;
   };
   list_compact = function() {
     var arg, result, _i, _len;
@@ -247,10 +270,13 @@ wrapper = function() {
   };
   return {
     a_contains: a_contains,
+    a_each: a_each,
+    a_map: a_map,
     apply: apply,
     bind: bind,
     butlast: butlast,
     cat: cat,
+    compact: compact,
     compose: compose,
     complement: complement,
     contains: contains,
@@ -265,6 +291,7 @@ wrapper = function() {
     jquery_wrap_to_array: jquery_wrap_to_array,
     keys: keys,
     last: last,
+    list: list,
     list_compact: list_compact,
     map: map,
     match: match,

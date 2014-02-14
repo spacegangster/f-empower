@@ -105,6 +105,15 @@ wrapper = ->
       if searched_item == item
         return true
     false
+
+  a_each = (array, fn) ->
+    (each fn, array)
+
+  a_map = (array, fn) ->
+    (map fn, array)
+
+  compact = (coll) ->
+    item for item in coll when item
     
   count = (array) ->
     array.length
@@ -118,6 +127,9 @@ wrapper = ->
     array[0]
 
   last = (list) -> list[list.length - 1]
+
+  list = (args...) ->
+    args
 
   # Produces list from arguments and then applies compact
   # function (which removes all falsies)
@@ -220,10 +232,13 @@ wrapper = ->
     root
 
   { a_contains
+  , a_each
+  , a_map
   , apply
   , bind
   , butlast
   , cat
+  , compact
   , compose
   , complement
   , contains
@@ -238,6 +253,7 @@ wrapper = ->
   , jquery_wrap_to_array
   , keys
   , last
+  , list
   , list_compact
   , map
   , match

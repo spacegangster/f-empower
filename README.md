@@ -76,11 +76,14 @@ has_flaw = (f.partial f.contains, 'flaw')
 ```
 
 ## Function index
-- a_contains  : array centric `contains`, like in underscore
+- a_contains  : array first `contains`, like in underscore
+- a_each      : array first `each`
+- a_map       : array first `map`
 - apply       : applies arguments to function
-- bind
+- bind        : simplified bind function, like makeCallback in lodash
 - butlast     : slice all but last elements of array
 - cat
+- compact     : (coll) returns new version of the collection without elements evaluating to falsee
 - compose
 - complement
 - contains
@@ -95,7 +98,8 @@ has_flaw = (f.partial f.contains, 'flaw')
 - is_function
 - keys
 - last
-- list_compact
+- list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
+- list_compact : list and compact functions composed. Equal to (compact (list args...))
 - map
 - match
 - mk_regexp
