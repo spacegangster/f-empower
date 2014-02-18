@@ -126,5 +126,6 @@ Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
 and string `'bafbaffab'` will output `'ифаифаафи'`.
 - str_join
 - varynum
+- vals         : (hash) returns the list of object's values
 
 ## License : MIT

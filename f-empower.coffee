@@ -201,17 +201,33 @@ wrapper = ->
       variator *= -1
       number * variator
 
+
   # ============================================================
   # CATEGORY: OBJECTS
   # ============================================================
 
   
-  keys = (obj) ->
-    Object.keys(obj)
+  keys = (hash) ->
+    Object.keys(hash)
 
+  # @param {object} hash source
+  # @param {array<string>} keys_list
+  # @return {array<*>}
+  # @example:
+  #  food_related_hash =
+  #    cook_haggis : (ingredients...) -> ... some code ...
+  #    cook_pasta  : (ingredients...) ->
+  #    cook_soup   : (ingredients...) ->
+  #    drink_beer  : (beer) ->
+  #
+  #  cooking_for_today = (o_map hash, [ 'cook_haggis', 'drink_beer' ]) # -> [ function, function ]
+  #  (first cooking_for_today) == food_related_hash['cook_haggis'] # -> true
   o_map = (hash, keys_list) ->
     for key in keys_list
       hash[key]
+
+  vals = (hash) ->
+    (o_map hash, (keys hash))
 
   # ============================================================
   # CATEGORY: STRINGS
@@ -316,6 +332,7 @@ wrapper = ->
   , str
   , str_breplace
   , str_join
+  , vals
   , varynum }
 
 # AMD loader support

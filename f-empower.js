@@ -11,7 +11,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, pluck, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, varynum;
+  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, pluck, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, vals, varynum;
   Errors = {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
@@ -255,8 +255,8 @@ wrapper = function() {
     }
     return _results;
   };
-  keys = function(obj) {
-    return Object.keys(obj);
+  keys = function(hash) {
+    return Object.keys(hash);
   };
   o_map = function(hash, keys_list) {
     var key, _i, _len, _results;
@@ -266,6 +266,9 @@ wrapper = function() {
       _results.push(hash[key]);
     }
     return _results;
+  };
+  vals = function(hash) {
+    return o_map(hash, keys(hash));
   };
   match = function(source_str, regexp) {
     return source_str.match(regexp);
@@ -375,6 +378,7 @@ wrapper = function() {
     str: str,
     str_breplace: str_breplace,
     str_join: str_join,
+    vals: vals,
     varynum: varynum
   };
 };
