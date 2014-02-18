@@ -11,7 +11,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, varynum;
+  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, pluck, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, varynum;
   Errors = {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
@@ -232,14 +232,17 @@ wrapper = function() {
   second = function(array) {
     return array[1];
   };
-  invoke = function(method_name, collection) {
+  invoke = function(method_name, coll) {
     var item, _i, _len, _results;
     _results = [];
-    for (_i = 0, _len = collection.length; _i < _len; _i++) {
-      item = collection[_i];
+    for (_i = 0, _len = coll.length; _i < _len; _i++) {
+      item = coll[_i];
       _results.push(item[method_name]());
     }
     return _results;
+  };
+  pluck = function(prop_name, coll) {
+    return map(partial(read, prop_name), coll);
   };
   varynum = function(numbers, start_with_one) {
     var number, variator, _i, _len, _results;
@@ -361,6 +364,7 @@ wrapper = function() {
     not_function: not_function,
     o_map: o_map,
     partial: partial,
+    pluck: pluck,
     read: read,
     recurse: recurse,
     reduce: reduce,

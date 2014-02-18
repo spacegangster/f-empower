@@ -188,9 +188,12 @@ wrapper = ->
   # ============================================================
 
 
-  invoke = (method_name, collection) ->
-    for item in collection
+  invoke = (method_name, coll) ->
+    for item in coll
       item[method_name]()
+
+  pluck = (prop_name, coll) ->
+    (map (partial read, prop_name), coll)
 
   varynum = (numbers, start_with_one) ->
     variator = start_with_one && -1 || 1
@@ -302,6 +305,7 @@ wrapper = ->
   , not_function
   , o_map
   , partial
+  , pluck
   , read
   , recurse
   , reduce

@@ -82,9 +82,9 @@ has_flaw = (f.partial f.contains, 'flaw')
 - a_map       : array first `map`
 - a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
 - a_reject    : array first `reject`
-- apply       : applies arguments to function
-- bind        : simplified bind function, like makeCallback in lodash
-- butlast     : slice all but last elements of array
+- apply       : (fn, args...) applies arguments to function
+- bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
+- butlast     : (array) slice all but last elements of array
 - cat
 - compact     : (coll) returns new version of the collection without elements evaluating to falsee
 - compose
@@ -97,6 +97,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - first
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 - invoke
+- is_array     : predicate that tests if object is array
 - is_empty
 - is_function
 - keys
@@ -110,14 +111,15 @@ has_flaw = (f.partial f.contains, 'flaw')
 - not_array
 - not_empty
 - not_function
-- partial
+- partial      : (fn, args...)
+- pluck        : (prop_name, coll)
 - read         : (prop_name, hash) - will read a property with specified name
 - recurse
 - reduce       : (fn, array) | (fn, val, array)
 - reject       : (fn, array)
 - remap
 - second
-- slice        : same as JS slice
+- slice        : (array [, start_idx, end_idx]) same as standard JS slice
 - str          : (list_of_strings) - join list of strings with a whitespace into one string
 - str_breplace : (replace_map, string) - string bulk character replace.
 Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
