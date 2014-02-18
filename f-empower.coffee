@@ -161,7 +161,7 @@ wrapper = ->
       (fn item)
 
   reduce = (fn, val, array) ->
-    idx = 0
+    idx = -1
     if !array && (is_array val)
       array = val
       val = (fn array[0], array[1])
@@ -269,6 +269,7 @@ wrapper = ->
   , a_each
   , a_filter
   , a_map
+  , a_reduce
   , a_reject
   , apply
   , bind
@@ -303,6 +304,7 @@ wrapper = ->
   , partial
   , read
   , recurse
+  , reduce
   , reject
   , remap
   , second

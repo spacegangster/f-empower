@@ -199,7 +199,7 @@ wrapper = function() {
   };
   reduce = function(fn, val, array) {
     var idx;
-    idx = 0;
+    idx = -1;
     if (!array && (is_array(val))) {
       array = val;
       val = fn(array[0], array[1]);
@@ -328,6 +328,7 @@ wrapper = function() {
     a_each: a_each,
     a_filter: a_filter,
     a_map: a_map,
+    a_reduce: a_reduce,
     a_reject: a_reject,
     apply: apply,
     bind: bind,
@@ -362,6 +363,7 @@ wrapper = function() {
     partial: partial,
     read: read,
     recurse: recurse,
+    reduce: reduce,
     reject: reject,
     remap: remap,
     second: second,
