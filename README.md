@@ -78,14 +78,17 @@ has_flaw = (f.partial f.contains, 'flaw')
 ## Function index
 - a_contains  : array first `contains`, like in underscore
 - a_each      : array first `each`
+- a_filter    : array first `filter`
 - a_map       : array first `map`
+- a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
+- a_reject    : array first `reject`
 - apply       : applies arguments to function
 - bind        : simplified bind function, like makeCallback in lodash
 - butlast     : slice all but last elements of array
 - cat
 - compact     : (coll) returns new version of the collection without elements evaluating to falsee
 - compose
-- complement
+- complement  : (predicate) inverts predicate
 - contains
 - count
 - each
@@ -100,14 +103,18 @@ has_flaw = (f.partial f.contains, 'flaw')
 - last
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
+- o_map        : (hash, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
 - map
 - match
 - mk_regexp
+- not_array
 - not_empty
 - not_function
 - partial
 - read         : (prop_name, hash) - will read a property with specified name
 - recurse
+- reduce       : (fn, array) | (fn, val, array)
+- reject       : (fn, array)
 - remap
 - second
 - slice        : same as JS slice

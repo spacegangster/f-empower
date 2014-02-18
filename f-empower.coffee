@@ -74,11 +74,15 @@ wrapper = ->
   # CATEGORY: PREDICATES
   # ============================================================
 
-  is_empty = (list) ->
-    list.length == 0
+  is_array = Array.isArray
+
+  is_empty = (seq) ->
+    seq.length == 0
 
   is_function = (candidate) ->
     'function' == typeof candidate
+
+  not_array = (complement is_array)
 
   not_empty = (complement is_empty)
 
@@ -109,8 +113,17 @@ wrapper = ->
   a_each = (array, fn) ->
     (each fn, array)
 
+  a_filter = (array, fn) ->
+    (filter fn, array)
+
   a_map = (array, fn) ->
     (map fn, array)
+
+  a_reduce = (array, fn, val) ->
+    (reduce fn, val, array)
+
+  a_reject = (array, fn) ->
+    (reject fn, array)
 
   compact = (coll) ->
     item for item in coll when item
@@ -125,6 +138,9 @@ wrapper = ->
 
   first = (array) ->
     array[0]
+
+  filter = (fn, array) ->
+    item for item in array when (fn item)
 
   last = (list) -> list[list.length - 1]
 
@@ -143,6 +159,21 @@ wrapper = ->
   map = (fn, array) ->
     for item in array
       (fn item)
+
+  reduce = (fn, val, array) ->
+    idx = 0
+    if !array && (is_array val)
+      array = val
+      val = (fn array[0], array[1])
+      idx = 1
+
+    while ++idx < array.length
+      val = (fn val, array[idx])
+
+    val
+
+  reject = (fn, array) ->
+    item for item in array when !(fn item)
 
   remap = (fn, array) ->
     for item, item_idx in array
@@ -172,9 +203,12 @@ wrapper = ->
   # ============================================================
 
   
-  keys = ->
-    Object.keys.apply(Object, arguments)
+  keys = (obj) ->
+    Object.keys(obj)
 
+  o_map = (hash, keys_list) ->
+    for key in keys_list
+      hash[key]
 
   # ============================================================
   # CATEGORY: STRINGS
@@ -233,7 +267,9 @@ wrapper = ->
 
   { a_contains
   , a_each
+  , a_filter
   , a_map
+  , a_reject
   , apply
   , bind
   , butlast
@@ -247,7 +283,9 @@ wrapper = ->
   , fastbind: bind
   , flow
   , first
+  , filter
   , invoke
+  , is_array
   , is_empty
   , is_function
   , jquery_wrap_to_array
@@ -258,11 +296,14 @@ wrapper = ->
   , map
   , match
   , mk_regexp
+  , not_array
   , not_empty
   , not_function
+  , o_map
   , partial
   , read
   , recurse
+  , reject
   , remap
   , second
   , slice

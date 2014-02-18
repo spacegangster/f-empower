@@ -11,7 +11,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_map, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, first, flow, invoke, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_empty, not_function, partial, read, recurse, remap, second, slice, str, str_breplace, str_join, varynum;
+  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, varynum;
   Errors = {
     NOT_FUNCTION: new TypeError('Something is not function')
   };
@@ -83,12 +83,14 @@ wrapper = function() {
       return first(memo);
     };
   };
-  is_empty = function(list) {
-    return list.length === 0;
+  is_array = Array.isArray;
+  is_empty = function(seq) {
+    return seq.length === 0;
   };
   is_function = function(candidate) {
     return 'function' === typeof candidate;
   };
+  not_array = complement(is_array);
   not_empty = complement(is_empty);
   not_function = complement(is_function);
   butlast = function(array) {
@@ -120,8 +122,17 @@ wrapper = function() {
   a_each = function(array, fn) {
     return each(fn, array);
   };
+  a_filter = function(array, fn) {
+    return filter(fn, array);
+  };
   a_map = function(array, fn) {
     return map(fn, array);
+  };
+  a_reduce = function(array, fn, val) {
+    return reduce(fn, val, array);
+  };
+  a_reject = function(array, fn) {
+    return reject(fn, array);
   };
   compact = function(coll) {
     var item, _i, _len, _results;
@@ -146,6 +157,17 @@ wrapper = function() {
   };
   first = function(array) {
     return array[0];
+  };
+  filter = function(fn, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (fn(item)) {
+        _results.push(item);
+      }
+    }
+    return _results;
   };
   last = function(list) {
     return list[list.length - 1];
@@ -172,6 +194,30 @@ wrapper = function() {
     for (_i = 0, _len = array.length; _i < _len; _i++) {
       item = array[_i];
       _results.push(fn(item));
+    }
+    return _results;
+  };
+  reduce = function(fn, val, array) {
+    var idx;
+    idx = 0;
+    if (!array && (is_array(val))) {
+      array = val;
+      val = fn(array[0], array[1]);
+      idx = 1;
+    }
+    while (++idx < array.length) {
+      val = fn(val, array[idx]);
+    }
+    return val;
+  };
+  reject = function(fn, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (!(fn(item))) {
+        _results.push(item);
+      }
     }
     return _results;
   };
@@ -206,8 +252,17 @@ wrapper = function() {
     }
     return _results;
   };
-  keys = function() {
-    return Object.keys.apply(Object, arguments);
+  keys = function(obj) {
+    return Object.keys(obj);
+  };
+  o_map = function(hash, keys_list) {
+    var key, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = keys_list.length; _i < _len; _i++) {
+      key = keys_list[_i];
+      _results.push(hash[key]);
+    }
+    return _results;
   };
   match = function(source_str, regexp) {
     return source_str.match(regexp);
@@ -271,7 +326,9 @@ wrapper = function() {
   return {
     a_contains: a_contains,
     a_each: a_each,
+    a_filter: a_filter,
     a_map: a_map,
+    a_reject: a_reject,
     apply: apply,
     bind: bind,
     butlast: butlast,
@@ -285,7 +342,9 @@ wrapper = function() {
     fastbind: bind,
     flow: flow,
     first: first,
+    filter: filter,
     invoke: invoke,
+    is_array: is_array,
     is_empty: is_empty,
     is_function: is_function,
     jquery_wrap_to_array: jquery_wrap_to_array,
@@ -296,11 +355,14 @@ wrapper = function() {
     map: map,
     match: match,
     mk_regexp: mk_regexp,
+    not_array: not_array,
     not_empty: not_empty,
     not_function: not_function,
+    o_map: o_map,
     partial: partial,
     read: read,
     recurse: recurse,
+    reject: reject,
     remap: remap,
     second: second,
     slice: slice,
