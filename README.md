@@ -125,6 +125,7 @@ property inside criteria_object.
 - not_function
 - partial      : (fn, args...)
 - pluck        : (prop_name, coll)
+- pull
 - read         : (prop_name, hash) - will read a property with specified name
 - recurse
 - reduce       : (fn, array) | (fn, val, array)

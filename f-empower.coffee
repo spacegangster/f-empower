@@ -639,6 +639,7 @@ wrapper = ->
   , o_match
   , partial
   , pluck
+  , pull
   , read
   , recurse
   , reduce
