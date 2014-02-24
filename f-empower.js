@@ -11,7 +11,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, each, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_empty, is_function, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, no_operation, not_array, not_contains, not_empty, not_function, not_object, not_zero, o_map, o_match, partial, pluck, pull, range, read, read_1kv, recurse, reduce, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, reverse, second, set, set_difference, set_symmetric_difference, slice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, delay, each, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, no_operation, not_array, not_contains, not_empty, not_function, not_nuber, not_object, not_zero, o_map, o_match, partial, pluck, pull, range, read, read_1kv, recurse, reduce, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, reverse, second, set, set_difference, set_symmetric_difference, slice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -65,6 +65,9 @@ wrapper = function() {
       return !(apply(predicate, arguments));
     };
   };
+  delay = function(delay_ms, fn) {
+    return setTimeout(fn, delay_ms);
+  };
   flow = function() {
     var functions, item, _i, _len;
     functions = arguments;
@@ -93,6 +96,9 @@ wrapper = function() {
   is_function = function(candidate) {
     return 'function' === typeof candidate;
   };
+  is_number = function(candidate) {
+    return 'number' === typeof candidate;
+  };
   is_object = function(candidate) {
     return 'object' === typeof candidate;
   };
@@ -102,6 +108,7 @@ wrapper = function() {
   not_array = complement(is_array);
   not_empty = complement(is_empty);
   not_function = complement(is_function);
+  not_nuber = complement(is_number);
   not_object = complement(is_object);
   not_zero = complement(is_zero);
   butlast = function(array) {
@@ -754,6 +761,7 @@ wrapper = function() {
     contains: contains,
     count: count,
     defaults: defaults,
+    delay: delay,
     detect: find,
     each: each,
     extend: extend,
@@ -779,6 +787,7 @@ wrapper = function() {
     is_array: is_array,
     is_empty: is_empty,
     is_function: is_function,
+    is_number: is_number,
     is_object: is_object,
     jquery_wrap_to_array: jquery_wrap_to_array,
     keys: keys,
@@ -793,11 +802,13 @@ wrapper = function() {
     not_array: not_array,
     not_empty: not_empty,
     not_function: not_function,
+    not_number: not_number,
     not_object: not_object,
     o_map: o_map,
     o_match: o_match,
     partial: partial,
     pluck: pluck,
+    pull: pull,
     read: read,
     recurse: recurse,
     reduce: reduce,

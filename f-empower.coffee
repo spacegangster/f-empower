@@ -57,6 +57,9 @@ wrapper = ->
     ->
       !(apply predicate, arguments)
 
+  delay = (delay_ms, fn) ->
+    (setTimeout fn, delay_ms)
+
   flow = ->
     functions = arguments
     # PRAGMA DEV
@@ -86,6 +89,9 @@ wrapper = ->
   is_function = (candidate) ->
     'function' == typeof candidate
 
+  is_number = (candidate) ->
+    'number' == typeof candidate
+
   is_object = (candidate) ->
     'object' == typeof candidate
 
@@ -97,6 +103,8 @@ wrapper = ->
   not_empty = (complement is_empty)
 
   not_function = (complement is_function)
+
+  not_nuber = (complement is_number)
 
   not_object = (complement is_object)
 
@@ -595,6 +603,7 @@ wrapper = ->
   , contains
   , count
   , defaults
+  , delay
   , detect: find
   , each
   , extend
@@ -620,6 +629,7 @@ wrapper = ->
   , is_array
   , is_empty
   , is_function
+  , is_number
   , is_object
   , jquery_wrap_to_array
   , keys
@@ -634,6 +644,7 @@ wrapper = ->
   , not_array
   , not_empty
   , not_function
+  , not_number
   , not_object
   , o_map
   , o_match

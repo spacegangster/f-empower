@@ -97,6 +97,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - contains
 - count
 - defaults
+- delay       : (delay_ms, fn) like set timeout, but the delay parameter is specified before fn
 - each
 - extend
 - fastbind    -> bind
@@ -108,6 +109,8 @@ has_flaw = (f.partial f.contains, 'flaw')
 - is_array     : predicate that tests if object is array
 - is_empty
 - is_function
+- is_number
+- is_object
 - keys
 - last
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
@@ -123,6 +126,8 @@ property inside criteria_object.
 - not_array
 - not_empty
 - not_function
+- not_number
+- not_object
 - partial      : (fn, args...)
 - pluck        : (prop_name, coll)
 - pull
