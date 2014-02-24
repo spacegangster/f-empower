@@ -8,7 +8,9 @@
 wrapper = ->
 
   Errors =
-    NOT_FUNCTION : new TypeError('Something is not function')
+    NO_KEY_VALUE_PAIR_IN_HASH : new Error('No key value pair in a criterion hash')
+    NOT_FUNCTION              : new TypeError('Something is not function')
+    UNEXPECTED_TYPE           : new TypeError('Unexpected type')
   
   native_slice = Array::slice
 
@@ -70,6 +72,8 @@ wrapper = ->
         memo = [ functions[i].apply(null, memo) ]
       (first memo)
 
+  no_operation = ->
+
   # ============================================================
   # CATEGORY: PREDICATES
   # ============================================================
@@ -82,19 +86,33 @@ wrapper = ->
   is_function = (candidate) ->
     'function' == typeof candidate
 
+  is_object = (candidate) ->
+    'object' == typeof candidate
+
+  is_zero = (candidate) ->
+    candidate == 0
+
   not_array = (complement is_array)
 
   not_empty = (complement is_empty)
 
   not_function = (complement is_function)
 
+  not_object = (complement is_object)
+
+  not_zero = (complement is_zero)
+
   # ============================================================
   # CATEGORY: ARRAYS
   # ============================================================
 
+  # TODO objective filter, reject, find
+  # TODO property filter, reject, find
+
   butlast = (array) ->
     (slice array, 0, array.length - 1)
   
+  # TODO check arguments
   cat = (array) ->
     array.concat.apply(array, (slice arguments, 1))
 
@@ -115,6 +133,9 @@ wrapper = ->
 
   a_filter = (array, fn) ->
     (filter fn, array)
+
+  a_index_of = (array, item) ->
+    array.indexOf(item)
 
   a_map = (array, fn) ->
     (map fn, array)
@@ -139,10 +160,107 @@ wrapper = ->
   first = (array) ->
     array[0]
 
-  filter = (fn, array) ->
+
+  # ARRAY FILTERING FUNCTIONS
+  filter_fn = (fn, array) ->
     item for item in array when (fn item)
 
-  last = (list) -> list[list.length - 1]
+  filter_prop = (prop_name, array) ->
+    item for item in array when !!item[prop_name]
+
+  filter_obj_1kv = (obj, array) ->
+    [key, val] = (read_1kv obj)
+    item for item in array when item[key] == val
+
+  filter_obj_2kv = (obj, array) ->
+    [key1, key2] = (keys obj)
+    [val1, val2] = [obj[key1], obj[key2]]
+    item for item in array when item[key1] == val1 && item[key2] == val2
+
+  filter_obj = (obj, array) ->
+    item for item in array when (o_match obj, item)
+
+  filter = (some_criteria, array) ->
+    switch (typeof some_criteria)
+      when "string"
+        (filter_prop some_criteria, array)
+      when "function"
+        (filter_fn some, array)
+      when "object"
+        switch (count (keys some_criteria))
+          when 0
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+          when 1
+            (filter_obj_1kv some_criteria, array)
+          when 2
+            (filter_obj_2kv some_criteria, array)
+          else
+            (filter_obj some_criteria, array)
+      else
+        throw Errors.UNEXPECTED_TYPE
+  
+  find_index_fn = (fn, array) ->
+    for item, idx in array
+      if (fn item)
+        return idx
+    -1
+
+  find_index_prop = (prop_name, array) ->
+    for item, idx in array
+      if item[prop_name]
+        return idx
+    -1
+
+  find_index_obj_1kv = (obj_with_1kv_pair, array) ->
+    [key, val] = (read_1kv obj_with_1kv_pair)
+    for item, idx in array
+      if item[key] == val
+        return idx
+    -1
+
+  find_index_obj_2kv = (obj_with_2kv_pair, array) ->
+    [key1, key2] = (keys obj_with_2kv_pair)
+    [val1, val2] = [obj_with_2kv_pair[key1], obj_with_2kv_pair[key2]]
+    for item, idx in array
+      if item[key1] == val1 && item[key2] == val2
+        return idx
+    -1
+
+  find_index_obj = (obj, array) ->
+    for item, idx in array
+      if (o_match obj, item)
+        return idx
+    -1
+
+  find_index = (some_criteria, array) ->
+    switch (typeof some_criteria)
+      when "string"
+        (find_index_prop some_criteria, array)
+      when "function"
+        (find_index_fn some_criteria, array)
+      when "object"
+        switch (count (keys some_criteria))
+          when 0
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+          when 1
+            (find_index_obj_1kv some_criteria, array)
+          when 2
+            (find_index_obj_2kv some_criteria, array)
+          else
+            (find_index_obj some_criteria, array)
+      else
+        throw Errors.UNEXPECTED_TYPE
+
+  find = (some_criteria, array) ->
+    item_idx = (find_index some_criteria, array)
+    return  if item_idx == -1
+    (read item_idx, array)
+
+  index_of = (item, array) ->
+    array.indexOf(item)
+
+  last = (list) ->
+    list[list.length - 1]
 
   list = (args...) ->
     args
@@ -160,6 +278,8 @@ wrapper = ->
     for item in array
       (fn item)
 
+  not_contains = (complement contains)
+
   reduce = (fn, val, array) ->
     idx = -1
     if !array && (is_array val)
@@ -172,16 +292,58 @@ wrapper = ->
 
     val
 
-  reject = (fn, array) ->
+  reject_fn = (fn, array) ->
     item for item in array when !(fn item)
+
+  reject_prop = (prop_name, array) ->
+    item for item in array when !item[prop_name]
+
+  reject_obj_1kv = (one_kv_pair_object, array) ->
+    [key, val] = (read_1kv one_kv_pair_object)
+    item for item in array when item[key] != val
+
+  reject_obj_2kv = (two_kv_pairs_object, array) ->
+    [key1, key2] = (keys two_kv_pairs_object)
+    [val1, val2] = [two_kv_pairs_object[key1], two_kv_pairs_object[key2]]
+    item for item in array when !(item[key1] == val1 && item[key2] == val2)
+
+  reject_obj = (object, array) ->
+    item for item in array when !(o_match object, item)
+
+  reject = (some_criteria, array) ->
+    switch (typeof some_criteria)
+      when "string"
+        (reject_prop some_criteria, array)
+      when "function"
+        (reject_fn some_criteria, array)
+      when "object"
+        switch (count (keys some_criteria))
+          when 0
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+          when 1
+            (reject_obj_1kv some_criteria, array)
+          when 2
+            (reject_obj_2kv some_criteria, array)
+          else
+            (reject_obj some_criteria, array)
+      else
+        throw Errors.UNEXPECTED_TYPE
 
   remap = (fn, array) ->
     for item, item_idx in array
       array[item_idx] = (fn item)
     array
 
+  reverse = (bind Function::call, Array::reverse)
+
   second = (array) ->
     array[1]
+
+  set_diff = (set_a, set_b) ->
+    item for item in set_a when (not_contains item, set_b)
+
+  set_symmetric_diff = (set_a, set_b) ->
+    [(set_diff set_a, set_b), (set_diff set_b, set_a)]
 
   # ============================================================
   # CATEGORY: COLLECTIONS
@@ -205,7 +367,96 @@ wrapper = ->
   # ============================================================
   # CATEGORY: OBJECTS
   # ============================================================
+  
+  clone_obj = (obj) ->
+    res = {}
+    for key, val of obj
+      res[key] = val
+    res
 
+  clone = (data) ->
+    if (is_object data)
+      if (is_array data)
+        (slice data)
+      else
+        (clone_obj data)
+    else
+      throw Errors.UNEXPECTED_TYPE
+
+  clonedeep = (src) ->
+    (_clonedeep src
+              , dst = (is_array src) && [] || {}
+              , stack_dst = [dst]
+              , stack_src = [src])
+
+  _clonedeep = (src, dst, stack_dst, stack_src) ->
+    for key, val of src
+      if (not_object val)
+        dst[key] = val
+      else
+        val_idx = (index_of val, stack_src)
+        if (val_idx == -1)
+          dst[key] = child_dst = (is_array val) && [] || {}
+          stack_src.push(val)
+          stack_dst.push(child_dst)
+          (_clonedeep val, child_dst, stack_dst, stack_src)
+        else
+          dst[key] = stack_dst[val_idx]
+    dst
+
+  # _clonedeep2 # TODO how about non-recursive deep clone based on stacks?
+  _clonedeep2 = (src) ->
+    dst = (is_array src) && [] || {}
+    cur_src = src
+    cur_dst = dst
+
+    stack_src = [src]
+    stack_dst = [dst]
+    stack_act = []
+
+    cur_keys = (is_array cur_src) && (range (count cur_src)) || (reverse (keys cur_src))
+    cur_key_idx = (count cur_keys)
+
+    while --cur_key_idx >= 0
+      key = cur_keys[cur_key_idx]
+      val = cur_src[key]
+
+      if (not_object val)
+        cur_dst[key] = val
+      else
+        val_idx = (index_of val, stack_src)
+        if (val_idx == -1)
+          child_dst = (is_array val) && [] || {}
+          cur_dst[key] = child_dst
+
+          stack_act.push([cur_src, cur_dst, cur_keys, cur_key_idx])
+
+          cur_src = val
+          cur_dst = child_dst
+          cur_keys = (is_array cur_src) && (range (count cur_src)) || (reverse (keys cur_src))
+          cur_key_idx = (count cur_keys)
+
+          stack_src.push(cur_src)
+          stack_dst.push(cur_dst)
+        else
+          cur_dst[key] = stack_dst[val_idx]
+
+      while (is_zero cur_key_idx) && (not_zero (count stack_act))
+        [cur_src, cur_dst, cur_keys, cur_key_idx] = stack_act.pop()
+
+    dst
+    
+  
+  defaults = (defaults_hash, extended) ->
+    for key, val of defaults_hash
+      if !(extended[key])
+        extended[key] = val
+    extended
+
+  extend = (extender, extended) ->
+    for key, val of extender
+      extended[key] = val
+    extended
   
   keys = (hash) ->
     Object.keys(hash)
@@ -225,6 +476,17 @@ wrapper = ->
   o_map = (hash, keys_list) ->
     for key in keys_list
       hash[key]
+
+  o_match = (criteria_obj, matched) ->
+    for key, val of criteria_obj
+      if matched[key] != val
+        return false
+    true
+
+  pull = (prop_name, hash) ->
+    val = hash[prop_name]
+    delete hash[prop_name]
+    val
 
   vals = (hash) ->
     (o_map hash, (keys hash))
@@ -249,10 +511,19 @@ wrapper = ->
   str_join = (join_string, array_to_join) ->
     array_to_join.join(join_string)
 
+  str_split = (split_str, string_to_split) ->
+    string_to_split.split(split_str)
 
   # ============================================================
   # CATEGORY: MISCELLANEOUS
   # ============================================================
+
+  # decrement
+  dec = (num) ->
+    num - 1
+
+  inc = (num) ->
+    num + 1
 
   jquery_wrap_to_array = (jquery_wrap) ->
     wrap_len = jquery_wrap.length
@@ -264,9 +535,19 @@ wrapper = ->
     rx_settings = rx_settings || ""
     new RegExp(rx_str, rx_settings)
 
+  range = (length) ->
+    array = new Array(length)
+    while --length >= 0
+      array[length] = length
+    array
+
   read = (prop_name, hash) ->
     hash[prop_name]
-  
+
+  read_1kv = (obj_with_1kv_pair) ->
+    key = (first (keys obj_with_1kv_pair))
+    [key, (read key, obj_with_1kv_pair)]
+
   ###
   This is a function that iterates with another function 
   over the nodes of a tree structure.
@@ -277,16 +558,27 @@ wrapper = ->
   @param depth: indicates depth of recursion
   ###
   recurse = (func, root, depth = 0) ->
-    sons = root.sons
+    { sons } = root
     for son, idx in sons
       (func son, root, idx, depth + 1)
     for son in sons
       (recurse func, son, depth + 1)
     root
 
+  set = (prop_name, hash, val) ->
+    hash[prop_name] = val
+
+  time = (fn) ->
+    time_start = Date.now()
+    fn()
+    time_end   = Date.now()
+    time_end - time_start
+
+  # EXPORTS
   { a_contains
   , a_each
   , a_filter
+  , a_index_of
   , a_map
   , a_reduce
   , a_reject
@@ -294,20 +586,41 @@ wrapper = ->
   , bind
   , butlast
   , cat
+  , clone
+  , clonedeep
+  , clonedeep2: _clonedeep2
   , compact
   , compose
   , complement
   , contains
   , count
+  , defaults
+  , detect: find
   , each
+  , extend
   , fastbind: bind
   , flow
   , first
   , filter
+  , filter_fn
+  , filter_obj
+  , filter_obj_1kv
+  , filter_obj_2kv
+  , filter_prop
+  , find
+  , find_index
+  , find_index_fn
+  , find_index_prop
+  , find_index_obj_1kv
+  , find_index_obj_2kv
+  , find_index_obj
+  , get: read
+  , index_of
   , invoke
   , is_array
   , is_empty
   , is_function
+  , is_object
   , jquery_wrap_to_array
   , keys
   , last
@@ -316,22 +629,35 @@ wrapper = ->
   , map
   , match
   , mk_regexp
+  , no_operation
+  , noop: no_operation
   , not_array
   , not_empty
   , not_function
+  , not_object
   , o_map
+  , o_match
   , partial
   , pluck
   , read
   , recurse
   , reduce
   , reject
+  , reject_fn
+  , reject_obj
+  , reject_obj_1kv
+  , reject_obj_2kv
+  , reject_prop
   , remap
+  , reverse
   , second
+  , set
   , slice
   , str
   , str_breplace
   , str_join
+  , str_split
+  , time
   , vals
   , varynum }
 

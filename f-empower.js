@@ -11,9 +11,11 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_map, a_reduce, a_reject, apply, bind, butlast, cat, compact, complement, compose, contains, count, each, filter, first, flow, invoke, is_array, is_empty, is_function, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, not_array, not_empty, not_function, o_map, partial, pluck, read, recurse, reduce, reject, remap, second, slice, str, str_breplace, str_join, vals, varynum;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, each, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_empty, is_function, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, no_operation, not_array, not_contains, not_empty, not_function, not_object, not_zero, o_map, o_match, partial, pluck, pull, range, read, read_1kv, recurse, reduce, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, reverse, second, set, set_diff, set_symmetric_diff, slice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
-    NOT_FUNCTION: new TypeError('Something is not function')
+    NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
+    NOT_FUNCTION: new TypeError('Something is not function'),
+    UNEXPECTED_TYPE: new TypeError('Unexpected type')
   };
   native_slice = Array.prototype.slice;
   slice = function(array_or_arguments, start_idx, end_idx) {
@@ -83,6 +85,7 @@ wrapper = function() {
       return first(memo);
     };
   };
+  no_operation = function() {};
   is_array = Array.isArray;
   is_empty = function(seq) {
     return seq.length === 0;
@@ -90,9 +93,17 @@ wrapper = function() {
   is_function = function(candidate) {
     return 'function' === typeof candidate;
   };
+  is_object = function(candidate) {
+    return 'object' === typeof candidate;
+  };
+  is_zero = function(candidate) {
+    return candidate === 0;
+  };
   not_array = complement(is_array);
   not_empty = complement(is_empty);
   not_function = complement(is_function);
+  not_object = complement(is_object);
+  not_zero = complement(is_zero);
   butlast = function(array) {
     return slice(array, 0, array.length - 1);
   };
@@ -124,6 +135,9 @@ wrapper = function() {
   };
   a_filter = function(array, fn) {
     return filter(fn, array);
+  };
+  a_index_of = function(array, item) {
+    return array.indexOf(item);
   };
   a_map = function(array, fn) {
     return map(fn, array);
@@ -158,7 +172,7 @@ wrapper = function() {
   first = function(array) {
     return array[0];
   };
-  filter = function(fn, array) {
+  filter_fn = function(fn, array) {
     var item, _i, _len, _results;
     _results = [];
     for (_i = 0, _len = array.length; _i < _len; _i++) {
@@ -168,6 +182,163 @@ wrapper = function() {
       }
     }
     return _results;
+  };
+  filter_prop = function(prop_name, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (!!item[prop_name]) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  filter_obj_1kv = function(obj, array) {
+    var item, key, val, _i, _len, _ref, _results;
+    _ref = read_1kv(obj), key = _ref[0], val = _ref[1];
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (item[key] === val) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  filter_obj_2kv = function(obj, array) {
+    var item, key1, key2, val1, val2, _i, _len, _ref, _ref1, _results;
+    _ref = keys(obj), key1 = _ref[0], key2 = _ref[1];
+    _ref1 = [obj[key1], obj[key2]], val1 = _ref1[0], val2 = _ref1[1];
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (item[key1] === val1 && item[key2] === val2) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  filter_obj = function(obj, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (o_match(obj, item)) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  filter = function(some_criteria, array) {
+    switch (typeof some_criteria) {
+      case "string":
+        return filter_prop(some_criteria, array);
+      case "function":
+        return filter_fn(some, array);
+      case "object":
+        switch (count(keys(some_criteria))) {
+          case 0:
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
+            break;
+          case 1:
+            return filter_obj_1kv(some_criteria, array);
+          case 2:
+            return filter_obj_2kv(some_criteria, array);
+          default:
+            return filter_obj(some_criteria, array);
+        }
+        break;
+      default:
+        throw Errors.UNEXPECTED_TYPE;
+    }
+  };
+  find_index_fn = function(fn, array) {
+    var idx, item, _i, _len;
+    for (idx = _i = 0, _len = array.length; _i < _len; idx = ++_i) {
+      item = array[idx];
+      if (fn(item)) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+  find_index_prop = function(prop_name, array) {
+    var idx, item, _i, _len;
+    for (idx = _i = 0, _len = array.length; _i < _len; idx = ++_i) {
+      item = array[idx];
+      if (item[prop_name]) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+  find_index_obj_1kv = function(obj_with_1kv_pair, array) {
+    var idx, item, key, val, _i, _len, _ref;
+    _ref = read_1kv(obj_with_1kv_pair), key = _ref[0], val = _ref[1];
+    for (idx = _i = 0, _len = array.length; _i < _len; idx = ++_i) {
+      item = array[idx];
+      if (item[key] === val) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+  find_index_obj_2kv = function(obj_with_2kv_pair, array) {
+    var idx, item, key1, key2, val1, val2, _i, _len, _ref, _ref1;
+    _ref = keys(obj_with_2kv_pair), key1 = _ref[0], key2 = _ref[1];
+    _ref1 = [obj_with_2kv_pair[key1], obj_with_2kv_pair[key2]], val1 = _ref1[0], val2 = _ref1[1];
+    for (idx = _i = 0, _len = array.length; _i < _len; idx = ++_i) {
+      item = array[idx];
+      if (item[key1] === val1 && item[key2] === val2) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+  find_index_obj = function(obj, array) {
+    var idx, item, _i, _len;
+    for (idx = _i = 0, _len = array.length; _i < _len; idx = ++_i) {
+      item = array[idx];
+      if (o_match(obj, item)) {
+        return idx;
+      }
+    }
+    return -1;
+  };
+  find_index = function(some_criteria, array) {
+    switch (typeof some_criteria) {
+      case "string":
+        return find_index_prop(some_criteria, array);
+      case "function":
+        return find_index_fn(some_criteria, array);
+      case "object":
+        switch (count(keys(some_criteria))) {
+          case 0:
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
+            break;
+          case 1:
+            return find_index_obj_1kv(some_criteria, array);
+          case 2:
+            return find_index_obj_2kv(some_criteria, array);
+          default:
+            return find_index_obj(some_criteria, array);
+        }
+        break;
+      default:
+        throw Errors.UNEXPECTED_TYPE;
+    }
+  };
+  find = function(some_criteria, array) {
+    var item_idx;
+    item_idx = find_index(some_criteria, array);
+    if (item_idx === -1) {
+      return;
+    }
+    return read(item_idx, array);
+  };
+  index_of = function(item, array) {
+    return array.indexOf(item);
   };
   last = function(list) {
     return list[list.length - 1];
@@ -197,6 +368,7 @@ wrapper = function() {
     }
     return _results;
   };
+  not_contains = complement(contains);
   reduce = function(fn, val, array) {
     var idx;
     idx = -1;
@@ -210,7 +382,7 @@ wrapper = function() {
     }
     return val;
   };
-  reject = function(fn, array) {
+  reject_fn = function(fn, array) {
     var item, _i, _len, _results;
     _results = [];
     for (_i = 0, _len = array.length; _i < _len; _i++) {
@@ -221,6 +393,76 @@ wrapper = function() {
     }
     return _results;
   };
+  reject_prop = function(prop_name, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (!item[prop_name]) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  reject_obj_1kv = function(one_kv_pair_object, array) {
+    var item, key, val, _i, _len, _ref, _results;
+    _ref = read_1kv(one_kv_pair_object), key = _ref[0], val = _ref[1];
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (item[key] !== val) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  reject_obj_2kv = function(two_kv_pairs_object, array) {
+    var item, key1, key2, val1, val2, _i, _len, _ref, _ref1, _results;
+    _ref = keys(two_kv_pairs_object), key1 = _ref[0], key2 = _ref[1];
+    _ref1 = [two_kv_pairs_object[key1], two_kv_pairs_object[key2]], val1 = _ref1[0], val2 = _ref1[1];
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (!(item[key1] === val1 && item[key2] === val2)) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  reject_obj = function(object, array) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = array.length; _i < _len; _i++) {
+      item = array[_i];
+      if (!(o_match(object, item))) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  reject = function(some_criteria, array) {
+    switch (typeof some_criteria) {
+      case "string":
+        return reject_prop(some_criteria, array);
+      case "function":
+        return reject_fn(some_criteria, array);
+      case "object":
+        switch (count(keys(some_criteria))) {
+          case 0:
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
+            break;
+          case 1:
+            return reject_obj_1kv(some_criteria, array);
+          case 2:
+            return reject_obj_2kv(some_criteria, array);
+          default:
+            return reject_obj(some_criteria, array);
+        }
+        break;
+      default:
+        throw Errors.UNEXPECTED_TYPE;
+    }
+  };
   remap = function(fn, array) {
     var item, item_idx, _i, _len;
     for (item_idx = _i = 0, _len = array.length; _i < _len; item_idx = ++_i) {
@@ -229,8 +471,23 @@ wrapper = function() {
     }
     return array;
   };
+  reverse = bind(Function.prototype.call, Array.prototype.reverse);
   second = function(array) {
     return array[1];
+  };
+  set_diff = function(set_a, set_b) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = set_a.length; _i < _len; _i++) {
+      item = set_a[_i];
+      if (not_contains(item, set_b)) {
+        _results.push(item);
+      }
+    }
+    return _results;
+  };
+  set_symmetric_diff = function(set_a, set_b) {
+    return [set_diff(set_a, set_b), set_diff(set_b, set_a)];
   };
   invoke = function(method_name, coll) {
     var item, _i, _len, _results;
@@ -255,6 +512,105 @@ wrapper = function() {
     }
     return _results;
   };
+  clone_obj = function(obj) {
+    var key, res, val;
+    res = {};
+    for (key in obj) {
+      val = obj[key];
+      res[key] = val;
+    }
+    return res;
+  };
+  clone = function(data) {
+    if (is_object(data)) {
+      if (is_array(data)) {
+        return slice(data);
+      } else {
+        return clone_obj(data);
+      }
+    } else {
+      throw Errors.UNEXPECTED_TYPE;
+    }
+  };
+  clonedeep = function(src) {
+    var dst, stack_dst, stack_src;
+    return _clonedeep(src, dst = (is_array(src)) && [] || {}, stack_dst = [dst], stack_src = [src]);
+  };
+  _clonedeep = function(src, dst, stack_dst, stack_src) {
+    var child_dst, key, val, val_idx;
+    for (key in src) {
+      val = src[key];
+      if (not_object(val)) {
+        dst[key] = val;
+      } else {
+        val_idx = index_of(val, stack_src);
+        if (val_idx === -1) {
+          dst[key] = child_dst = (is_array(val)) && [] || {};
+          stack_src.push(val);
+          stack_dst.push(child_dst);
+          _clonedeep(val, child_dst, stack_dst, stack_src);
+        } else {
+          dst[key] = stack_dst[val_idx];
+        }
+      }
+    }
+    return dst;
+  };
+  _clonedeep2 = function(src) {
+    var child_dst, cur_dst, cur_key_idx, cur_keys, cur_src, dst, key, stack_act, stack_dst, stack_src, val, val_idx, _ref;
+    dst = (is_array(src)) && [] || {};
+    cur_src = src;
+    cur_dst = dst;
+    stack_src = [src];
+    stack_dst = [dst];
+    stack_act = [];
+    cur_keys = (is_array(cur_src)) && (range(count(cur_src))) || (reverse(keys(cur_src)));
+    cur_key_idx = count(cur_keys);
+    while (--cur_key_idx >= 0) {
+      key = cur_keys[cur_key_idx];
+      val = cur_src[key];
+      if (not_object(val)) {
+        cur_dst[key] = val;
+      } else {
+        val_idx = index_of(val, stack_src);
+        if (val_idx === -1) {
+          child_dst = (is_array(val)) && [] || {};
+          cur_dst[key] = child_dst;
+          stack_act.push([cur_src, cur_dst, cur_keys, cur_key_idx]);
+          cur_src = val;
+          cur_dst = child_dst;
+          cur_keys = (is_array(cur_src)) && (range(count(cur_src))) || (reverse(keys(cur_src)));
+          cur_key_idx = count(cur_keys);
+          stack_src.push(cur_src);
+          stack_dst.push(cur_dst);
+        } else {
+          cur_dst[key] = stack_dst[val_idx];
+        }
+      }
+      while ((is_zero(cur_key_idx)) && (not_zero(count(stack_act)))) {
+        _ref = stack_act.pop(), cur_src = _ref[0], cur_dst = _ref[1], cur_keys = _ref[2], cur_key_idx = _ref[3];
+      }
+    }
+    return dst;
+  };
+  defaults = function(defaults_hash, extended) {
+    var key, val;
+    for (key in defaults_hash) {
+      val = defaults_hash[key];
+      if (!extended[key]) {
+        extended[key] = val;
+      }
+    }
+    return extended;
+  };
+  extend = function(extender, extended) {
+    var key, val;
+    for (key in extender) {
+      val = extender[key];
+      extended[key] = val;
+    }
+    return extended;
+  };
   keys = function(hash) {
     return Object.keys(hash);
   };
@@ -266,6 +622,22 @@ wrapper = function() {
       _results.push(hash[key]);
     }
     return _results;
+  };
+  o_match = function(criteria_obj, matched) {
+    var key, val;
+    for (key in criteria_obj) {
+      val = criteria_obj[key];
+      if (matched[key] !== val) {
+        return false;
+      }
+    }
+    return true;
+  };
+  pull = function(prop_name, hash) {
+    var val;
+    val = hash[prop_name];
+    delete hash[prop_name];
+    return val;
   };
   vals = function(hash) {
     return o_map(hash, keys(hash));
@@ -286,6 +658,15 @@ wrapper = function() {
   str_join = function(join_string, array_to_join) {
     return array_to_join.join(join_string);
   };
+  str_split = function(split_str, string_to_split) {
+    return string_to_split.split(split_str);
+  };
+  dec = function(num) {
+    return num - 1;
+  };
+  inc = function(num) {
+    return num + 1;
+  };
   jquery_wrap_to_array = function(jquery_wrap) {
     var i, wrap_len, _results;
     wrap_len = jquery_wrap.length;
@@ -300,8 +681,21 @@ wrapper = function() {
     rx_settings = rx_settings || "";
     return new RegExp(rx_str, rx_settings);
   };
+  range = function(length) {
+    var array;
+    array = new Array(length);
+    while (--length >= 0) {
+      array[length] = length;
+    }
+    return array;
+  };
   read = function(prop_name, hash) {
     return hash[prop_name];
+  };
+  read_1kv = function(obj_with_1kv_pair) {
+    var key;
+    key = first(keys(obj_with_1kv_pair));
+    return [key, read(key, obj_with_1kv_pair)];
   };
 
   /*
@@ -329,10 +723,21 @@ wrapper = function() {
     }
     return root;
   };
+  set = function(prop_name, hash, val) {
+    return hash[prop_name] = val;
+  };
+  time = function(fn) {
+    var time_end, time_start;
+    time_start = Date.now();
+    fn();
+    time_end = Date.now();
+    return time_end - time_start;
+  };
   return {
     a_contains: a_contains,
     a_each: a_each,
     a_filter: a_filter,
+    a_index_of: a_index_of,
     a_map: a_map,
     a_reduce: a_reduce,
     a_reject: a_reject,
@@ -340,20 +745,41 @@ wrapper = function() {
     bind: bind,
     butlast: butlast,
     cat: cat,
+    clone: clone,
+    clonedeep: clonedeep,
+    clonedeep2: _clonedeep2,
     compact: compact,
     compose: compose,
     complement: complement,
     contains: contains,
     count: count,
+    defaults: defaults,
+    detect: find,
     each: each,
+    extend: extend,
     fastbind: bind,
     flow: flow,
     first: first,
     filter: filter,
+    filter_fn: filter_fn,
+    filter_obj: filter_obj,
+    filter_obj_1kv: filter_obj_1kv,
+    filter_obj_2kv: filter_obj_2kv,
+    filter_prop: filter_prop,
+    find: find,
+    find_index: find_index,
+    find_index_fn: find_index_fn,
+    find_index_prop: find_index_prop,
+    find_index_obj_1kv: find_index_obj_1kv,
+    find_index_obj_2kv: find_index_obj_2kv,
+    find_index_obj: find_index_obj,
+    get: read,
+    index_of: index_of,
     invoke: invoke,
     is_array: is_array,
     is_empty: is_empty,
     is_function: is_function,
+    is_object: is_object,
     jquery_wrap_to_array: jquery_wrap_to_array,
     keys: keys,
     last: last,
@@ -362,22 +788,35 @@ wrapper = function() {
     map: map,
     match: match,
     mk_regexp: mk_regexp,
+    no_operation: no_operation,
+    noop: no_operation,
     not_array: not_array,
     not_empty: not_empty,
     not_function: not_function,
+    not_object: not_object,
     o_map: o_map,
+    o_match: o_match,
     partial: partial,
     pluck: pluck,
     read: read,
     recurse: recurse,
     reduce: reduce,
     reject: reject,
+    reject_fn: reject_fn,
+    reject_obj: reject_obj,
+    reject_obj_1kv: reject_obj_1kv,
+    reject_obj_2kv: reject_obj_2kv,
+    reject_prop: reject_prop,
     remap: remap,
+    reverse: reverse,
     second: second,
+    set: set,
     slice: slice,
     str: str,
     str_breplace: str_breplace,
     str_join: str_join,
+    str_split: str_split,
+    time: time,
     vals: vals,
     varynum: varynum
   };

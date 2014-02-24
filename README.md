@@ -2,8 +2,10 @@
 ## A set of functions oriented towards functional composition
 It makes your code lighter and easier to read, while improving performance.
 Use it to precompile functions, or make partial functions before their usage.
+Written with V8 optimizing copiler in mind, so functional monomorphism is emphasized.
+Includes nonrecursive cloning function (clonedeep2)
 
-The set is very small, and I use it WITH lodash.
+The set is still not so big as lodash, so I use it WITH lodash.
 
 CommonJS and AMD loaders are supported
 No support for lots of runtime scenarios like lodash does
@@ -86,15 +88,20 @@ has_flaw = (f.partial f.contains, 'flaw')
 - bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
 - butlast     : (array) slice all but last elements of array
 - cat
+- clone
+- clonedeep   : deep clone for data structures, able to clone structures with circular references
 - compact     : (coll) returns new version of the collection without elements evaluating to falsee
 - compose
 - complement  : (predicate) inverts predicate
 - contains
 - count
+- defaults
 - each
+- extend
 - fastbind    -> bind
-- flow
+- filter      : (criteria(fn/obj/string), array)
 - first
+- flow
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 - invoke
 - is_array     : predicate that tests if object is array
@@ -105,9 +112,13 @@ has_flaw = (f.partial f.contains, 'flaw')
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
 - o_map        : (hash, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
+- o_match      : (criteria_object, matched_object) checks properties of matched_object to match every
+property inside criteria_object.
 - map
 - match
 - mk_regexp
+- no_operation : function that does nothing, and returns undefined
+- noop -> no_operation
 - not_array
 - not_empty
 - not_function
@@ -125,6 +136,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
 and string `'bafbaffab'` will output `'ифаифаафи'`.
 - str_join
+- str_split    : (split_str, string_to_split)
 - varynum
 - vals         : (hash) returns the list of object's values
 
