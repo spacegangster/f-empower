@@ -339,11 +339,11 @@ wrapper = ->
   second = (array) ->
     array[1]
 
-  set_diff = (set_a, set_b) ->
+  set_difference = (set_a, set_b) ->
     item for item in set_a when (not_contains item, set_b)
 
-  set_symmetric_diff = (set_a, set_b) ->
-    [(set_diff set_a, set_b), (set_diff set_b, set_a)]
+  set_symmetric_difference = (set_a, set_b) ->
+    [(set_difference set_a, set_b), (set_difference set_b, set_a)]
 
   # ============================================================
   # CATEGORY: COLLECTIONS
@@ -652,6 +652,8 @@ wrapper = ->
   , reverse
   , second
   , set
+  , set_difference
+  , set_symmetric_difference
   , slice
   , str
   , str_breplace

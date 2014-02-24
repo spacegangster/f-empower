@@ -90,6 +90,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - cat
 - clone
 - clonedeep   : deep clone for data structures, able to clone structures with circular references
+- clonedeep2  : deep clone without recursion, able to clone very deep structures with circular references
 - compact     : (coll) returns new version of the collection without elements evaluating to falsee
 - compose
 - complement  : (predicate) inverts predicate
@@ -130,6 +131,8 @@ property inside criteria_object.
 - reject       : (fn, array)
 - remap
 - second
+- set_difference
+- set_symmetric_difference
 - slice        : (array [, start_idx, end_idx]) same as standard JS slice
 - str          : (list_of_strings) - join list of strings with a whitespace into one string
 - str_breplace : (replace_map, string) - string bulk character replace.

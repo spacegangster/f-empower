@@ -11,7 +11,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, each, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_empty, is_function, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, no_operation, not_array, not_contains, not_empty, not_function, not_object, not_zero, o_map, o_match, partial, pluck, pull, range, read, read_1kv, recurse, reduce, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, reverse, second, set, set_diff, set_symmetric_diff, slice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, each, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_empty, is_function, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_slice, no_operation, not_array, not_contains, not_empty, not_function, not_object, not_zero, o_map, o_match, partial, pluck, pull, range, read, read_1kv, recurse, reduce, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, reverse, second, set, set_difference, set_symmetric_difference, slice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -475,7 +475,7 @@ wrapper = function() {
   second = function(array) {
     return array[1];
   };
-  set_diff = function(set_a, set_b) {
+  set_difference = function(set_a, set_b) {
     var item, _i, _len, _results;
     _results = [];
     for (_i = 0, _len = set_a.length; _i < _len; _i++) {
@@ -486,8 +486,8 @@ wrapper = function() {
     }
     return _results;
   };
-  set_symmetric_diff = function(set_a, set_b) {
-    return [set_diff(set_a, set_b), set_diff(set_b, set_a)];
+  set_symmetric_difference = function(set_a, set_b) {
+    return [set_difference(set_a, set_b), set_difference(set_b, set_a)];
   };
   invoke = function(method_name, coll) {
     var item, _i, _len, _results;
@@ -811,6 +811,8 @@ wrapper = function() {
     reverse: reverse,
     second: second,
     set: set,
+    set_difference: set_difference,
+    set_symmetric_difference: set_symmetric_difference,
     slice: slice,
     str: str,
     str_breplace: str_breplace,
