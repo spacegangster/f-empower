@@ -194,7 +194,7 @@ wrapper = ->
       when "string"
         (filter_prop some_criteria, array)
       when "function"
-        (filter_fn some, array)
+        (filter_fn some_criteria, array)
       when "object"
         switch (count (keys some_criteria))
           when 0

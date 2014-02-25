@@ -242,7 +242,7 @@ wrapper = function() {
       case "string":
         return filter_prop(some_criteria, array);
       case "function":
-        return filter_fn(some, array);
+        return filter_fn(some_criteria, array);
       case "object":
         switch (count(keys(some_criteria))) {
           case 0:
