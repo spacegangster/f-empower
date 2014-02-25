@@ -105,9 +105,9 @@ has_flaw = (f.partial f.contains, 'flaw')
 - first
 - flow
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
-- invoke
+- invoke       : (method_name, method_args..., array)
 - is_array     : predicate that tests if object is array
-- is_empty
+- is_empty     : (array_like) checks some array like thing for length == 0
 - is_function
 - is_number
 - is_object

@@ -363,10 +363,23 @@ wrapper = ->
   # CATEGORY: COLLECTIONS
   # ============================================================
 
-
+  # @param {string} method_name
+  # @param {var_args...} [method_args]
+  # @param {Array} coll
   invoke = (method_name, coll) ->
-    for item in coll
-      item[method_name]()
+    results = []
+    args_count = (count arguments)
+
+    if args_count >= 3
+      method_args = (slice arguments, 1, args_count - 1)
+      coll = (last arguments)
+      for item in coll
+        results.push( item[method_name].apply(item, method_args) )
+    else
+      for item in coll
+        results.push( item[method_name]() )
+
+    results
 
   pluck = (prop_name, coll) ->
     (map (partial read, prop_name), coll)
@@ -579,7 +592,7 @@ wrapper = ->
       (recurse func, son, depth + 1)
     root
 
-  set = (prop_name, hash, val) ->
+  set = (prop_name, val, hash) ->
     hash[prop_name] = val
 
   time = (fn) ->

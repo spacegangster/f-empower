@@ -501,13 +501,23 @@ wrapper = function() {
     return [set_difference(set_a, set_b), set_difference(set_b, set_a)];
   };
   invoke = function(method_name, coll) {
-    var item, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = coll.length; _i < _len; _i++) {
-      item = coll[_i];
-      _results.push(item[method_name]());
+    var args_count, item, method_args, results, _i, _j, _len, _len1;
+    results = [];
+    args_count = count(arguments);
+    if (args_count >= 3) {
+      method_args = slice(arguments, 1, args_count - 1);
+      coll = last(arguments);
+      for (_i = 0, _len = coll.length; _i < _len; _i++) {
+        item = coll[_i];
+        results.push(item[method_name].apply(item, method_args));
+      }
+    } else {
+      for (_j = 0, _len1 = coll.length; _j < _len1; _j++) {
+        item = coll[_j];
+        results.push(item[method_name]());
+      }
     }
-    return _results;
+    return results;
   };
   pluck = function(prop_name, coll) {
     return map(partial(read, prop_name), coll);
@@ -737,7 +747,7 @@ wrapper = function() {
     }
     return root;
   };
-  set = function(prop_name, hash, val) {
+  set = function(prop_name, val, hash) {
     return hash[prop_name] = val;
   };
   time = function(fn) {
