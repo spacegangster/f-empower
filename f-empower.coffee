@@ -19,8 +19,9 @@ wrapper = ->
 
   bind = (fn, this_arg) -> # TODO make dumb
     other_args = (slice arguments, 2)
-    arguments.length <= 2 &&
+    (count arguments) <= 2 &&
       (-> fn.apply(this_arg, arguments)) ||
+      # deprecated
       (-> fn.apply(this_arg, other_args.concat((slice arguments))))
 
   partial = ->
@@ -104,7 +105,7 @@ wrapper = ->
 
   not_function = (complement is_function)
 
-  not_nuber = (complement is_number)
+  not_number = (complement is_number)
 
   not_object = (complement is_object)
 
@@ -342,7 +343,12 @@ wrapper = ->
       array[item_idx] = (fn item)
     array
 
+  remove_at = (idx, array) ->
+    (splice array, idx, 1)
+
   reverse = (bind Function::call, Array::reverse)
+
+  splice = (bind Function::call, Array::splice)
 
   second = (array) ->
     array[1]
@@ -455,7 +461,7 @@ wrapper = ->
     dst
     
   
-  defaults = (defaults_hash, extended) ->
+  defaults = (defaults_hash, extended = {}) ->
     for key, val of defaults_hash
       if !(extended[key])
         extended[key] = val
@@ -661,12 +667,14 @@ wrapper = ->
   , reject_obj_2kv
   , reject_prop
   , remap
+  , remove_at
   , reverse
   , second
   , set
   , set_difference
   , set_symmetric_difference
   , slice
+  , splice
   , str
   , str_breplace
   , str_join

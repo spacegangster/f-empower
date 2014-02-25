@@ -136,10 +136,12 @@ property inside criteria_object.
 - reduce       : (fn, array) | (fn, val, array)
 - reject       : (fn, array)
 - remap
+- remove_at    : (idx, array) removes and returns one element at specified index from array
 - second
 - set_difference
 - set_symmetric_difference
 - slice        : (array [, start_idx, end_idx]) same as standard JS slice
+- splice       : (array [, start_idx, remove_count, new_elements...])
 - str          : (list_of_strings) - join list of strings with a whitespace into one string
 - str_breplace : (replace_map, string) - string bulk character replace.
 Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,

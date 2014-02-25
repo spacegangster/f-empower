@@ -1,6 +1,6 @@
 {
   "name"        : "f-empower"
-, "version"     : "1.14.0"
+, "version"     : "1.15.0"
 , "description" : "Habitual functions that are simpler to compose"
 
 , "keywords"    : [ "functional"
