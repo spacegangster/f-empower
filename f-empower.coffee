@@ -12,7 +12,8 @@ wrapper = ->
     NOT_FUNCTION              : new TypeError('Something is not function')
     UNEXPECTED_TYPE           : new TypeError('Unexpected type')
   
-  native_slice = Array::slice
+  native_concat = Array::concat
+  native_slice  = Array::slice
 
   slice = (array_or_arguments, start_idx, end_idx) ->
     native_slice.call(array_or_arguments, start_idx, end_idx)
@@ -37,7 +38,7 @@ wrapper = ->
 
   # Calls a function with specified args list
   apply = (fn, args_list) ->
-    fn.apply(null, args_list)
+    fn.apply(this, args_list)
 
   # Composes a list of functions into one
   compose = ->
@@ -78,6 +79,12 @@ wrapper = ->
 
   no_operation = ->
 
+  partialr = (fn, right_args) ->
+    right_args = (slice arguments, 1)
+    ->
+      (apply fn, (cat (apply list, arguments), right_args))
+
+
   # ============================================================
   # CATEGORY: PREDICATES
   # ============================================================
@@ -111,19 +118,17 @@ wrapper = ->
 
   not_zero = (complement is_zero)
 
+
   # ============================================================
   # CATEGORY: ARRAYS
   # ============================================================
 
-  # TODO objective filter, reject, find
-  # TODO property filter, reject, find
-
   butlast = (array) ->
     (slice array, 0, array.length - 1)
   
-  # TODO check arguments
+  # works only with arrays
   cat = (array) ->
-    array.concat.apply(array, (slice arguments, 1))
+    native_concat.apply(array, (slice arguments, 1))
 
   contains = (searched_item, array) ->
     for item in array
@@ -289,17 +294,38 @@ wrapper = ->
 
   not_contains = (complement contains)
 
+  prelast = (array) ->
+    array[(count array) - 2]
+
+  # (fn, array)
+  # (fn, val, array)
   reduce = (fn, val, array) ->
     idx = -1
     if !array && (is_array val)
       array = val
-      val = (fn array[0], array[1])
+      val = (fn (first array), (second array))
       idx = 1
 
     while ++idx < array.length
       val = (fn val, array[idx])
 
     val
+
+  # (fn, array)
+  # (fn, val, array) # TODO finish
+  reduce_right = (fn, val, array) ->
+    idx = (count array)
+    if !array && (is_array val)
+      array = val
+      val = (fn (last array), (prelast array))
+      idx = idx - 2
+
+    while --idx >= 0
+      val = (fn val, array[idx])
+
+    val
+
+
 
   reject_fn = (fn, array) ->
     item for item in array when !(fn item)
@@ -394,6 +420,11 @@ wrapper = ->
   # ============================================================
   # CATEGORY: OBJECTS
   # ============================================================
+
+  assign = (dest = {}, source) ->
+    for key, val of source
+      dest[key] = val
+    dest
   
   clone_obj = (obj) ->
     res = {}
@@ -474,17 +505,12 @@ wrapper = ->
     dst
     
   
-  defaults = (defaults_hash, extended = {}) ->
-    for key, val of defaults_hash
-      if !(extended[key])
-        extended[key] = val
-    extended
+  defaults = (dest = {}, source) ->
+    for key, val of source
+      if ('undefined' == typeof dest[key])
+        dest[key] = val
+    dest
 
-  extend = (extender, extended) ->
-    for key, val of extender
-      extended[key] = val
-    extended
-  
   keys = (hash) ->
     Object.keys(hash)
 
@@ -609,6 +635,7 @@ wrapper = ->
   , a_map
   , a_reduce
   , a_reject
+  , assign
   , apply
   , bind
   , butlast
@@ -619,13 +646,15 @@ wrapper = ->
   , compact
   , compose
   , complement
+  , concat: cat
   , contains
   , count
+  , dec
   , defaults
   , delay
   , detect: find
   , each
-  , extend
+  , extend: assign
   , fastbind: bind
   , flow
   , first
@@ -643,6 +672,7 @@ wrapper = ->
   , find_index_obj_2kv
   , find_index_obj
   , get: read
+  , inc
   , index_of
   , invoke
   , is_array
@@ -650,6 +680,7 @@ wrapper = ->
   , is_function
   , is_number
   , is_object
+  , is_zero
   , jquery_wrap_to_array
   , keys
   , last
@@ -665,9 +696,12 @@ wrapper = ->
   , not_function
   , not_number
   , not_object
+  , not_zero
   , o_map
   , o_match
   , partial
+  , partialr
+  , pipeline: flow
   , pluck
   , pull
   , read

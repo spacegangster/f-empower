@@ -85,6 +85,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
 - a_reject    : array first `reject`
 - apply       : (fn, args...) applies arguments to function
+- assign      : (dest, src)
 - bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
 - butlast     : (array) slice all but last elements of array
 - cat
@@ -96,10 +97,10 @@ has_flaw = (f.partial f.contains, 'flaw')
 - complement  : (predicate) inverts predicate
 - contains
 - count
-- defaults
+- defaults    : (dest, src)
 - delay       : (delay_ms, fn) like set timeout, but the delay parameter is specified before fn
 - each
-- extend
+- extend      -> assign
 - fastbind    -> bind
 - filter      : (criteria(fn/obj/string), array)
 - first
@@ -111,7 +112,8 @@ has_flaw = (f.partial f.contains, 'flaw')
 - is_function
 - is_number
 - is_object
-- keys
+- is_zero      : (num)
+- keys         : (object)
 - last
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
@@ -128,7 +130,9 @@ property inside criteria_object.
 - not_function
 - not_number
 - not_object
+- not_zero
 - partial      : (fn, args...)
+- pipeline -> flow
 - pluck        : (prop_name, coll)
 - pull
 - read         : (prop_name, hash) - will read a property with specified name
