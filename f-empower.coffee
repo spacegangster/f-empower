@@ -91,6 +91,9 @@ wrapper = ->
 
   is_array = Array.isArray
 
+  is_defined = (subj) ->
+    'undefined' != (typeof subj)
+
   is_empty = (seq) ->
     seq.length == 0
 
@@ -106,7 +109,10 @@ wrapper = ->
   is_zero = (candidate) ->
     candidate == 0
 
+
   not_array = (complement is_array)
+
+  not_defined = (complement is_defined)
 
   not_empty = (complement is_empty)
 
@@ -676,6 +682,7 @@ wrapper = ->
   , index_of
   , invoke
   , is_array
+  , is_defined
   , is_empty
   , is_function
   , is_number
@@ -692,6 +699,7 @@ wrapper = ->
   , no_operation
   , noop: no_operation
   , not_array
+  , not_defined
   , not_empty
   , not_function
   , not_number

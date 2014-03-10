@@ -108,6 +108,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 - invoke       : (method_name, method_args..., array)
 - is_array     : predicate that tests if object is array
+- is_defined
 - is_empty     : (array_like) checks some array like thing for length == 0
 - is_function
 - is_number
@@ -126,6 +127,7 @@ property inside criteria_object.
 - no_operation : function that does nothing, and returns undefined
 - noop -> no_operation
 - not_array
+- not_defined
 - not_empty
 - not_function
 - not_number
