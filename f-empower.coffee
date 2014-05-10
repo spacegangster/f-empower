@@ -76,6 +76,13 @@ wrapper = ->
         memo = [ functions[i].apply(null, memo) ]
       (first memo)
 
+  multicall = (fns) ->
+    fns = (compact fns)
+    ->
+      for fn in functions
+        fn.apply(this, arguments)
+      return
+
   no_operation = ->
 
   partialr = (fn, right_args) ->
@@ -327,10 +334,10 @@ wrapper = ->
       array = val
       val = (fn (last array), (prelast array))
       idx = idx - 2
-
+    #
     while --idx >= 0
       val = (fn val, array[idx])
-
+    #
     val
 
 
@@ -774,6 +781,7 @@ wrapper = ->
   , match
   , merge
   , mk_regexp
+  , multicall
   , no_operation
   , noop: no_operation
   , not_array

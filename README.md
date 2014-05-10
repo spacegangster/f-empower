@@ -130,6 +130,7 @@ property inside criteria_object.
 - map
 - match
 - mk_regexp
+- multicall    : (functions...) returns a function that will call the all of the functions, when called
 - no_operation : function that does nothing, and returns undefined
 - noop -> no_operation
 - not_array

@@ -10,7 +10,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_defined, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_defined, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -86,6 +86,16 @@ wrapper = function() {
         memo = [functions[i].apply(null, memo)];
       }
       return first(memo);
+    };
+  };
+  multicall = function(fns) {
+    fns = compact(fns);
+    return function() {
+      var fn, _i, _len;
+      for (_i = 0, _len = functions.length; _i < _len; _i++) {
+        fn = functions[_i];
+        fn.apply(this, arguments);
+      }
     };
   };
   no_operation = function() {};
@@ -917,6 +927,7 @@ wrapper = function() {
     match: match,
     merge: merge,
     mk_regexp: mk_regexp,
+    multicall: multicall,
     no_operation: no_operation,
     noop: no_operation,
     not_array: not_array,
