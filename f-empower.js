@@ -10,7 +10,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_defined, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -106,6 +106,9 @@ wrapper = function() {
     };
   };
   is_array = Array.isArray;
+  is_atom = function(val) {
+    return !((is_array(val)) || (is_object(val)));
+  };
   is_defined = function(subj) {
     return 'undefined' !== (typeof subj);
   };
@@ -120,6 +123,21 @@ wrapper = function() {
   };
   is_object = function(candidate) {
     return 'object' === typeof candidate;
+  };
+  is_plain_object = function(subj) {
+    var ctor, key, latest_key, val;
+    if (!subj || !('[object Object]' === toString.call(subj)) || (!hasOwnProperty.call(subj, 'constructor') && ((ctor = subj.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
+      return false;
+    }
+    latest_key = null;
+    for (key in subj) {
+      val = subj[key];
+      latest_key = key;
+    }
+    return (not_defined(key)) || hasOwnProperty.call(subj, latest_key);
+  };
+  is_mergeable = function(item) {
+    return (is_array(item)) || (is_plain_object(item));
   };
   is_zero = function(candidate) {
     return candidate === 0;
@@ -706,7 +724,7 @@ wrapper = function() {
       key = cur_keys[cur_key_idx];
       val = cur_src[key];
       if ((not_defined(dst[key])) || (not_object(val))) {
-        dst[key] = val;
+        cur_dst[key] = val;
         if (is_object(val)) {
           src_stack.push(val);
         }
@@ -714,13 +732,11 @@ wrapper = function() {
         val_idx = index_of(val, src_stack);
         if (val_idx === -1) {
           call_stack.push([cur_dst, cur_src, cur_keys, cur_key_idx]);
-          src_stack.push(cur_src);
+          src_stack.push(val);
           cur_dst = cur_dst[key];
           cur_src = cur_src[key];
           cur_keys = keys(cur_src);
           cur_key_idx = count(cur_keys);
-        } else {
-
         }
       }
       while ((is_zero(cur_key_idx)) && (not_empty(call_stack))) {
@@ -915,8 +931,10 @@ wrapper = function() {
     is_defined: is_defined,
     is_empty: is_empty,
     is_function: is_function,
+    is_mergeable: is_mergeable,
     is_number: is_number,
     is_object: is_object,
+    is_plain_object: is_plain_object,
     is_zero: is_zero,
     jquery_wrap_to_array: jquery_wrap_to_array,
     keys: keys,

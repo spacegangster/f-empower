@@ -76,10 +76,11 @@ wrapper = ->
         memo = [ functions[i].apply(null, memo) ]
       (first memo)
 
+  # @param {var_args} fns variable number of functions
   multicall = (fns) ->
     fns = (compact fns)
     ->
-      for fn in functions
+      for fn in fns
         fn.apply(this, arguments)
       return
 
@@ -97,6 +98,9 @@ wrapper = ->
 
   is_array = Array.isArray
 
+  is_atom = (val) ->
+    !((is_array val) || (is_object val))
+
   is_defined = (subj) ->
     'undefined' != (typeof subj)
 
@@ -109,8 +113,26 @@ wrapper = ->
   is_number = (candidate) ->
     'number' == typeof candidate
 
+  # TODO check usages on conflict with old typeof predicate
+  # FIXME complete merge function and clonedeep
   is_object = (candidate) ->
     'object' == typeof candidate
+
+  is_plain_object = (subj) ->
+    if (!subj ||
+         !('[object Object]' == toString.call(subj)) ||
+         (!hasOwnProperty.call(subj, 'constructor') &&
+         ((ctor = subj.constructor) && (is_function ctor) && !(ctor instanceof ctor))))
+      return false
+    #
+    latest_key = null
+    for key, val of subj
+      latest_key = key
+    #
+    (not_defined key) || hasOwnProperty.call(subj, latest_key)
+
+  is_mergeable = (item) ->
+    (is_array item) || (is_plain_object item)
 
   is_zero = (candidate) ->
     candidate == 0
@@ -123,6 +145,8 @@ wrapper = ->
   not_empty = (complement is_empty)
 
   not_function = (complement is_function)
+
+  not_mergeable = (complement is_mergeable)
 
   not_number = (complement is_number)
 
@@ -565,22 +589,21 @@ wrapper = ->
       key = cur_keys[cur_key_idx]
       val = cur_src[key]
       #
-      if (not_defined dst[key]) || (not_object val)
-        dst[key] = val
-        if (is_object val)
+      if (not_defined cur_dst[key]) || (not_mergeable val)
+        cur_dst[key] = val
+        if (is_mergeable val)
           src_stack.push(val)
       else
         val_idx = (index_of val, src_stack)
         if (val_idx == -1)
           #
           call_stack.push([cur_dst, cur_src, cur_keys, cur_key_idx])
-          src_stack.push(cur_src)
+          src_stack.push(val)
           #
           cur_dst     = cur_dst[key]
           cur_src     = cur_src[key]
           cur_keys    = (keys cur_src)
           cur_key_idx = (count cur_keys)
-        else
       #
       while (is_zero cur_key_idx) && (not_empty call_stack)
         [cur_dst, cur_src, cur_keys, cur_key_idx] = call_stack.pop()
@@ -769,8 +792,10 @@ wrapper = ->
   , is_defined
   , is_empty
   , is_function
+  , is_mergeable
   , is_number
   , is_object
+  , is_plain_object
   , is_zero
   , jquery_wrap_to_array
   , keys
