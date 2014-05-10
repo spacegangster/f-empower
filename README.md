@@ -1,17 +1,19 @@
 # F-EMPOWER
-## A set of functions oriented towards functional composition
-It makes your code lighter and easier to read, while improving performance.
-Use it to precompile functions, or make partial functions before their usage.
-Written with V8 optimizing copiler in mind, so functional monomorphism is emphasized.
-Includes nonrecursive cloning function (clonedeep2)
+## A set of functions designed for composition
+It makes your code leaner and easier to read, improves development speed 
+and efficiency. Use it to precompile functions, or make partial functions 
+before their usage. Written with V8's optimizing copiler (Crankshaft) 
+in mind, so functional monomorphism is emphasized.
 
-The set is still not so big as lodash, so I use it WITH lodash.
+Includes nonrecursive deep cloning function (clonedeep2)
 
 CommonJS and AMD loaders are supported
-No support for lots of runtime scenarios like lodash does
+
 
 ## Install
 `npm install f-empower`
+
+
 ## Use
 ### NodeJS
 ```coffeescript
@@ -44,7 +46,7 @@ define [ 'f-empower' ], (functions) ->
 ### Map a collection of sads into doges
 ```coffeescript
 # ECMA 5
-# ... some battle logics, lots of code, etc ...
+# ... some battle logic, lots of code, etc ...
 # ... and this is how you do it ...
 doges = sads.map(turn_sad_into_doge)
 
@@ -99,6 +101,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - count
 - defaults    : (dest, src)
 - delay       : (delay_ms, fn) like set timeout, but the delay parameter is specified before fn
+- drop        : (x, array) drops first x items from array
 - each
 - extend      -> assign
 - fastbind    -> bind
@@ -106,6 +109,8 @@ has_flaw = (f.partial f.contains, 'flaw')
 - first
 - flow
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
+- head         : (x, string) takes first x chars from string
+- index_of     : (item, array)
 - invoke       : (method_name, method_args..., array)
 - is_array     : predicate that tests if object is array
 - is_defined
@@ -118,6 +123,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - last
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
+- merge        : (dest, src) deep merge of two objects
 - o_map        : (hash, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
 - o_match      : (criteria_object, matched_object) checks properties of matched_object to match every
 property inside criteria_object.
@@ -142,18 +148,22 @@ property inside criteria_object.
 - reduce       : (fn, array) | (fn, val, array)
 - reject       : (fn, array)
 - remap
+- remove       : (item, array) removes item from array based on reference equality
 - remove_at    : (idx, array) removes and returns one element at specified index from array
 - second
 - set_difference
 - set_symmetric_difference
 - slice        : (array [, start_idx, end_idx]) same as standard JS slice
+- space        : (strings...) join strings with a whitespace
 - splice       : (array [, start_idx, remove_count, new_elements...])
-- str          : (list_of_strings) - join list of strings with a whitespace into one string
+- str          : (strings...) - join any number of strings into one
 - str_breplace : (replace_map, string) - string bulk character replace.
 Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
 and string `'bafbaffab'` will output `'ифаифаафи'`.
 - str_join
 - str_split    : (split_str, string_to_split)
+- take         : (x, array) takes first x items from array
+- tail         : (x, string) drops first chars from string
 - varynum
 - vals         : (hash) returns the list of object's values
 

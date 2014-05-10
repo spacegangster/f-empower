@@ -1,7 +1,6 @@
 ###
   F-EMPOWER
-  A set of functions to harness the power and benefits of functional
-  programming in JS.
+  A set of functions to harness the power functional programming in JS.
   Author: Ivan Fedorov <sharp.maestro@gmail.com>
   License: MIT
 ###
@@ -171,6 +170,9 @@ wrapper = ->
     
   count = (array) ->
     array.length
+
+  drop = (items_number_to_drop, array_like) ->
+    (slice array_like, items_number_to_drop)
 
   each = (fn, array) ->
     for item in array
@@ -370,13 +372,18 @@ wrapper = ->
       else
         throw Errors.UNEXPECTED_TYPE
 
-  remap = (fn, array) ->
-    for item, item_idx in array
-      array[item_idx] = (fn item)
-    array
+  remap = (fn, arr) ->
+    for item, item_idx in arr
+      arr[item_idx] = (fn item)
+    arr
 
-  remove_at = (idx, array) ->
-    (splice array, idx, 1)
+  # removes item from array based on ref equality
+  remove = (item, arr) ->
+    idx = (index_of item, arr)
+    idx != -1 && (remove_at idx, arr)
+
+  remove_at = (idx, arr) ->
+    (splice arr, idx, 1)
 
   reverse = (bind Function::call, Array::reverse)
 
@@ -390,6 +397,9 @@ wrapper = ->
 
   set_symmetric_difference = (set_a, set_b) ->
     [(set_difference set_a, set_b), (set_difference set_b, set_a)]
+
+  take = (items_number_to_take, array_like) ->
+    (slice array_like, 0, items_number_to_take)
 
   # ============================================================
   # CATEGORY: COLLECTIONS
@@ -427,10 +437,18 @@ wrapper = ->
   # CATEGORY: OBJECTS
   # ============================================================
 
-  assign = (dest = {}, source) ->
-    for key, val of source
-      dest[key] = val
+
+  # @param {object} dest the place where all properties
+  #  from all sources will be written
+  # @param {varargs} sources: 1 or more sources
+  assign = (dest = {}, sources) ->
+    sources = (drop 1, arguments)
+    (each (partial assign_one, dest), sources)
     dest
+
+  assign_one = (dest, src) ->
+    for key, val of src
+      dest[key] = val
   
   clone_obj = (obj) ->
     res = {}
@@ -468,7 +486,8 @@ wrapper = ->
           dst[key] = stack_dst[val_idx]
     dst
 
-  # _clonedeep2 # TODO how about non-recursive deep clone based on stacks?
+  # _clonedeep2
+  # проверить чтобы клонировалась также множественные ссылки на один объект
   _clonedeep2 = (src) ->
     dst = (is_array src) && [] || {}
     cur_src = src
@@ -520,6 +539,48 @@ wrapper = ->
   keys = (hash) ->
     Object.keys(hash)
 
+  # what is more important?
+  #   1) to have all the links of the source objects inside the dest object? 
+  #      don't replacate circular refs then
+  #   2) or to have the dest object to repeat qualities of the source objects?
+  #      then replicate circular refs
+  # this function acts by first strategy.
+  merge = (dst, src) ->
+    call_stack  = []
+    src_stack   = []
+    #
+    cur_dst     = dst
+    cur_src     = src
+    cur_keys    = (keys src)
+    cur_key_idx = (count cur_keys)
+    #
+    while --cur_key_idx >= 0
+      key = cur_keys[cur_key_idx]
+      val = cur_src[key]
+      #
+      if (not_defined dst[key]) || (not_object val)
+        dst[key] = val
+        if (is_object val)
+          src_stack.push(val)
+      else
+        val_idx = (index_of val, src_stack)
+        if (val_idx == -1)
+          #
+          call_stack.push([cur_dst, cur_src, cur_keys, cur_key_idx])
+          src_stack.push(cur_src)
+          #
+          cur_dst     = cur_dst[key]
+          cur_src     = cur_src[key]
+          cur_keys    = (keys cur_src)
+          cur_key_idx = (count cur_keys)
+        else
+      #
+      while (is_zero cur_key_idx) && (not_empty call_stack)
+        [cur_dst, cur_src, cur_keys, cur_key_idx] = call_stack.pop()
+    #
+    dst
+
+
   # @param {object} hash source
   # @param {array<string>} keys_list
   # @return {array<*>}
@@ -554,12 +615,21 @@ wrapper = ->
   # CATEGORY: STRINGS
   # ============================================================
   
+  head = (chars_to_take, str) ->
+    str.substr(0, chars_to_take)
+  
   match = (source_str, regexp) ->
     source_str.match(regexp)
 
-  # Joins incoming strings with a whitespace
+  comma = ->
+    (str_join ',', (slice arguments))
+
+  space = ->
+    (str_join ' ', (slice arguments))
+
+  # Joins incoming strings into single one
   str = ->
-    Array::join.call(arguments, ' ')
+    (str_join '', (slice arguments))
 
   str_breplace = (map, str) ->
     regex = (mk_regexp (str_join '|', (keys map)), 'ig')
@@ -572,6 +642,10 @@ wrapper = ->
 
   str_split = (split_str, string_to_split) ->
     string_to_split.split(split_str)
+
+  tail = (chars_to_drop, str) ->
+    str.substr(chars_to_drop)
+
 
   # ============================================================
   # CATEGORY: MISCELLANEOUS
@@ -649,6 +723,7 @@ wrapper = ->
   , clone
   , clonedeep
   , clonedeep2: _clonedeep2
+  , comma
   , compact
   , compose
   , complement
@@ -659,6 +734,7 @@ wrapper = ->
   , defaults
   , delay
   , detect: find
+  , drop
   , each
   , extend: assign
   , fastbind: bind
@@ -678,6 +754,7 @@ wrapper = ->
   , find_index_obj_2kv
   , find_index_obj
   , get: read
+  , head
   , inc
   , index_of
   , invoke
@@ -695,6 +772,7 @@ wrapper = ->
   , list_compact
   , map
   , match
+  , merge
   , mk_regexp
   , no_operation
   , noop: no_operation
@@ -722,6 +800,7 @@ wrapper = ->
   , reject_obj_2kv
   , reject_prop
   , remap
+  , remove
   , remove_at
   , reverse
   , second
@@ -729,11 +808,14 @@ wrapper = ->
   , set_difference
   , set_symmetric_difference
   , slice
+  , space
   , splice
   , str
   , str_breplace
   , str_join
   , str_split
+  , take
+  , tail
   , time
   , vals
   , varynum }

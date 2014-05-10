@@ -2,8 +2,7 @@
 
 /*
   F-EMPOWER
-  A set of functions to harness the power and benefits of functional
-  programming in JS.
+  A set of functions to harness the power functional programming in JS.
   Author: Ivan Fedorov <sharp.maestro@gmail.com>
   License: MIT
  */
@@ -11,7 +10,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, bind, butlast, cat, clone, clone_obj, clonedeep, compact, complement, compose, contains, count, dec, defaults, delay, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, inc, index_of, invoke, is_array, is_defined, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, mk_regexp, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, splice, str, str_breplace, str_join, str_split, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_defined, is_empty, is_function, is_number, is_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -179,6 +178,9 @@ wrapper = function() {
   };
   count = function(array) {
     return array.length;
+  };
+  drop = function(items_number_to_drop, array_like) {
+    return slice(array_like, items_number_to_drop);
   };
   each = function(fn, array) {
     var item, _i, _len;
@@ -497,16 +499,21 @@ wrapper = function() {
         throw Errors.UNEXPECTED_TYPE;
     }
   };
-  remap = function(fn, array) {
+  remap = function(fn, arr) {
     var item, item_idx, _i, _len;
-    for (item_idx = _i = 0, _len = array.length; _i < _len; item_idx = ++_i) {
-      item = array[item_idx];
-      array[item_idx] = fn(item);
+    for (item_idx = _i = 0, _len = arr.length; _i < _len; item_idx = ++_i) {
+      item = arr[item_idx];
+      arr[item_idx] = fn(item);
     }
-    return array;
+    return arr;
   };
-  remove_at = function(idx, array) {
-    return splice(array, idx, 1);
+  remove = function(item, arr) {
+    var idx;
+    idx = index_of(item, arr);
+    return idx !== -1 && (remove_at(idx, arr));
+  };
+  remove_at = function(idx, arr) {
+    return splice(arr, idx, 1);
   };
   reverse = bind(Function.prototype.call, Array.prototype.reverse);
   splice = bind(Function.prototype.call, Array.prototype.splice);
@@ -526,6 +533,9 @@ wrapper = function() {
   };
   set_symmetric_difference = function(set_a, set_b) {
     return [set_difference(set_a, set_b), set_difference(set_b, set_a)];
+  };
+  take = function(items_number_to_take, array_like) {
+    return slice(array_like, 0, items_number_to_take);
   };
   invoke = function(method_name, coll) {
     var args_count, item, method_args, results, _i, _j, _len, _len1;
@@ -560,16 +570,22 @@ wrapper = function() {
     }
     return _results;
   };
-  assign = function(dest, source) {
-    var key, val;
+  assign = function(dest, sources) {
     if (dest == null) {
       dest = {};
     }
-    for (key in source) {
-      val = source[key];
-      dest[key] = val;
-    }
+    sources = drop(1, arguments);
+    each(partial(assign_one, dest), sources);
     return dest;
+  };
+  assign_one = function(dest, src) {
+    var key, val, _results;
+    _results = [];
+    for (key in src) {
+      val = src[key];
+      _results.push(dest[key] = val);
+    }
+    return _results;
   };
   clone_obj = function(obj) {
     var key, res, val;
@@ -668,6 +684,41 @@ wrapper = function() {
   keys = function(hash) {
     return Object.keys(hash);
   };
+  merge = function(dst, src) {
+    var call_stack, cur_dst, cur_key_idx, cur_keys, cur_src, key, src_stack, val, val_idx, _ref;
+    call_stack = [];
+    src_stack = [];
+    cur_dst = dst;
+    cur_src = src;
+    cur_keys = keys(src);
+    cur_key_idx = count(cur_keys);
+    while (--cur_key_idx >= 0) {
+      key = cur_keys[cur_key_idx];
+      val = cur_src[key];
+      if ((not_defined(dst[key])) || (not_object(val))) {
+        dst[key] = val;
+        if (is_object(val)) {
+          src_stack.push(val);
+        }
+      } else {
+        val_idx = index_of(val, src_stack);
+        if (val_idx === -1) {
+          call_stack.push([cur_dst, cur_src, cur_keys, cur_key_idx]);
+          src_stack.push(cur_src);
+          cur_dst = cur_dst[key];
+          cur_src = cur_src[key];
+          cur_keys = keys(cur_src);
+          cur_key_idx = count(cur_keys);
+        } else {
+
+        }
+      }
+      while ((is_zero(cur_key_idx)) && (not_empty(call_stack))) {
+        _ref = call_stack.pop(), cur_dst = _ref[0], cur_src = _ref[1], cur_keys = _ref[2], cur_key_idx = _ref[3];
+      }
+    }
+    return dst;
+  };
   o_map = function(hash, keys_list) {
     var key, _i, _len, _results;
     _results = [];
@@ -696,11 +747,20 @@ wrapper = function() {
   vals = function(hash) {
     return o_map(hash, keys(hash));
   };
+  head = function(chars_to_take, str) {
+    return str.substr(0, chars_to_take);
+  };
   match = function(source_str, regexp) {
     return source_str.match(regexp);
   };
+  comma = function() {
+    return str_join(',', slice(arguments));
+  };
+  space = function() {
+    return str_join(' ', slice(arguments));
+  };
   str = function() {
-    return Array.prototype.join.call(arguments, ' ');
+    return str_join('', slice(arguments));
   };
   str_breplace = function(map, str) {
     var regex;
@@ -714,6 +774,9 @@ wrapper = function() {
   };
   str_split = function(split_str, string_to_split) {
     return string_to_split.split(split_str);
+  };
+  tail = function(chars_to_drop, str) {
+    return str.substr(chars_to_drop);
   };
   dec = function(num) {
     return num - 1;
@@ -803,6 +866,7 @@ wrapper = function() {
     clone: clone,
     clonedeep: clonedeep,
     clonedeep2: _clonedeep2,
+    comma: comma,
     compact: compact,
     compose: compose,
     complement: complement,
@@ -813,6 +877,7 @@ wrapper = function() {
     defaults: defaults,
     delay: delay,
     detect: find,
+    drop: drop,
     each: each,
     extend: assign,
     fastbind: bind,
@@ -832,6 +897,7 @@ wrapper = function() {
     find_index_obj_2kv: find_index_obj_2kv,
     find_index_obj: find_index_obj,
     get: read,
+    head: head,
     inc: inc,
     index_of: index_of,
     invoke: invoke,
@@ -849,6 +915,7 @@ wrapper = function() {
     list_compact: list_compact,
     map: map,
     match: match,
+    merge: merge,
     mk_regexp: mk_regexp,
     no_operation: no_operation,
     noop: no_operation,
@@ -876,6 +943,7 @@ wrapper = function() {
     reject_obj_2kv: reject_obj_2kv,
     reject_prop: reject_prop,
     remap: remap,
+    remove: remove,
     remove_at: remove_at,
     reverse: reverse,
     second: second,
@@ -883,11 +951,14 @@ wrapper = function() {
     set_difference: set_difference,
     set_symmetric_difference: set_symmetric_difference,
     slice: slice,
+    space: space,
     splice: splice,
     str: str,
     str_breplace: str_breplace,
     str_join: str_join,
     str_split: str_split,
+    take: take,
+    tail: tail,
     time: time,
     vals: vals,
     varynum: varynum
