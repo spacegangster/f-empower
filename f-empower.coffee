@@ -119,8 +119,9 @@ wrapper = ->
     'object' == typeof candidate
 
   is_plain_object = (subj) ->
-    if (!subj ||
-         !('[object Object]' == toString.call(subj)) ||
+    is_defnd = 'undefined' != typeof subj
+    is_objct = is_defnd && ('[object Object]' == toString.call(subj)) && !(is_function subj)
+    if (!is_objct ||
          (!hasOwnProperty.call(subj, 'constructor') &&
          ((ctor = subj.constructor) && (is_function ctor) && !(ctor instanceof ctor))))
       return false
