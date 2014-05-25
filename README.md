@@ -1,7 +1,9 @@
 # F-EMPOWER
 ## Utility functions designed for functional programming and composition
 Written with V8's optimizing copiler (Crankshaft) in mind (functional monomorphism is emphasized).
+
 Inspired by Clojure and Underscore.
+
 CommonJS and AMD loaders are supported.
 
 ## Install
@@ -46,8 +48,8 @@ monomorphism.
 It is much closer to Clojure.
 
 ### Features not in Underscore
-map, each. `map` and `each` work with any number of arrays.
-`clonedeep2`, `merge` -- operate on deep structures, staying non-recursive.
+- `map`, `each`. `map` and `each` work with any number of arrays.
+- `clonedeep2`, `merge` -- operate on deep structures, staying non-recursive.
 
 ## Function index
 - a_contains  : array first `contains`, like in underscore
