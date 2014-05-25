@@ -1,18 +1,11 @@
 # F-EMPOWER
-## A set of functions designed for composition
-It makes your code leaner and easier to read, improves development speed 
-and efficiency. Use it to precompile functions, or make partial functions 
-before their usage. Written with V8's optimizing copiler (Crankshaft) 
-in mind, so functional monomorphism is emphasized.
-
-Includes nonrecursive deep cloning function (clonedeep2)
-
-CommonJS and AMD loaders are supported
-
+## Utility functions designed for functional programming and composition
+Written with V8's optimizing copiler (Crankshaft) in mind (functional monomorphism is emphasized).
+Inspired by Clojure and Underscore.
+CommonJS and AMD loaders are supported.
 
 ## Install
 `npm install f-empower`
-
 
 ## Use
 ### NodeJS
@@ -42,42 +35,19 @@ define [ 'f-empower' ], (functions) ->
   console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
 ```
 
-## F-EMPOWER vs ECMA 5 / underscore / lodash
-### Map a collection of sads into doges
-```coffeescript
-# ECMA 5
-# ... some battle logic, lots of code, etc ...
-# ... and this is how you do it ...
-doges = sads.map(turn_sad_into_doge)
+## Compared to Underscore / Lodash
+As a new thing f-empower doesn't have the functional multitude of Lodash or Underscore.
+This is not (and won't be) a template library. Although it has `jquery_wrap_to_array` 
+which converts a jQuery wrap, into array of jQuery wraps.
 
-# Lodash
-# ... the same thing with lodash / underscore because ...
-# ... their map function first argument is collection, not function ...
-doges = _.map(sads, turn_sad_into_doge)
+It is not so polished in terms of speed as Lodash. Although it respects functional 
+monomorphism.
 
-# f-empower 
-# ... precompile function ...
-map_sads_into_doges = (f.partial f.map, turn_sad_into_doge)
-# ... some battle logics, lots of code, etc ...
-doges = (map_sads_into_doges sads)
-```
-That's it. Less symbols, less code, less distraction when you read your code year after.
+It is much closer to Clojure.
 
-### Check if collection contains item
-```coffeescript
-# Plain JS
-has_flaw = (coll) ->
-  coll.indexOf('flaw') != -1
-(has_flaw [ 'ok', 'good', 'flaw') # -> true
-
-# Lodash
-has_flaw = (_.partialRight _.contains, 'flaw')
-(has_flaw [ 'ok', 'good', 'flaw']) # -> true
-
-# f-empower
-has_flaw = (f.partial f.contains, 'flaw')
-(has_flaw ['ok', 'good', 'flaw']) # -> true
-```
+### Features not in Underscore
+map, each. `map` and `each` work with any number of arrays.
+`clonedeep2`, `merge` -- operate on deep structures, staying non-recursive.
 
 ## Function index
 - a_contains  : array first `contains`, like in underscore
@@ -86,6 +56,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - a_map       : array first `map`
 - a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
 - a_reject    : array first `reject`
+- a_sum
 - apply       : (fn, args...) applies arguments to function
 - assign      : (dest, src)
 - bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
@@ -99,15 +70,16 @@ has_flaw = (f.partial f.contains, 'flaw')
 - complement  : (predicate) inverts predicate
 - contains
 - count
+- debounce    : (debounce_timeout, fn)
 - defaults    : (dest, src)
-- delay       : (delay_ms, fn) like set timeout, but the delay parameter is specified before fn
+- delay       : (delay_ms, fn) like `setTimeout`, but the delay parameter is specified before fn
 - drop        : (x, array) drops first x items from array
 - each
 - extend      -> assign
 - fastbind    -> bind
 - filter      : (criteria(fn/obj/string), array)
 - first
-- flow
+- flow        : natural compose
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 - head         : (x, string) takes first x chars from string
 - index_of     : (item, array)
@@ -127,7 +99,7 @@ has_flaw = (f.partial f.contains, 'flaw')
 - o_map        : (hash, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
 - o_match      : (criteria_object, matched_object) checks properties of matched_object to match every
 property inside criteria_object.
-- map
+- map          : (fn, arrs...)
 - match
 - mk_regexp
 - multicall    : (functions...) returns a function that will call the all of the functions, when called
@@ -144,10 +116,14 @@ property inside criteria_object.
 - pipeline -> flow
 - pluck        : (prop_name, coll)
 - pull
+- push
+- range        : (start_val, end_val, step)
 - read         : (prop_name, hash) - will read a property with specified name
 - recurse
 - reduce       : (fn, array) | (fn, val, array)
 - reject       : (fn, array)
+- repeat       : (times, val)
+- rest         : (arr) return all but first elements
 - remap
 - remove       : (item, array) removes item from array based on reference equality
 - remove_at    : (idx, array) removes and returns one element at specified index from array
@@ -165,6 +141,8 @@ and string `'bafbaffab'` will output `'ифаифаафи'`.
 - str_split    : (split_str, string_to_split)
 - take         : (x, array) takes first x items from array
 - tail         : (x, string) drops first chars from string
+- throttle     : (throttle_ms, fn)
+- unshift
 - varynum
 - vals         : (hash) returns the list of object's values
 

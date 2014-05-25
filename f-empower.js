@@ -10,7 +10,7 @@ var wrapper,
   __slice = [].slice;
 
 wrapper = function() {
-  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, dec, defaults, delay, drop, each, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, tail, take, time, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, delay, drop, each, each2, each3, eachn, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, push, range, read, read_1kv, recurse, reduce, reduce_right, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, unshift, vals, varynum, _clonedeep, _clonedeep2;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
@@ -41,6 +41,9 @@ wrapper = function() {
   apply = function(fn, args_list) {
     return fn.apply(this, args_list);
   };
+  and2 = function(a, b) {
+    return a && b;
+  };
   compose = function() {
     var functions, item, _i, _len;
     functions = arguments;
@@ -63,6 +66,21 @@ wrapper = function() {
   complement = function(predicate) {
     return function() {
       return !(apply(predicate, arguments));
+    };
+  };
+  debounce = function(debounce_timeout, fn) {
+    var exec, last_args, last_result, last_timeout_id;
+    last_result = void 0;
+    last_args = null;
+    last_timeout_id = null;
+    exec = function() {
+      return last_result = apply(fn, last_args);
+    };
+    return function() {
+      last_args = slice(arguments);
+      clearTimeout(last_timeout_id);
+      last_timeout_id = delay(debounce_timeout, exec);
+      return last_result;
     };
   };
   delay = function(delay_ms, fn) {
@@ -103,6 +121,37 @@ wrapper = function() {
     right_args = slice(arguments, 1);
     return function() {
       return apply(fn, cat(apply(list, arguments), right_args));
+    };
+  };
+  throttle = function(throttle_millis, fn) {
+    var last_args, last_result, locked, should_call;
+    locked = false;
+    should_call = false;
+    last_args = null;
+    last_result = null;
+    return function() {
+      var void_main;
+      last_args = slice(arguments);
+      if (locked) {
+        should_call = true;
+        return last_result;
+      } else {
+        locked = true;
+        last_result = fn.apply(null, last_args);
+        void_main = function() {
+          return delay(throttle_millis, function() {
+            if (should_call) {
+              last_result = fn.apply(null, last_args);
+              should_call = false;
+              return void_main();
+            } else {
+              return locked = false;
+            }
+          });
+        };
+        void_main();
+        return last_result;
+      }
     };
   };
   is_array = Array.isArray;
@@ -213,11 +262,48 @@ wrapper = function() {
   drop = function(items_number_to_drop, array_like) {
     return slice(array_like, items_number_to_drop);
   };
-  each = function(fn, array) {
+  each = function() {
+    var args;
+    args = arguments;
+    switch (count(args)) {
+      case 0:
+      case 1:
+        throw new Error("Each doesn't have a signature of that arity");
+        break;
+      case 2:
+        return each2(args[0], args[1]);
+      case 3:
+        return each3(args[0], args[1], args[2]);
+      default:
+        return apply(eachn, args);
+    }
+  };
+  each2 = function(fn, arr) {
     var item, _i, _len;
-    for (_i = 0, _len = array.length; _i < _len; _i++) {
-      item = array[_i];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
       fn(item);
+    }
+  };
+  each3 = function(fn, arr1, arr2) {
+    var i, length_of_shortest;
+    length_of_shortest = Math.min(count(arr1), count(arr2));
+    i = -1;
+    while (++i < length_of_shortest) {
+      fn(arr1[i], arr2[i]);
+    }
+  };
+  eachn = function() {
+    var args, arrs, fn, i, local_apply, local_pluck, shortest_idx;
+    args = arguments;
+    fn = first(args);
+    arrs = rest(args);
+    shortest_idx = apply(Math.min, map2(count, arrs));
+    i = -1;
+    local_pluck = pluck;
+    local_apply = apply;
+    while (++i < shortest_idx) {
+      local_apply(fn, local_pluck(i, arrs));
     }
   };
   first = function(array) {
@@ -410,18 +496,63 @@ wrapper = function() {
     }
     return result;
   };
-  map = function(fn, array) {
+  map = function() {
+    var args;
+    args = arguments;
+    switch (count(args)) {
+      case 0:
+      case 1:
+        throw new Error("Map doesn't have a signature of that arity");
+        break;
+      case 2:
+        return map2(args[0], args[1]);
+      case 3:
+        return map3(args[0], args[1], args[2]);
+      default:
+        return apply(mapn, args);
+    }
+  };
+  map2 = function(fn, arr) {
     var item, _i, _len, _results;
     _results = [];
-    for (_i = 0, _len = array.length; _i < _len; _i++) {
-      item = array[_i];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
       _results.push(fn(item));
+    }
+    return _results;
+  };
+  map3 = function(fn, arr1, arr2) {
+    var i, length_of_shortest, _results;
+    length_of_shortest = Math.min(count(arr1), count(arr2));
+    i = -1;
+    _results = [];
+    while (++i < length_of_shortest) {
+      _results.push(fn(arr1[i], arr2[i]));
+    }
+    return _results;
+  };
+  mapn = function() {
+    var args, arrs, fn, i, local_apply, local_pluck, shortest_idx, _results;
+    args = arguments;
+    fn = first(args);
+    arrs = rest(args);
+    shortest_idx = apply(Math.min, map2(count, arrs));
+    i = -1;
+    local_pluck = pluck;
+    local_apply = apply;
+    _results = [];
+    while (++i < shortest_idx) {
+      _results.push(local_apply(fn, local_pluck(i, arrs)));
     }
     return _results;
   };
   not_contains = complement(contains);
   prelast = function(array) {
     return array[(count(array)) - 2];
+  };
+  push = function(arr, item) {
+    arr.push(item);
+    return arr;
   };
   reduce = function(fn, val, array) {
     var idx;
@@ -546,6 +677,17 @@ wrapper = function() {
   remove_at = function(idx, arr) {
     return splice(arr, idx, 1);
   };
+  repeat = function(times, value) {
+    var _results;
+    _results = [];
+    while (--times) {
+      _results.push(value);
+    }
+    return _results;
+  };
+  rest = function(arr) {
+    return slice(arr, 1);
+  };
   reverse = bind(Function.prototype.call, Array.prototype.reverse);
   splice = bind(Function.prototype.call, Array.prototype.splice);
   second = function(array) {
@@ -568,6 +710,10 @@ wrapper = function() {
   take = function(items_number_to_take, array_like) {
     return slice(array_like, 0, items_number_to_take);
   };
+  unshift = function(arr, item) {
+    arr.unshift(item);
+    return arr;
+  };
   invoke = function(method_name, coll) {
     var args_count, item, method_args, results, _i, _j, _len, _len1;
     results = [];
@@ -587,8 +733,14 @@ wrapper = function() {
     }
     return results;
   };
-  pluck = function(prop_name, coll) {
-    return map(partial(read, prop_name), coll);
+  pluck = function(key, coll) {
+    var item, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = coll.length; _i < _len; _i++) {
+      item = coll[_i];
+      _results.push(item[key]);
+    }
+    return _results;
   };
   varynum = function(numbers, start_with_one) {
     var number, variator, _i, _len, _results;
@@ -827,11 +979,28 @@ wrapper = function() {
     rx_settings = rx_settings || "";
     return new RegExp(rx_str, rx_settings);
   };
-  range = function(length) {
-    var array;
+  range = function(start_idx, end_idx, step) {
+    var array, i, length;
+    switch (count(arguments)) {
+      case 1:
+        end_idx = start_idx;
+        start_idx = 0;
+        step = 1;
+        break;
+      case 2:
+        step = 1;
+        break;
+      case 3:
+        break;
+      default:
+        throw new Error('Bad arguments length, available signatures are for arguments length 1, 2 and 3');
+    }
+    length = Math.ceil((Math.abs(end_idx - start_idx)) / step);
     array = new Array(length);
-    while (--length >= 0) {
-      array[length] = length;
+    start_idx -= step;
+    i = -1;
+    while (++i < length) {
+      array[i] = (start_idx += step);
     }
     return array;
   };
@@ -869,6 +1038,10 @@ wrapper = function() {
     }
     return root;
   };
+  sum2 = function(a, b) {
+    return a + b;
+  };
+  a_sum = partial(reduce, sum2);
   set = function(prop_name, val, hash) {
     return hash[prop_name] = val;
   };
@@ -887,6 +1060,7 @@ wrapper = function() {
     a_map: a_map,
     a_reduce: a_reduce,
     a_reject: a_reject,
+    a_sum: a_sum,
     assign: assign,
     apply: apply,
     bind: bind,
@@ -902,6 +1076,7 @@ wrapper = function() {
     concat: cat,
     contains: contains,
     count: count,
+    debounce: debounce,
     dec: dec,
     defaults: defaults,
     delay: delay,
@@ -965,6 +1140,8 @@ wrapper = function() {
     pipeline: flow,
     pluck: pluck,
     pull: pull,
+    push: push,
+    range: range,
     read: read,
     recurse: recurse,
     reduce: reduce,
@@ -977,6 +1154,8 @@ wrapper = function() {
     remap: remap,
     remove: remove,
     remove_at: remove_at,
+    repeat: repeat,
+    rest: rest,
     reverse: reverse,
     second: second,
     set: set,
@@ -989,9 +1168,13 @@ wrapper = function() {
     str_breplace: str_breplace,
     str_join: str_join,
     str_split: str_split,
+    sum2: sum2,
+    sumn: flow(list, partial(reduce, sum2)),
     take: take,
     tail: tail,
+    throttle: throttle,
     time: time,
+    unshift: unshift,
     vals: vals,
     varynum: varynum
   };

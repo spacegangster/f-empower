@@ -39,6 +39,9 @@ wrapper = ->
   apply = (fn, args_list) ->
     fn.apply(this, args_list)
 
+  and2 = (a, b) ->
+    a && b
+
   # Composes a list of functions into one
   compose = ->
     functions = arguments
@@ -57,6 +60,22 @@ wrapper = ->
   complement = (predicate) ->
     ->
       !(apply predicate, arguments)
+
+  debounce = (debounce_timeout, fn) ->
+    last_result = undefined
+    last_args   = null
+    last_timeout_id = null
+    #
+    exec = ->
+      last_result = (apply fn, last_args)
+    #
+    ->
+      last_args = (slice arguments)
+      #
+      (clearTimeout last_timeout_id)
+      last_timeout_id = (delay debounce_timeout, exec)
+      #
+      last_result
 
   delay = (delay_ms, fn) ->
     (setTimeout fn, delay_ms)
@@ -90,6 +109,35 @@ wrapper = ->
     right_args = (slice arguments, 1)
     ->
       (apply fn, (cat (apply list, arguments), right_args))
+
+  # Executes fn once in the given period
+  # BEWARE: if fn should be executed with context, you should bind it before throttling
+  throttle = (throttle_millis, fn) ->
+    locked      = false
+    should_call = false
+    #
+    last_args   = null
+    last_result = null
+    #
+    ->
+      last_args = (slice arguments)
+      if locked
+        should_call = true
+        last_result
+      else
+        locked = true
+        last_result = fn.apply(null, last_args)
+        void_main = ->
+          delay throttle_millis, ->
+            if should_call
+              last_result = fn.apply(null, last_args)
+              should_call = false
+              void_main()
+            else
+              locked = false
+        void_main()
+        #
+        last_result
 
 
   # ============================================================
@@ -206,14 +254,51 @@ wrapper = ->
   drop = (items_number_to_drop, array_like) ->
     (slice array_like, items_number_to_drop)
 
-  each = (fn, array) ->
-    for item in array
+  # signatures: 
+  #   fn, arr
+  #   fn, arr, arr
+  #   fn, arrs...
+  each = ->
+    args = arguments
+    switch (count args)
+      when 0, 1
+        throw new Error("Each doesn't have a signature of that arity")
+      when 2
+        (each2 args[0], args[1])
+      when 3
+        (each3 args[0], args[1], args[2])
+      else
+        (apply eachn, args)
+
+  # each of arity = 2
+  each2 = (fn, arr) ->
+    for item in arr
       (fn item)
+    return
+
+  # each of arity = 3
+  each3 = (fn, arr1, arr2) ->
+    length_of_shortest = (Math.min (count arr1), (count arr2))
+    i                  = -1
+    while ++i < length_of_shortest
+      (fn arr1[i], arr2[i])
+    return
+
+  # each of arity = n
+  eachn = ->
+    args         = arguments
+    fn           = (first args)
+    arrs         = (rest args)
+    shortest_idx = (apply Math.min, (map2 count, arrs))
+    i            = -1
+    local_pluck  = pluck
+    local_apply  = apply
+    while ++i < shortest_idx
+      (local_apply fn, (local_pluck i, arrs))
     return
 
   first = (array) ->
     array[0]
-
 
   # ARRAY FILTERING FUNCTIONS
   filter_fn = (fn, array) ->
@@ -328,14 +413,54 @@ wrapper = ->
         result.push(arg)
     result
 
-  map = (fn, array) ->
-    for item in array
+  # signatures: 
+  #   fn, arr
+  #   fn, arr, arr
+  #   fn, arrs...
+  map = ->
+    args = arguments
+    switch (count args)
+      when 0, 1
+        throw new Error("Map doesn't have a signature of that arity")
+      when 2
+        (map2 args[0], args[1])
+      when 3
+        (map3 args[0], args[1], args[2])
+      else
+        (apply mapn, args)
+
+  # map of arity = 2
+  map2 = (fn, arr) ->
+    for item in arr
       (fn item)
+
+  # map of arity = 3
+  map3 = (fn, arr1, arr2) ->
+    length_of_shortest = (Math.min (count arr1), (count arr2))
+    i                  = -1
+    while ++i < length_of_shortest
+      (fn arr1[i], arr2[i])
+
+  # map of arity = n
+  mapn = ->
+    args         = arguments
+    fn           = (first args)
+    arrs         = (rest args)
+    shortest_idx = (apply Math.min, (map2 count, arrs))
+    i            = -1
+    local_pluck  = pluck
+    local_apply  = apply
+    while ++i < shortest_idx
+      (local_apply fn, (local_pluck i, arrs))
 
   not_contains = (complement contains)
 
   prelast = (array) ->
     array[(count array) - 2]
+
+  push = (arr, item) ->
+    arr.push(item)
+    arr
 
   # (fn, array)
   # (fn, val, array)
@@ -417,6 +542,14 @@ wrapper = ->
   remove_at = (idx, arr) ->
     (splice arr, idx, 1)
 
+  repeat = (times, value) ->
+    while --times
+      value
+
+  # @return {Array} whole array except the first item
+  rest = (arr) ->
+    (slice arr, 1)
+
   reverse = (bind Function::call, Array::reverse)
 
   splice = (bind Function::call, Array::splice)
@@ -432,6 +565,10 @@ wrapper = ->
 
   take = (items_number_to_take, array_like) ->
     (slice array_like, 0, items_number_to_take)
+
+  unshift = (arr, item) ->
+    arr.unshift(item)
+    arr
 
   # ============================================================
   # CATEGORY: COLLECTIONS
@@ -455,8 +592,9 @@ wrapper = ->
 
     results
 
-  pluck = (prop_name, coll) ->
-    (map (partial read, prop_name), coll)
+  pluck = (key, coll) ->
+    for item in coll
+      item[key]
 
   varynum = (numbers, start_with_one) ->
     variator = start_with_one && -1 || 1
@@ -699,10 +837,31 @@ wrapper = ->
     rx_settings = rx_settings || ""
     new RegExp(rx_str, rx_settings)
 
-  range = (length) ->
-    array = new Array(length)
-    while --length >= 0
-      array[length] = length
+  # signatures:
+  #  end_idx
+  #  start_idx, end_idx
+  #  start_idx, end_idx, step
+  range = (start_idx, end_idx, step) ->
+    switch (count arguments)
+      when 1
+        end_idx   = start_idx
+        start_idx = 0
+        step      = 1
+      when 2
+        step      = 1
+      when 3
+        break
+      else
+        throw new Error(
+          'Bad arguments length,
+          available signatures are for arguments length 1, 2 and 3')
+    #
+    length = (Math.ceil ((Math.abs (end_idx - start_idx)) / step))
+    array  = new Array(length)
+    start_idx -= step
+    i = -1
+    while ++i < length
+      array[i] = (start_idx += step)
     array
 
   read = (prop_name, hash) ->
@@ -729,6 +888,11 @@ wrapper = ->
       (recurse func, son, depth + 1)
     root
 
+  sum2 = (a, b) ->
+    a + b
+
+  a_sum = (partial reduce, sum2)
+
   set = (prop_name, val, hash) ->
     hash[prop_name] = val
 
@@ -746,6 +910,7 @@ wrapper = ->
   , a_map
   , a_reduce
   , a_reject
+  , a_sum
   , assign
   , apply
   , bind
@@ -761,6 +926,7 @@ wrapper = ->
   , concat: cat
   , contains
   , count
+  , debounce
   , dec
   , defaults
   , delay
@@ -824,6 +990,8 @@ wrapper = ->
   , pipeline: flow
   , pluck
   , pull
+  , push
+  , range
   , read
   , recurse
   , reduce
@@ -836,6 +1004,8 @@ wrapper = ->
   , remap
   , remove
   , remove_at
+  , repeat
+  , rest
   , reverse
   , second
   , set
@@ -848,9 +1018,13 @@ wrapper = ->
   , str_breplace
   , str_join
   , str_split
+  , sum2
+  , sumn: (flow list, (partial reduce, sum2))
   , take
   , tail
+  , throttle
   , time
+  , unshift
   , vals
   , varynum }
 
