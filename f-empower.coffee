@@ -643,7 +643,7 @@ wrapper = ->
 
   _clonedeep = (src, dst, stack_dst, stack_src) ->
     for key, val of src
-      if (not_object val)
+      if (not_mergeable val)
         dst[key] = val
       else
         val_idx = (index_of val, stack_src)
@@ -674,7 +674,7 @@ wrapper = ->
       key = cur_keys[cur_key_idx]
       val = cur_src[key]
 
-      if (not_object val)
+      if (not_mergeable val)
         cur_dst[key] = val
       else
         val_idx = (index_of val, stack_src)
