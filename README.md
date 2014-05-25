@@ -57,6 +57,7 @@ map, each. `map` and `each` work with any number of arrays.
 - a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
 - a_reject    : array first `reject`
 - a_sum
+- and2        : (a, b) -> a && b
 - apply       : (fn, args...) applies arguments to function
 - assign      : (dest, src)
 - bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure

@@ -23,6 +23,7 @@ equal_deep = assert.deepEqual;
 
 test_clonedeep2 = function() {
   var cloned, tree;
+  console.log("testing clonedeep2");
   tree = JSON.parse(fs.readFileSync('tree.json', 'utf-8'));
   cloned = clonedeep2(tree);
   return print_json(cloned);
@@ -178,6 +179,8 @@ test_debounce = function(next) {
 test_throttle = function() {
   return console.log("testing throttle");
 };
+
+test_clonedeep2();
 
 test_each();
 

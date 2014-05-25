@@ -22,7 +22,9 @@ print_json = (obj) ->
 equal      = assert.equal
 equal_deep = assert.deepEqual
 
+
 test_clonedeep2 = ->
+  console.log "testing clonedeep2"
   tree = JSON.parse( fs.readFileSync('tree.json', 'utf-8') )
   cloned = (clonedeep2 tree)
   (print_json cloned)
@@ -160,6 +162,7 @@ test_throttle = ->
   console.log "testing throttle"
 
 
+test_clonedeep2()
 test_each()
 test_map()
 test_merge()
@@ -167,5 +170,3 @@ test_is_plain_object()
 
 test_debounce ->
   test_throttle()
-
-#test_clonedeep2()

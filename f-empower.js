@@ -1061,6 +1061,7 @@ wrapper = function() {
     a_reduce: a_reduce,
     a_reject: a_reject,
     a_sum: a_sum,
+    and2: and2,
     assign: assign,
     apply: apply,
     bind: bind,

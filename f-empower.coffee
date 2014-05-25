@@ -911,6 +911,7 @@ wrapper = ->
   , a_reduce
   , a_reject
   , a_sum
+  , and2
   , assign
   , apply
   , bind
