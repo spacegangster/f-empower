@@ -209,9 +209,9 @@ wrapper = ->
   # ============================================================
 
   butlast = (array) ->
-    (slice array, 0, array.length - 1)
+    (slice array, 0, ((count array) - 1))
   
-  # works only with arrays
+  # @param arrays...
   cat = (array) ->
     native_concat.apply(array, (slice arguments, 1))
 
@@ -399,10 +399,10 @@ wrapper = ->
     array.indexOf(item)
 
   last = (list) ->
-    list[list.length - 1]
+    list[(dec (count list))]
 
-  list = (args...) ->
-    args
+  list = ->
+    (count (args = arguments)) && (slice args) || []
 
   # Produces list from arguments and then applies compact
   # function (which removes all falsies)
@@ -596,9 +596,9 @@ wrapper = ->
     for item in coll
       item[key]
 
-  varynum = (numbers, start_with_one) ->
+  varynum = (numbers_arr, start_with_one) ->
     variator = start_with_one && -1 || 1
-    for number in numbers
+    for number in numbers_arr
       variator *= -1
       number * variator
 
@@ -699,8 +699,10 @@ wrapper = ->
 
     dst
     
+  defaults = (dest = {}) ->
+    (reduce defaults2, dest, (rest arguments))
   
-  defaults = (dest = {}, source) ->
+  defaults2 = (dest, source) ->
     for key, val of source
       if ('undefined' == typeof dest[key])
         dest[key] = val
@@ -772,9 +774,9 @@ wrapper = ->
         return false
     true
 
-  pull = (prop_name, hash) ->
-    val = hash[prop_name]
-    delete hash[prop_name]
+  pull = (key, hash) ->
+    val = hash[key]
+    delete hash[key]
     val
 
   vals = (hash) ->
