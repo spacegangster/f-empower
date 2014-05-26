@@ -543,7 +543,7 @@ wrapper = ->
     (splice arr, idx, 1)
 
   repeat = (times, value) ->
-    while --times
+    while --times >= 0
       value
 
   # @return {Array} whole array except the first item
@@ -874,18 +874,19 @@ wrapper = ->
   ###
   This is a function that iterates with another function 
   over the nodes of a tree structure.
-  @param func {function} function that operates on the node.
+  @param fn {function} function that operates on the node.
     signature: son, parent, son_idx, depth
   @param root {hash} a tree whose children lie in the sons
     list (i.e. ordered collection).
   @param depth: indicates depth of recursion
   ###
-  recurse = (func, root, depth = 0) ->
+  recurse = (fn, root, depth = 0) ->
     { sons } = root
+    depth++
     for son, idx in sons
-      (func son, root, idx, depth + 1)
+      (fn son, root, idx, depth)
     for son in sons
-      (recurse func, son, depth + 1)
+      (recurse fn, son, depth)
     root
 
   sum2 = (a, b) ->

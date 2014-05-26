@@ -56,14 +56,14 @@ It is much closer to Clojure.
 - a_each      : array first `each`
 - a_filter    : array first `filter`
 - a_map       : array first `map`
-- a_reduce    : (array, fn) | (array, fn, val) array first `reduce`
+- a_reduce    : (arr, fn) | (arr, fn, val) array first `reduce`
 - a_reject    : array first `reject`
 - a_sum
 - and2        : (a, b) -> a && b
 - apply       : (fn, args...) applies arguments to function
 - assign      : (dest, src)
 - bind        : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
-- butlast     : (array) slice all but last elements of array
+- butlast     : (arr) slice all but last elements of array
 - cat
 - clone
 - clonedeep   : deep clone for data structures, able to clone structures with circular references
@@ -76,17 +76,17 @@ It is much closer to Clojure.
 - debounce    : (debounce_timeout, fn)
 - defaults    : (dest, src)
 - delay       : (delay_ms, fn) like `setTimeout`, but the delay parameter is specified before fn
-- drop        : (x, array) drops first x items from array
+- drop        : (x, arr) drops first x items from array
 - each
 - extend      -> assign
 - fastbind    -> bind
-- filter      : (criteria(fn/obj/string), array)
+- filter      : (criteria(fn/obj/string), arr)
 - first
 - flow        : natural compose
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 - head         : (x, string) takes first x chars from string
-- index_of     : (item, array)
-- invoke       : (method_name, method_args..., array)
+- index_of     : (item, arr)
+- invoke       : (method_name, method_args..., arr)
 - is_array     : predicate that tests if object is array
 - is_defined
 - is_empty     : (array_like) checks some array like thing for length == 0
@@ -99,7 +99,7 @@ It is much closer to Clojure.
 - list         : returns a list composed from arguments, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
 - merge        : (dest, src) deep merge of two objects
-- o_map        : (hash, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
+- o_map        : (obj, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
 - o_match      : (criteria_object, matched_object) checks properties of matched_object to match every
 property inside criteria_object.
 - map          : (fn, arrs...)
@@ -117,36 +117,36 @@ property inside criteria_object.
 - not_zero
 - partial      : (fn, args...)
 - pipeline -> flow
-- pluck        : (prop_name, coll)
-- pull
-- push
+- pluck        : (key, coll)
+- pull         : 
+- push         : (arr, item)
 - range        : (start_val, end_val, step)
-- read         : (prop_name, hash) - will read a property with specified name
-- recurse
-- reduce       : (fn, array) | (fn, val, array)
-- reject       : (fn, array)
+- read         : (key, obj) - will read a property with specified name
+- recurse      : (fn(son, parent, son_idx, son_depth), root, depth) recurses a tree where 
+- reduce       : (fn, arr) | (fn, val, arr)
+- reject       : (fn, arr)
 - repeat       : (times, val)
 - rest         : (arr) return all but first elements
-- remap
-- remove       : (item, array) removes item from array based on reference equality
-- remove_at    : (idx, array) removes and returns one element at specified index from array
-- second
-- set_difference
-- set_symmetric_difference
-- slice        : (array [, start_idx, end_idx]) same as standard JS slice
+- remap        : (fn, arr) rewrites each element in array, using fn
+- remove       : (item, arr) removes item from array based on reference equality
+- remove_at    : (idx, arr) removes and returns one element at specified index from array
+- second       : (array_like)
+- set_difference : (arr1, arr2) -> items of first array which are not present in second array
+- set_symmetric_difference (arr1, arr2) -> [(set_difference arr1, arr2), (set_difference arr2, arr1)]
+- slice        : (arr [, start_idx, end_idx]) same as standard JS slice
 - space        : (strings...) join strings with a whitespace
-- splice       : (array [, start_idx, remove_count, new_elements...])
+- splice       : (arr [, start_idx, remove_count, new_elements...])
 - str          : (strings...) - join any number of strings into one
 - str_breplace : (replace_map, string) - string bulk character replace.
 Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
 and string `'bafbaffab'` will output `'ифаифаафи'`.
-- str_join
+- str_join     : (join_str, Array<string>)
 - str_split    : (split_str, string_to_split)
-- take         : (x, array) takes first x items from array
+- take         : (x, arr) takes first x items from array
 - tail         : (x, string) drops first chars from string
 - throttle     : (throttle_ms, fn)
-- unshift
+- unshift      : (arr, item)
 - varynum
-- vals         : (hash) returns the list of object's values
+- vals         : (obj) returns the list of object's values
 
 ## License : MIT
