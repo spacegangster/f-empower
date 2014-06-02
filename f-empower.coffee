@@ -11,6 +11,7 @@ wrapper = ->
     NOT_FUNCTION              : new TypeError('Something is not function')
     UNEXPECTED_TYPE           : new TypeError('Unexpected type')
   
+  to_string = Object::toString
   native_concat = Array::concat
   native_slice  = Array::slice
 
@@ -168,7 +169,7 @@ wrapper = ->
 
   is_plain_object = (subj) ->
     is_defnd = 'undefined' != typeof subj
-    is_objct = is_defnd && ('[object Object]' == toString.call(subj)) && !(is_function subj)
+    is_objct = is_defnd && ('[object Object]' == to_string.call(subj)) && !(is_function subj)
     if (!is_objct ||
          (!hasOwnProperty.call(subj, 'constructor') &&
          ((ctor = subj.constructor) && (is_function ctor) && !(ctor instanceof ctor))))
