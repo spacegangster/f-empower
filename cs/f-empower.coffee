@@ -1,16 +1,22 @@
-###
-  F-EMPOWER
-  A set of functions to harness the power functional programming in JS.
-  Author: Ivan Fedorov <sharp.maestro@gmail.com>
-  License: MIT
-###
-wrapper = ->
+define ->
+  ###
+    F-EMPOWER
+    A set of functions to harness the power functional programming in JS.
+    Author: Ivan Fedorov <sharp.maestro@gmail.com>
+    License: MIT
+  ###
+
+  # use 64k as large array size threshold
+  # small arrays can be static size
+  # large array should be dynamically sized
+  THRESHOLD_LARGE_ARRAY_SIZE = 64000
+
 
   Errors =
     NO_KEY_VALUE_PAIR_IN_HASH : new Error('No key value pair in a criterion hash')
     NOT_FUNCTION              : new TypeError('Something is not function')
     UNEXPECTED_TYPE           : new TypeError('Unexpected type')
-  
+
   to_string = Object::toString
   native_concat = Array::concat
   native_slice  = Array::slice
@@ -162,8 +168,6 @@ wrapper = ->
   is_number = (candidate) ->
     'number' == typeof candidate
 
-  # TODO check usages on conflict with old typeof predicate
-  # FIXME complete merge function and clonedeep
   is_object = (candidate) ->
     'object' == typeof candidate
 
@@ -430,29 +434,51 @@ wrapper = ->
       else
         (apply mapn, args)
 
+  # @private
+  make_array = (len) ->
+    len > THRESHOLD_LARGE_ARRAY_SIZE &&
+      [] ||
+      new Array(len)
+
+
   # map of arity = 2
   map2 = (fn, arr) ->
-    for item in arr
-      (fn item)
+    i      = -1
+    len    = arr.length
+    result = (make_array len)
+    #
+    while ++i < len
+      result.push((fn arr[i]))
+    #
+    result
 
   # map of arity = 3
   map3 = (fn, arr1, arr2) ->
     length_of_shortest = (Math.min (count arr1), (count arr2))
     i                  = -1
+    result             = (make_array length_of_shortest)
+    #
     while ++i < length_of_shortest
-      (fn arr1[i], arr2[i])
+      result.push((fn arr1[i], arr2[i]))
+    #
+    result
 
   # map of arity = n
+  # fn, arr1, arr2, arr3, etc.
   mapn = ->
     args         = arguments
     fn           = (first args)
     arrs         = (rest args)
-    shortest_idx = (apply Math.min, (map2 count, arrs))
+    shortest_len = (apply Math.min, (map2 count, arrs))
     i            = -1
     local_pluck  = pluck
     local_apply  = apply
-    while ++i < shortest_idx
-      (local_apply fn, (local_pluck i, arrs))
+    result       = (make_array shortest_len)
+    #
+    while ++i < shortest_len
+      result.push((local_apply fn, (local_pluck i, arrs)))
+    #
+    result
 
   not_contains = (complement contains)
 
@@ -478,16 +504,18 @@ wrapper = ->
     val
 
   # (fn, array)
-  # (fn, val, array) # TODO finish
-  reduce_right = (fn, val, array) ->
-    idx = (count array)
-    if !array && (is_array val)
-      array = val
-      val = (fn (last array), (prelast array))
-      idx = idx - 2
+  # (fn, val, array)
+  reducer = (fn, val, arr) ->
+    idx = -1
+    if !arr && (is_array val)
+      arr = val
+      val = (fn (last arr), (prelast arr))
+      idx = (count arr) - 2
+    else
+      idx = (count arr)
     #
-    while --idx >= 0
-      val = (fn val, array[idx])
+    while --idx > -1
+      val = (fn val, arr[idx])
     #
     val
 
@@ -769,9 +797,10 @@ wrapper = ->
     for key in keys_list
       hash[key]
 
-  o_match = (criteria_obj, matched) ->
+  # tests subject to match the criteria object
+  o_match = (criteria_obj, subject) ->
     for key, val of criteria_obj
-      if matched[key] != val
+      if subject[key] != val
         return false
     true
 
@@ -907,135 +936,133 @@ wrapper = ->
     time_end - time_start
 
   # EXPORTS
-  { a_contains
-  , a_each
-  , a_filter
-  , a_index_of
-  , a_map
-  , a_reduce
-  , a_reject
-  , a_sum
-  , and2
-  , assign
-  , apply
-  , bind
-  , butlast
-  , cat
-  , clone
-  , clonedeep
-  , clonedeep2: _clonedeep2
-  , comma
-  , compact
-  , compose
-  , complement
-  , concat: cat
-  , contains
-  , count
-  , debounce
-  , dec
-  , defaults
-  , delay
-  , detect: find
-  , drop
-  , each
-  , extend: assign
-  , fastbind: bind
-  , flow
-  , first
-  , filter
-  , filter_fn
-  , filter_obj
-  , filter_obj_1kv
-  , filter_obj_2kv
-  , filter_prop
-  , find
-  , find_index
-  , find_index_fn
-  , find_index_prop
-  , find_index_obj_1kv
-  , find_index_obj_2kv
-  , find_index_obj
-  , get: read
-  , head
-  , inc
-  , index_of
-  , invoke
-  , is_array
-  , is_defined
-  , is_empty
-  , is_function
-  , is_mergeable
-  , is_number
-  , is_object
-  , is_plain_object
-  , is_zero
-  , jquery_wrap_to_array
-  , keys
-  , last
-  , list
-  , list_compact
-  , map
-  , match
-  , merge
-  , mk_regexp
-  , multicall
-  , no_operation
-  , noop: no_operation
-  , not_array
-  , not_defined
-  , not_empty
-  , not_function
-  , not_number
-  , not_object
-  , not_zero
-  , o_map
-  , o_match
-  , partial
-  , partialr
-  , pipeline: flow
-  , pluck
-  , pull
-  , push
-  , range
-  , read
-  , recurse
-  , reduce
-  , reject
-  , reject_fn
-  , reject_obj
-  , reject_obj_1kv
-  , reject_obj_2kv
-  , reject_prop
-  , remap
-  , remove
-  , remove_at
-  , repeat
-  , rest
-  , reverse
-  , second
-  , set
-  , set_difference
-  , set_symmetric_difference
-  , slice
-  , space
-  , splice
-  , str
-  , str_breplace
-  , str_join
-  , str_split
-  , sum2
-  , sumn: (flow list, (partial reduce, sum2))
-  , take
-  , tail
-  , throttle
-  , time
-  , unshift
-  , vals
-  , varynum }
+  exports = module && module.exports || {}
+  #
+  exports.a_contains = a_contains
+  exports.a_each = a_each
+  exports.a_filter = a_filter
+  exports.a_index_of = a_index_of
+  exports.a_map = a_map
+  exports.a_reduce = a_reduce
+  exports.a_reject = a_reject
+  exports.a_sum = a_sum
+  exports.and2 = and2
+  exports.assign = assign
+  exports.apply = apply
+  exports.bind = bind
+  exports.butlast = butlast
+  exports.cat = cat
+  exports.clone = clone
+  exports.clonedeep = clonedeep
+  exports.clonedeep2 = _clonedeep2
+  exports.comma = comma
+  exports.compact = compact
+  exports.compose = compose
+  exports.complement = complement
+  exports.concat = cat
+  exports.contains = contains
+  exports.count = count
+  exports.debounce = debounce
+  exports.dec = dec
+  exports.defaults = defaults
+  exports.delay = delay
+  exports.detect = find
+  exports.drop = drop
+  exports.each = each
+  exports.extend = assign
+  exports.fastbind = bind
+  exports.flow = flow
+  exports.first = first
+  exports.filter = filter
+  exports.filter_fn = filter_fn
+  exports.filter_obj = filter_obj
+  exports.filter_obj_1kv = filter_obj_1kv
+  exports.filter_obj_2kv = filter_obj_2kv
+  exports.filter_prop = filter_prop
+  exports.find = find
+  exports.find_index = find_index
+  exports.find_index_fn = find_index_fn
+  exports.find_index_prop = find_index_prop
+  exports.find_index_obj_1kv = find_index_obj_1kv
+  exports.find_index_obj_2kv = find_index_obj_2kv
+  exports.find_index_obj = find_index_obj
+  exports.get = read
+  exports.head = head
+  exports.inc = inc
+  exports.index_of = index_of
+  exports.invoke = invoke
+  exports.is_array = is_array
+  exports.is_defined = is_defined
+  exports.is_empty = is_empty
+  exports.is_function = is_function
+  exports.is_mergeable = is_mergeable
+  exports.is_number = is_number
+  exports.is_object = is_object
+  exports.is_plain_object = is_plain_object
+  exports.is_zero = is_zero
+  exports.jquery_wrap_to_array = jquery_wrap_to_array
+  exports.keys = keys
+  exports.last = last
+  exports.list = list
+  exports.list_compact = list_compact
+  exports.map = map
+  exports.match = match
+  exports.merge = merge
+  exports.mk_regexp = mk_regexp
+  exports.multicall = multicall
+  exports.no_operation = no_operation
+  exports.noop = no_operation
+  exports.not_array = not_array
+  exports.not_defined = not_defined
+  exports.not_empty = not_empty
+  exports.not_function = not_function
+  exports.not_number = not_number
+  exports.not_object = not_object
+  exports.not_zero = not_zero
+  exports.o_map = o_map
+  exports.o_match = o_match
+  exports.partial = partial
+  exports.partialr = partialr
+  exports.pipeline = flow
+  exports.pluck = pluck
+  exports.pull = pull
+  exports.push = push
+  exports.range = range
+  exports.read = read
+  exports.recurse = recurse
+  exports.reduce = reduce
+  exports.reducer = reducer
+  exports.reject = reject
+  exports.reject_fn = reject_fn
+  exports.reject_obj = reject_obj
+  exports.reject_obj_1kv = reject_obj_1kv
+  exports.reject_obj_2kv = reject_obj_2kv
+  exports.reject_prop = reject_prop
+  exports.remap = remap
+  exports.remove = remove
+  exports.remove_at = remove_at
+  exports.repeat = repeat
+  exports.rest = rest
+  exports.reverse = reverse
+  exports.second = second
+  exports.set = set
+  exports.set_difference = set_difference
+  exports.set_symmetric_difference = set_symmetric_difference
+  exports.slice = slice
+  exports.space = space
+  exports.splice = splice
+  exports.str = str
+  exports.str_breplace = str_breplace
+  exports.str_join = str_join
+  exports.str_split = str_split
+  exports.sum2 = sum2
+  exports.sumn = (flow list, (partial reduce, sum2))
+  exports.take = take
+  exports.tail = tail
+  exports.throttle = throttle
+  exports.time = time
+  exports.unshift = unshift
+  exports.vals = vals
+  exports.varynum = varynum
 
-# AMD loader support
-if (('undefined' != typeof define) && define.amd)
-  (define wrapper)
-# CommonJS support
-else if (('undefined' != typeof module) && module.exports)
-  module.exports = wrapper()
+  exports

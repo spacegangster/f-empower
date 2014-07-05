@@ -1,27 +1,29 @@
-functions = require './f-empower'
+f_empower = require '../cs-cj/f-empower'
 fs        = require 'fs'
 assert    = require 'assert'
-newline = ->
-  console.log ""
+tooling   = require './tooling'
 
-{ clonedeep
+{ equal
+  equal_deep
+  log
+  newline
+  print_json
+  testing } = tooling
+
+{ bind
+  clonedeep
   clonedeep2
-  debounce
   each
+  index_of
   is_plain_object
+  is_function
   inc
   map
   merge
+  partial
   push
   slice
-  sumn
-  throttle } = functions
-
-print_json = (obj) ->
-  console.log JSON.stringify(obj, null, 2)
-
-equal      = assert.equal
-equal_deep = assert.deepEqual
+  sumn } = f_empower
 
 # Classes used in some tests
 class Snake
@@ -116,7 +118,7 @@ test_map = ->
   
 
 test_merge = ->
-
+  testing "merge"
   #1
   b = {
     foo: 'bar'
@@ -164,58 +166,18 @@ test_merge = ->
         , clojure: true
         , javascript: true }
     , array: [ "don't", "also", "be", "merged" ] } )
+  log "ok"
 
 
 test_is_plain_object = ->
+  testing "is_plain_object"
+  #
   sammy = new Python(4)
   
   (assert !(is_plain_object sammy))
   (assert (is_plain_object {editor: 'vim'}))
-
-test_debounce = (next) ->
-  console.log "testing debounce"
-  # HELPER SECTION
-  a = 0
-  fn = ->
-    ++a * 2
-  # INIT 
-  dfn = (debounce 100, fn)
   #
-  (equal dfn(), undefined)
-  setTimeout ->
-    (equal dfn(), 2)
-  , 100
-  setTimeout ->
-    (equal dfn(), 4)
-    console.log "ok"
-    newline()
-    next && next()
-  , 202
-
- 
-test_throttle = (next) ->
-  console.log "testing throttle"
-  # HELPER SECTION
-  sum = (a, b) ->
-    a + b
-  # SETUP
-  tsum = (throttle 100, sum)
-  #
-  (equal (tsum 1, 1), 2)
-  (equal (tsum 2, 2), 2) # probably the worst sum function in the world, lol
-  setTimeout ->
-    (equal (tsum 3, 3), 2)
-  , 50
-  setTimeout ->
-    (equal (tsum 4, 4), 6)
-  , 100
-  setTimeout ->
-    (equal (tsum 1, 1), 8)
-    console.log "ok"
-    newline()
-    next && next()
-  , 202
-
+  log "ok"
 
 
 test_clonedeep()
@@ -235,6 +197,3 @@ newline()
 
 test_is_plain_object()
 newline()
-
-test_debounce ->
-  test_throttle()

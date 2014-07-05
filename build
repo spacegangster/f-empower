@@ -1,0 +1,9 @@
+#! /bin/sh
+
+rm -r cs-cj/
+mkdir cs-cj/
+
+fella -o cs-cj/f-empower.coffee cs/f-empower.coffee
+
+coffee -o dist/ -cb cs/
+coffee -o dist-cj/ -cb cs-cj/

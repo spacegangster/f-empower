@@ -1,8 +1,9 @@
 # F-EMPOWER
 ## Utility functions designed for functional programming and composition
-Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism is emphasized).
+Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
+is emphasized where possible).
 
-Inspired by Clojure and Underscore.
+Inspired by Clojure standard functions and Underscore.
 
 CommonJS and AMD loaders are supported.
 

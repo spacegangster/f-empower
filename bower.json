@@ -1,18 +1,18 @@
-{
-  "name"        : "f-empower"
-, "version"     : "3.3.2"
+{ "name"        : "f-empower"
+, "version"     : "3.4.0"
 , "description" : "Utility functions designed for functional programming and composition"
 
 , "keywords"    : [ "functional"
                   , "functional programming"
                   , "functions"
                   , "utility"
-                  , "utility belt" ]
+                  , "utility belt"
+                  , "underscore"
+                  , "lodash" ]
 
 , "repository"  : { "type" : "git"
                   , "url"  : "https://github.com/ognivo/f-empower" }
 
 , "authors"     : [ "Ivan Fedorov <sharp.maestro@gmail.com>" ]
 , "license"     : "MIT"
-, "main"        : "f-empower.js"
-}
+, "main"        : "dist/f-empower.js" }
