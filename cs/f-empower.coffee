@@ -442,7 +442,7 @@ define ->
   # map of arity = 2
   map2 = (fn, arr) ->
     i      = -1
-    len    = arr.length
+    len    = (count arr)
     result = (make_array len)
     #
     while ++i < len
@@ -487,18 +487,19 @@ define ->
     arr.push(item)
     arr
 
-  # (fn, array)
-  # (fn, val, array)
+  # (fn(memo, cur), array)
+  # (fn(memo, cur), val, array)
   reduce = (fn, val, array) ->
     idx = -1
     if !array && (is_array val)
       array = val
       val = (fn (first array), (second array))
       idx = 1
-
-    while ++idx < array.length
+    len = (count array)
+    #
+    while ++idx < len
       val = (fn val, array[idx])
-
+    #
     val
 
   # (fn, array)
@@ -605,23 +606,36 @@ define ->
   # @param {var_args...} [method_args]
   # @param {Array} coll
   invoke = (method_name, coll) ->
-    results = []
     args_count = (count arguments)
-
+    #
     if args_count >= 3
       method_args = (slice arguments, 1, args_count - 1)
       coll = (last arguments)
-      for item in coll
-        results.push( item[method_name].apply(item, method_args) )
+    #
+    len = (count coll)
+    results = (make_array len)
+    i = -1
+    #
+    if args_count >= 3
+      while ++i < len
+        item = coll[i]
+        results[i] = item[method_name].apply(item, method_args)
     else
-      for item in coll
-        results.push( item[method_name]() )
-
+      while ++i < len
+        item = coll[i]
+        results[i] = item[method_name]()
+    #
     results
 
   pluck = (key, coll) ->
-    for item in coll
-      item[key]
+    len    = (count coll)
+    result = (make_array len)
+    i      = -1
+    #
+    while ++i < len
+      result[i] = coll[i][key]
+    #
+    result
 
   varynum = (numbers_arr, start_with_one) ->
     variator = start_with_one && -1 || 1
@@ -858,7 +872,7 @@ define ->
     num + 1
 
   jquery_wrap_to_array = (jquery_wrap) ->
-    wrap_len = jquery_wrap.length
+    wrap_len = (count jquery_wrap)
     i = -1
     while ++i < wrap_len
       jquery_wrap.eq(i)
@@ -1020,6 +1034,7 @@ define ->
   exports.o_map = o_map
   exports.o_match = o_match
   exports.partial = partial
+  exports.pt = partial
   exports.partialr = partialr
   exports.pipeline = flow
   exports.pluck = pluck

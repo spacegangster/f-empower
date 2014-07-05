@@ -1,5 +1,5 @@
 { "name"        : "f-empower"
-, "version"     : "3.4.1"
+, "version"     : "3.4.2"
 , "description" : "Utility functions designed for functional programming and composition"
 
 , "keywords"    : [ "functional"

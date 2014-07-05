@@ -7,3 +7,7 @@ fella -o cs-cj/f-empower.coffee cs/f-empower.coffee
 
 coffee -o dist/ -cb cs/
 coffee -o dist-cj/ -cb cs-cj/
+
+uglifyjs -m -o dist/f-empower.min.js dist/f-empower.js
+
+gzip -k9 dist/f-empower.min.js

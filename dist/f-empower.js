@@ -516,7 +516,7 @@ define(function() {
   map2 = function(fn, arr) {
     var i, len, result;
     i = -1;
-    len = arr.length;
+    len = count(arr);
     result = make_array(len);
     while (++i < len) {
       result[i] = fn(arr[i]);
@@ -557,14 +557,15 @@ define(function() {
     return arr;
   };
   reduce = function(fn, val, array) {
-    var idx;
+    var idx, len;
     idx = -1;
     if (!array && (is_array(val))) {
       array = val;
       val = fn(first(array), second(array));
       idx = 1;
     }
-    while (++idx < array.length) {
+    len = count(array);
+    while (++idx < len) {
       val = fn(val, array[idx]);
     }
     return val;
@@ -719,32 +720,37 @@ define(function() {
     return arr;
   };
   invoke = function(method_name, coll) {
-    var args_count, item, method_args, results, _i, _j, _len, _len1;
-    results = [];
+    var args_count, i, item, len, method_args, results;
     args_count = count(arguments);
     if (args_count >= 3) {
       method_args = slice(arguments, 1, args_count - 1);
       coll = last(arguments);
-      for (_i = 0, _len = coll.length; _i < _len; _i++) {
-        item = coll[_i];
-        results.push(item[method_name].apply(item, method_args));
+    }
+    len = count(coll);
+    results = make_array(len);
+    i = -1;
+    if (args_count >= 3) {
+      while (++i < len) {
+        item = coll[i];
+        results[i] = item[method_name].apply(item, method_args);
       }
     } else {
-      for (_j = 0, _len1 = coll.length; _j < _len1; _j++) {
-        item = coll[_j];
-        results.push(item[method_name]());
+      while (++i < len) {
+        item = coll[i];
+        results[i] = item[method_name]();
       }
     }
     return results;
   };
   pluck = function(key, coll) {
-    var item, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = coll.length; _i < _len; _i++) {
-      item = coll[_i];
-      _results.push(item[key]);
+    var i, len, result;
+    len = count(coll);
+    result = make_array(len);
+    i = -1;
+    while (++i < len) {
+      result[i] = coll[i][key];
     }
-    return _results;
+    return result;
   };
   varynum = function(numbers_arr, start_with_one) {
     var number, variator, _i, _len, _results;
@@ -974,7 +980,7 @@ define(function() {
   };
   jquery_wrap_to_array = function(jquery_wrap) {
     var i, wrap_len, _results;
-    wrap_len = jquery_wrap.length;
+    wrap_len = count(jquery_wrap);
     i = -1;
     _results = [];
     while (++i < wrap_len) {
@@ -1145,6 +1151,7 @@ define(function() {
   exports.o_map = o_map;
   exports.o_match = o_match;
   exports.partial = partial;
+  exports.pt = partial;
   exports.partialr = partialr;
   exports.pipeline = flow;
   exports.pluck = pluck;
