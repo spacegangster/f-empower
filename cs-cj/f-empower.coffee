@@ -435,9 +435,7 @@ map = ->
 
 # @private
 make_array = (len) ->
-  len > THRESHOLD_LARGE_ARRAY_SIZE &&
-    [] ||
-    new Array(len)
+  len > THRESHOLD_LARGE_ARRAY_SIZE && [] || new Array(len)
 
 
 # map of arity = 2
@@ -447,7 +445,7 @@ map2 = (fn, arr) ->
   result = (make_array len)
   #
   while ++i < len
-    result.push((fn arr[i]))
+    result[i] = (fn arr[i])
   #
   result
 
@@ -458,7 +456,7 @@ map3 = (fn, arr1, arr2) ->
   result             = (make_array length_of_shortest)
   #
   while ++i < length_of_shortest
-    result.push((fn arr1[i], arr2[i]))
+    result[i] = (fn arr1[i], arr2[i])
   #
   result
 
@@ -475,7 +473,7 @@ mapn = ->
   result       = (make_array shortest_len)
   #
   while ++i < shortest_len
-    result.push((local_apply fn, (local_pluck i, arrs)))
+    result[i] = (local_apply fn, (local_pluck i, arrs))
   #
   result
 
@@ -503,7 +501,7 @@ reduce = (fn, val, array) ->
   val
 
 # (fn, array)
-# (fn, val, array) # TODO finish
+# (fn, val, array)
 reducer = (fn, val, arr) ->
   idx = -1
   if !arr && (is_array val)

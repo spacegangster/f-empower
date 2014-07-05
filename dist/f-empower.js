@@ -519,7 +519,7 @@ define(function() {
     len = arr.length;
     result = make_array(len);
     while (++i < len) {
-      result.push(fn(arr[i]));
+      result[i] = fn(arr[i]);
     }
     return result;
   };
@@ -529,7 +529,7 @@ define(function() {
     i = -1;
     result = make_array(length_of_shortest);
     while (++i < length_of_shortest) {
-      result.push(fn(arr1[i], arr2[i]));
+      result[i] = fn(arr1[i], arr2[i]);
     }
     return result;
   };
@@ -544,7 +544,7 @@ define(function() {
     local_apply = apply;
     result = make_array(shortest_len);
     while (++i < shortest_len) {
-      result.push(local_apply(fn, local_pluck(i, arrs)));
+      result[i] = local_apply(fn, local_pluck(i, arrs));
     }
     return result;
   };
