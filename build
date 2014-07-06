@@ -10,4 +10,4 @@ coffee -o dist-cj/ -cb cs-cj/
 
 uglifyjs -m -o dist/f-empower.min.js dist/f-empower.js
 
-gzip -k9 dist/f-empower.min.js
+gzip -fk9 dist/f-empower.min.js

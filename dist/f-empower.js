@@ -1067,7 +1067,7 @@ define(function() {
     time_end = Date.now();
     return time_end - time_start;
   };
-  exports = module && module.exports || {};
+  exports = ("undefined" !== typeof module) && module.exports || {};
   exports.a_contains = a_contains;
   exports.a_each = a_each;
   exports.a_filter = a_filter;

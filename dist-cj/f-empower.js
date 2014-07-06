@@ -1207,7 +1207,7 @@ time = function(fn) {
   return time_end - time_start;
 };
 
-exports = module && module.exports || {};
+exports = ("undefined" !== typeof module) && module.exports || {};
 
 exports.a_contains = a_contains;
 

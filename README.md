@@ -1,5 +1,5 @@
 # f-empower
-### Utility functions designed for functional programming and composition
+#### Utility functions designed for functional programming and composition
 Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
 is emphasized where possible).
 
