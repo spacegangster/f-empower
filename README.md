@@ -115,7 +115,7 @@ map(
 
 - push         : (arr, item)
 - reduce       : (fn, arr) | (fn, val, arr)
-```coffeescript
+```coffee
 reduce(and2, true, [true, null, false]) # false
 reduce(sum2, [1, 2, 3]) # 6
 
