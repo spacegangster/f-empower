@@ -1,3 +1,5 @@
+"use strict"
+
 ###
   F-EMPOWER
   A set of functions to harness the power functional programming in JS.

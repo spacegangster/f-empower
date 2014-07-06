@@ -1,5 +1,5 @@
-# F-EMPOWER
-## Utility functions designed for functional programming and composition
+# f-empower
+### Utility functions designed for functional programming and composition
 Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
 is emphasized where possible).
 
@@ -8,11 +8,14 @@ Inspired by Clojure standard functions and Underscore.
 CommonJS and AMD loaders are supported.
 
 ## Install
-`npm install f-empower`
+#### using npm
+`npm install -s f-empower`
+#### using Bower
+`bower install -S f-empower`
 
 ## Use
-### NodeJS
-```coffeescript
+### CommonJS (~ NodeJS)
+```coffee
 functions = require "f-empower"
 { apply
   bind }  = functions
@@ -22,11 +25,11 @@ push_to_array1 = (bind array1.push, array1)
 (apply push_to_array1, [ 4, 5, 6 ])
 console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
 ```
-### Browser (require.js)
-```coffeescript
+### AMD (~ RequireJS)
+```coffee
 require.config
   paths:
-    'f-empower': 'path/to/f-empower'
+    'f-empower': 'path/to/f-empower/dist/f-empower'
 
 define [ 'f-empower' ], (functions) ->
   { apply
@@ -37,6 +40,19 @@ define [ 'f-empower' ], (functions) ->
   (apply push_to_array1, [ 4, 5, 6 ])
   console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
 ```
+### Browser raw (badly supported, not recommended, questionable)
+```html
+<!-- including this -->
+<script src='path/to/f-empower/dist-cj/f-empower'></script>
+<!-- gives you exports object with all of the functions -->
+<!-- and a lot of global pollution -->
+<script>
+console.log(typeof exports.map)
+// function
+</script>
+```
+However you could use AMD module from `dist/f-empower`,
+you just need to define a `define` function before it
 
 ## Compared to Underscore / Lodash
 As a new thing f-empower doesn't have the functional multitude of Lodash or Underscore.
@@ -46,11 +62,18 @@ which converts a jQuery wrap, into array of jQuery wraps.
 It is not so polished in terms of speed as Lodash. Although it respects functional 
 monomorphism.
 
-It is much closer to Clojure.
+It is much closer to Clojure, though here is no lazyness or immutability.
 
 ### Features not in Underscore
-- `map`, `each`. `map` and `each` work with any number of arrays.
+- `map`, `each`. `map` and `each` work with arbitrary number of arrays.
 - `clonedeep2`, `merge` -- operate on deep structures, staying non-recursive.
+
+## TODO
+- Bencharks
+- More tests
+- Modularization:
+  - Define a smaller core set of functions
+  - Write new modules
 
 ## Function index
 ### Array
@@ -74,9 +97,32 @@ It is much closer to Clojure.
 - last         : (arr) returns last item from array
 - list         : (items...) returns an array composed from items, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
-- map          : (fn, arrs...)
+- map          : (fn, arrs...) map that works with arbitrary number of arrays
+```coffeescript
+map(
+    Array,
+    [0, 1, 2, 3],
+    ['zero', 'one' , 'two', 'three'], # en
+    ['ноль', 'один', 'два', 'три'  ], # ru
+    ['zero', 'uno' , 'due', 'tre'  ]  # it
+)
+# [ [ 0, 'zero ', 'ноль', 'zero' ],
+#   [ 1, 'one'  , 'один', 'uno'  ],
+#   [ 2, 'two'  , 'два' , 'due'  ],
+#   [ 3, 'three', 'три' , 'tre'  ] ]
+```
+
 - push         : (arr, item)
 - reduce       : (fn, arr) | (fn, val, arr)
+```coffeescript
+reduce(and2, true, [true, null, false]) # false
+reduce(sum2, [1, 2, 3]) # 6
+
+reduce(bind(console.log, console), [1, 2, 3])
+# 1 2
+# undefined, 3
+```
+
 - reject       : (fn, arr)
 - rest         : (arr) return all but first elements
 - remap        : (fn, arr) rewrites each element in array, using fn
@@ -96,54 +142,84 @@ It is much closer to Clojure.
 - apply        : (fn, args...) applies arguments to function
 - bind         : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
 - compose      : (fn...) composes functions
+```coffeescript
+square = (x) -> x * x
+add2   = (x) -> x + 2
+mult2  = (x) -> x * 2
+all_math = compose(mult2, square, add2)
+all_math( 0 ) # 8
+# equivalent of
+mult2( square( add2( 0 ) ) ) # 8 
+```
+
 - complement   : (predicate_fn) inverts predicate function
 - debounce     : (debounce_timeout, fn)
 - delay        : (delay_ms, fn) `setTimeout` with flipped signature
-- fastbind     -> bind
-- flow         : natural compose
-- multicall    : (functions...) returns a function that will call the all of the functions, when called
+- multicall    : (fn...) returns a function that will call the all of the functions, when called
 - partial      : (fn, args...)
-- pipeline -> flow
+- partialr     : (fn, args...) partial right
+```coffee
+map_my_set = partialr(map, [1, 2, 3], ['one', 'two', 'three'])
+map_my_set(list) # [[1, 'one'], [2, 'two'], [3, 'three']]
+```
+- pipeline     : (fn...) natural compose
+```coffee
+steps = pipeline(step1, step2, step3)
+steps()
+# equivalent:
+step3( step2( step1() ) )
+```
+- pt           : short for partial
 - throttle     : (throttle_ms, fn)
 - no_operation : function that does nothing, and returns undefined
 - noop -> no_operation
 
 ### Predicate
 - and2         : (a, b) -> a && b
-- is_array     : predicate that tests if object is array
-- is_defined   :
+- is_array     : (item) predicate that tests if object is array
+- is_defined   : (item)
 - is_empty     : (array_like) checks some array like thing for length == 0
-- is_function  :
-- is_number    :
-- is_object    :
-- is_plain_object : (item) tests item for being plain object
+- is_function  : (item)
+- is_number    : (item)
+- is_object    : (item)
+- is_plain_object : (item) tests item for being plain object. An object is plain when it's direct prototype is Object.
 - is_zero      : (num)
-- not_array    : 
-- not_defined  :
-- not_empty    :
-- not_function : 
-- not_number   :
-- not_object   : 
-- not_zero     :
+- not_array    : antagonist for is_array
+- not_defined  : antagonist for is_defined
+- not_empty    : antagonist for is_empty
+- not_function : antagonist for is_function
+- not_number   : antagonist for is_number
+- not_object   : antagonist for is_object
+- not_zero     : antagonist for is_zero
 
 ### Collection
-- invoke       : (method_name, method_args..., arr)
+- invoke       : (method_name, arr) | (method_name, method_args..., arr)
+```coffee
+results = invoke('peace', {plant_flowers: true}, [soldier1, soldier1, soldier3])
+# Equivalent of:
+results =
+  [ soldier1.peace({plant_flowers: true})
+  , soldier2.peace({plant_flowers: true})
+  , soldier3.peace({plant_flowers: true}) ]
+```
 - pluck        : (key, coll)
 
 ### Object
 - assign       : (dest, src...) assigns all src objects to dest object
-- clone
-- clonedeep    : deep clone for data structures, able to clone structures with circular references
-- clonedeep2   : deep clone without recursion, able to clone very deep structures with circular references
+- clone        : (item) shallow copy of the object
+- clonedeep    : (item) deep clone for data structures, able to clone structures with circular references
+- clonedeep2   : (item) deep clone without recursion, able to clone very deep structures with circular references
 - defaults     : (dest, src...)
 - extend       -> assign
 - keys         : (obj) returns keys of object
 - merge        : (dest, src) deep non-recursive merge of two objects
 - o_map        : (obj, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
-- o_match      : (criteria_object, matched_object) checks properties of matched_object to match every
+- o_match      : (criteria_object, matched_object) returns true if every property of the criteria_object is
+equal to the corresponding property of the matched_object
 - pull         : (key, obj) deletes the key from object and returns it
 - read         : (key, obj) - will read a property with specified name
-- recurse      : (fn(son, parent, son_idx, son_depth), root, depth) recurses a tree where 
+- recurse      : (fn(son, parent, son_idx, son_depth), root, depth) recurses a tree with fn, where children
+are stored in `sons` array
 - vals         : (obj) returns the list of object's values
 
 ### String
@@ -153,8 +229,11 @@ It is much closer to Clojure.
 - space        : (strings...) join strings with a whitespace
 - str          : (strings...) - join any number of strings into one
 - str_breplace : (replace_map, string) - string bulk character replace.
-Given english to russian characters map `{ 'a': 'ф', 'b': 'и', 'f': 'а' }`,
-and string `'bafbaffab'` will output `'ифаифаафи'`.
+```
+en2ru_chars = { 'a': 'ф', 'b': 'и', 'f': 'а' }
+en_str = 'bafbaffab'
+str_breplace(en2ru_chars, en_str) # 'ифаифаафи'
+```
 - str_join     : (join_str, Array<string>)
 - str_split    : (split_str, string_to_split)
 - tail         : (x, string) drops first chars from string
@@ -162,6 +241,10 @@ and string `'bafbaffab'` will output `'ифаифаафи'`.
 ### Misc
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
 property inside criteria_object.
-- varynum      : (numbers_arr, start_with_one)
+- varynum      : (numbers_arr, start_with_one) returns a new array composed of members of numbers_arr
+multiplied by -1 and 1 in turn
+```
+varynum([1, 2, 3, 4]) # [-1, 2, -3, 4]
+```
 
 ## License : MIT

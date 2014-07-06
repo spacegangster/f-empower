@@ -1,4 +1,6 @@
 define ->
+  "use strict"
+
   ###
     F-EMPOWER
     A set of functions to harness the power functional programming in JS.
@@ -846,7 +848,7 @@ define ->
 
   str_breplace = (map, str) ->
     regex = (mk_regexp (str_join '|', (keys map)), 'ig')
-
+    #
     str.replace regex, (seq) ->
       map[seq] || seq
 
