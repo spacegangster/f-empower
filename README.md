@@ -74,6 +74,7 @@ It is much closer to Clojure, though here is no lazyness or immutability.
 - Modularization:
   - Define a smaller core set of functions
   - Write new modules
+- Further optmization for V8 and Crankshaft
 
 ## Function index
 ### Array
@@ -141,6 +142,12 @@ reduce(bind(console.log, console), [1, 2, 3])
 ### Function
 - apply        : (fn, args...) applies arguments to function
 - bind         : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
+```coffee
+animals = []
+populate_animals = bind(animals.push, animals)
+populate_animals('cat', 'dog', 'monkey')
+console.log(animals) # ['cat', 'dog', 'monkey']
+```
 - compose      : (fn...) composes functions
 ```coffeescript
 square = (x) -> x * x
@@ -223,6 +230,7 @@ are stored in `sons` array
 - vals         : (obj) returns the list of object's values
 
 ### String
+- comma        : (strings...)
 - head         : (x, string) takes first x chars from string
 - match        : (str, regexp)
 - mk_regexp    : (regex_str, regex_options_str)
