@@ -1,0 +1,426 @@
+<h2 id="f-empower">f-empower</h2>
+<p>Набор функций предназначенных для функциональной композиции,
+   именованых через подчеркивание, похожий на clojure.core касательно сигнатуры функций.
+   Ничего особенного. Любителей прошу под кат.
+</p>
+<habracut>
+   <h3 id="-">Вам может не понравится</h3>
+   <ul>
+      <li>Браузер должен поддерживать новые функции для массивов (Array extras), а это IE &gt;= 9</li>
+      <li>Самые сложные функции покрыты тестами; в целом тесты покрывают лишь 14 из 127 
+         экспортируемых функций. Все функции обязательно тестируются в REPL,
+         и все функции используются в бою, так что ошибки находятся и правятся
+         в течение дня. Соответственно, текущая версия не содержит известных ошибок.
+      </li>
+   </ul>
+   <h3 id="-">Технические особенности</h3>
+   <ul>
+      <li>Стандартные функции обхода коллекций (map, each) поддерживают обход 
+         произвольного числа коллекций: map(iterator, coll_1, coll_2, ...)
+      </li>
+      <li>Релиз под две модульные системы (AMD, CommonJS) через преобразование заголовка файла,
+         без ветвлений и дополнительных условий (if module)
+         Версию для CommonJS можно использовать и в браузере, но подходит она плохо. Если будет
+         спрос, то будет отдельный формат для прямого подключения в браузере.
+      </li>
+      <li>Скорость. Релизация функций работы с массивами, а также bind и partial, близка к fast.js.
+         Она опускает рассмотрение редких пропускает крайних случаев, ради скорости.
+         Со временем будут и бенчмарки.
+      </li>
+      <li>Нерекурсивные функции глубокого клонирования, и слияния объектов.</li>
+      <li>
+         Маленький размер:
+         <ul>
+            <li>f-empower.min.js.gz ~ 4.4кб </li>
+            <li>f-empower.min.js ~ 14кб</li>
+         </ul>
+      </li>
+      <li>Для функций map, pluck, invoke учтен аспект работы с массивами для V8: для массивов
+         длинной менее 64 000 элементов, используются массивы фиксированной длины,
+         иначе динамической
+      </li>
+      <li>Поддерживается как обратная, так и прямая функциональная композиция</li>
+   </ul>
+   <h3 id="-">Стилистические особенности</h3>
+   <ul>
+      <li>
+         Сигнатура функций. Для большинства функций второстепенные параметры идут первыми.
+         Субъективное предположение, что это удобнее для создания замыканий через `partial`. 
+         Пример:
+<source lang="coffeescript">
+names = pluck(&#39;name&#39;, users)
+# vs
+names = pluck_name(users)
+# при заранее подготовленной функции pluck_name = partial(pluck, &#39;name&#39;)
+</source>
+      </li>
+      <li>Именование через нижнее подчеркивание. Помимо персональных предпочтений, идентификаторы 
+         с нижним подчеркиванием читаются на 13.5% быстрее кэмелкейса, согласно 
+         <a href="http://whathecode.wordpress.com/2011/02/10/camelcase-vs-underscores-scientific-showdown/">исследованию</a>.
+         Как правило, участок кода пишется один раз, а читается или сканируется глазами намного чаще.
+         Вот почему имеет смысл писать код оптимальный для чтения.
+      </li>
+      <li>Написано на CoffeeScript, с учетом особенностей его компиляции.</li>
+   </ul>
+   <h3 id="-">Что оставлено за пределами библиотеки</h3>
+   <ul>
+      <li>Индексы для функций обхода коллекций</li>
+      <li>Аргумент thisContext для функций обхода коллекций. Можно компенсировать использовав bind
+         для итератора заранее
+      </li>
+      <li>
+         Chaining API. Потому что проблемы вызова методов по цепочке не стоит, пока вы используете
+         возвращающие функции. Если же вас смущает необходимость постоянно писать `_.function_name`,
+         для каждого вызова -- то CoffeeScript имеет решение - деструктурирование объектов:
+<source lang="coffeescript"># Распаковать функции в текущую область видимости
+{ function_name_1
+favorite_2
+favorite_3 } = lib
+# Использовать без префикса
+result = function_name_1( favorite_2( data ) )
+</source>
+      </li>
+      <li>HTML шаблоны.</li>
+   </ul>
+   <h3 id="-">Планы</h3>
+   <ul>
+      <li>Бенчмарки производительности</li>
+      <li>Больше тестов</li>
+      <li>
+         Модуляризация:
+         <ul>
+            <li>Выделение меньшего ядра функций</li>
+            <li>Написание новых тематических модулей</li>
+         </ul>
+      </li>
+      <li>Дальнейшая оптимизация под V8 и Crankshaft</li>
+      <li>Подробная документация</li>
+   </ul>
+   <h2 id="-">Установка</h2>
+   <h4 id="npm">npm</h4>
+   <p>npm install -s `f-empower`</p>
+   <h4 id="bower">Bower</h4>
+   <p>bower install -S `f-empower`</p>
+   <h2 id="-">Использование</h2>
+   <h3 id="commonjs-nodejs-">CommonJS (~ NodeJS)</h3>
+<source lang="coffeescript">
+functions = require &quot;f-empower&quot;
+{ apply
+  bind }  = functions
+array1 = [ 1, 2, 3 ]
+push_to_array1 = (bind array1.push, array1)
+
+(apply push_to_array1, [ 4, 5, 6 ])
+console.log(array1) # -&gt; [ 1, 2, 3, 4, 5, 6 ]
+</source>
+   <h3 id="amd-requirejs-">AMD (~ RequireJS)</h3>
+<source lang="coffeescript">
+require.config
+  paths:
+    &#39;f-empower&#39;: &#39;path/to/f-empower/dist/f-empower&#39;
+
+define [ &#39;f-empower&#39; ], (functions) -&gt;
+  { apply
+    bind }  = functions
+  array1 = [ 1, 2, 3 ]
+  push_to_array1 = (bind array1.push, array1)
+
+  (apply push_to_array1, [ 4, 5, 6 ])
+  console.log(array1) # -&gt; [ 1, 2, 3, 4, 5, 6 ]
+</source>
+
+<h3 id="-">Браузер напрямую (нет специальной поддержки, под вопросом)</h3>
+<source lang="html">
+<!-- включив этот код в страницу -->
+<script src='path/to/f-empower/dist-cj/f-empower'></script>
+<!-- вы получите объект exports со всеми функциями -->
+<!-- также все функции будут в глобальной области видимости -->
+<script>
+console.log(typeof exports.map)
+// function
+</script>
+</source>
+   <p>C другой стороны можно попробовать подключить AMD модуль, 
+      только определите предварительно функцию define
+   </p>
+   <h2 id="-">Краткая документация</h2>
+   <p>Ниже следует описание функций библиотеки разбитое на категории.
+      Документация функций подчиняется шаблону:
+   </p>
+   <pre># название функции   сигнатура_1            сигнатура_2               описание
+reduce             : (fn(prev, cur), arr) | (fn(prev, cur), val, arr) прогоняет функцию fn по всем элементам массива...</pre>
+   <h3 id="-">Работа с массивами</h3>
+   <p>Сочетание массив-ориентированная значит, что массив принимается первым аргументом.</p>
+   <ul>
+      <li>a_contains   : (arr, item) массив-ориентированная версия `contains`.
+         Проверяет наличие элемента в массиве через строгое равенство.
+      </li>
+      <li>a_each       : (arr, fn) массив-ориентированная версия `each`, работает только с одним массивом</li>
+      <li>a_filter     : (arr, fn) массив-ориентированная версия `filter`</li>
+      <li>a_map        : (arr, fn) массив-ориентированная версия `map`, работает только с одним массивом</li>
+      <li>a_reduce     : (arr, fn) | (arr, fn, val) массив-ориентированная версия `reduce`</li>
+      <li>a_reject     : (arr, fn) массив-ориентированная версия `reject`</li>
+      <li>a_sum        : (arr.&lt;number&gt;) суммирует все числа в массиве</li>
+      <li>butlast      : (arr) вернет новый массив состоящий из всех-кроме-последнего элементов оригинала</li>
+      <li>count        : (array_like) вернет значение свойства `length` объекта</li>
+      <li>drop         : (x, arr) вернет новый массив без первых `x` элементов</li>
+      <li>each         : (fn(item), arr...) вызывает функцию `fn` на каждом срезе переданных массивов, см `map`</li>
+      <li>filter       : (criteria(fn/obj/string), arr) вернет новый список элементов удовлетворяющих условию. 
+         Условие может быть задано:
+         <ol>
+           <li>функцией, результат которой приводится к логическому значению</li>
+<source lang="coffeescript">
+filter(((x) -&gt; x), [0, 1, 2, 0, 3])
+# [1, 2, 3]
+</source>
+           <li>объектом задающим необходимые значения свойств</li>
+<source lang="coffeescript">
+filter({type: &#39;editor&#39;}, [{name: &#39;vim&#39;, type: &#39;editor&#39;}, {name: &#39;tmux&#39;, type: &#39;terminal multiplexer&#39;})
+# [{name: &#39;vim&#39;, type: &#39;editor&#39;}]
+</source>
+           <li>строкой указывающей имя свойства членов массива которое будет проверяться на логическое значение</li>
+<source lang="coffeescript">
+filter(&#39;has_lisp&#39;, [{name: &#39;emacs&#39;, has_lisp: true}, {name:&#39;vim&#39;, has_lisp: false}])
+# [{name: &#39;emacs&#39;, has_lisp: true}]
+</source>
+         </ol>
+      </li>
+      <li>first        : (arr) вернет первый элемент в массиве</li>
+      <li>index_of     : (item, arr) вернет индекс первого элемента в массиве удовлетворяющий строгому равенству</li>
+      <li>last         : (arr) вернет последний элемент массива</li>
+      <li>list         : (items...) создаст массив из аргументов list(1, 2, 3) # -&gt; [1, 2, 3]</li>
+      <li>list_compact : (items...) ярлык для `compact(list(args...))`</li>
+      <li>map          : (fn, arrs...) map работающий с произвольным числом коллекций. Пример работы
+<source lang="coffeescript">
+map(
+  Array,
+  [0, 1, 2, 3],
+  [&#39;zero&#39;, &#39;one&#39; , &#39;two&#39;, &#39;three&#39;], # en
+  [&#39;ноль&#39;, &#39;один&#39;, &#39;два&#39;, &#39;три&#39;  ], # ru
+  [&#39;zero&#39;, &#39;uno&#39; , &#39;due&#39;, &#39;tre&#39;  ]  # it
+)
+# [ [ 0, &#39;zero &#39;, &#39;ноль&#39;, &#39;zero&#39; ],
+#   [ 1, &#39;one&#39;  , &#39;один&#39;, &#39;uno&#39;  ],
+#   [ 2, &#39;two&#39;  , &#39;два&#39; , &#39;due&#39;  ],
+#   [ 3, &#39;three&#39;, &#39;три&#39; , &#39;tre&#39;  ] ]
+</source>
+      </li>
+      <li>push         : (arr, item) ярлык для arr.push(item)</li>
+      <li>reduce       : (fn(prev, cur), arr) | (fn(prev, cur), val, arr) прогоняет функцию `fn` по всем элементам массива,
+         вызывая ее каждый раз с результатом предыдущего вычисления и текущим элементом массива.
+<source lang="coffeescript">
+reduce(and2, true, [true, null, false]) # null
+reduce(sum2, [1, 2, 3]) # 6
+reduce(bind(console.log, console), [1, 2, 3])
+1 2
+undefined, 3
+</source>
+      </li>
+      <li>reject       : (fn/object/string, arr) антагонист filter, вернет новый массив где будут только те элементы
+      оригинала, для которых условие приводится к false</li>
+      <li>rest         : (arr) вернет все элементы массива кроме первого</li>
+      <li>remap        : (fn, arr) обновит каждый элемент массива используя функцию `fn` # `arr[i] = fn(arr[i])`</li>
+      <li>remove       : (item, arr) удалит элемент из массива опираясь на строгое равенство</li>
+      <li>remove_at    : (idx, arr) удалит из массива элемент с заданным индексом</li>
+      <li>range        : (end_num) | (start_num, end_num) | (start_num, end_num, step)
+      Создаст новый масив чисел от `start_num` до `end_num`, с шагом `step`</li>
+      <li>repeat       : (times, val) создаст новый массив длины `times`, заполненный значением `val`</li>
+      <li>second       : (arr) вернет второй элемент массива</li>
+      <li>set_difference : (arr1, arr2) -&gt; вернет новый массив с такими элементами из `arr1`, которых нет в `arr2`,
+      для сравнения элементов используется строгое равенство</li>
+      <li>set_symmetric_difference (arr1, arr2) ярлык для [set_difference(arr1, arr2), set_difference(arr2, arr1)]</li>
+      <li>slice        : (arr [, start_idx, end_idx]) обертка нативного `slice`</li>
+      <li>splice       : (arr [, start_idx, remove_count, new_elements...]) обертка нативного `splice`</li>
+      <li>take         : (x, arr) вернет новый массив в котором будут только первые `x` элементов из массива `arr`</li>
+      <li>unshift      : (arr, item) ярлык для `arr.unshift(item)`</li>
+
+   <h3>Работа с функциями</h3>
+   <ul>
+      <li>apply        : (fn, args...) вернет результат вызова fn.apply(this, args)</li>
+      <li>bind         : (fn, this_arg) вернет новую функцию, будет привязана к контексту `this_arg`</li>
+<source lang="coffeescript">
+animals = []
+populate_animals = bind(animals.push, animals)
+populate_animals(&#39;cat&#39;, &#39;dog&#39;, &#39;monkey&#39;)
+console.log(animals) # [&#39;cat&#39;, &#39;dog&#39;, &#39;monkey&#39;]
+</source>
+      <li>compose      : (fn...) вернет новую функцию которая будет возвращать результат выражения проведенный
+         через цепочку переданных функций. Пример: 
+<source lang="coffeescript">
+square = (x) -> x * x
+add2   = (x) -> x + 2
+mult2  = (x) -> x * 2
+all_math = compose(mult2, square, add2)
+all_math( 0 ) # 8
+# эквивалентно:
+mult2( square( add2( 0 ) ) ) # 8 
+</source>
+         Также смотри `pipeline`
+      </li>
+      <li>complement   : (predicate_fn) вернет новую функцию которая будет возвращать отрицание результата вычисления
+         переданной функции предиката. Используется для создания антагонистов предикатов:
+<source lang="coffeescript">
+not_number = complement( is_number )
+is_number(4)  # true
+not_number(4) # false
+</source>
+      </li>
+      <li>debounce     : (debounce_timeout, fn) вернет новую функцию `x` которая будет вызвать `fn`, после прохождения
+         `debounce_timeout` миллисекунд с момента последнего вызова `x`
+      </li>
+      <li>delay        : (delay_ms, fn) ярлык для `setTimeout`, с обратным порядком передачи аргументов.
+         На мой взгляд это делает код более читаемым: не приходится листать код вниз в поисках значения задержки
+         Вызов вернет идентификатор таймаута.
+      </li>
+      <li>multicall    : (fn...) вернет функцию вызов которой будет вызывать каждую из переданных функций
+         с переданными аргументами.
+      </li>
+      <li>partial      : (fn, args...), вернет новую функцию `x`, которая при каждом вызове будет вызывать `fn`, подставляя
+         `args...` в начало списка аргументов переданных `x`. Пример:
+<source lang="coffeescript">
+map_int = partial(map, parseInt)
+map_int([&quot;1&quot;, &quot;0&quot;, &quot;123&quot;, &quot;123153&quot;]) # [1, 0, 123, 123153]
+</source>
+         Результат тот же что и для `map(parseInt, [&quot;1&quot;, &quot;0&quot;, &quot;123&quot;, &quot;123153&quot;])`, но в момент вызова передается меньше аргументов
+      </li>
+      <li>partialr     : (fn, args...) то же что и partial, только args... будет подставляться с правой стороны,
+         для каждого вызова x. Пример:
+<source lang="coffeescript">
+map_my_set = partialr(map, [1, 2, 3], [&#39;one&#39;, &#39;two&#39;, &#39;three&#39;])
+map_my_set(list) # [[1, &#39;one&#39;], [2, &#39;two&#39;], [3, &#39;three&#39;]]
+</source>
+         Есть ярлык: `pt`
+      </li>
+      <li>pipeline     : (fn...) то же что и compose только код переходит по функциям слева направо, а не наоборот.
+         Пример: 
+<source lang="coffeescript">
+assemble_item = pipeline(step1, step2, step3)
+assemble_item( resources )
+# эквивалентно:
+step3( step2( step1( resources ) ) )
+</source>
+      </li>
+      <li>pt           : ярлык для `partial`</li>
+      <li>throttle     : (throttle_ms, fn) вернет новую функцию `x`, которая будет вызывать `fn`
+         не раньше чем раз в `throttle_ms`
+      </li>
+      <li>no_operation : не делает ничего, и ничего не возвращает</li>
+      <li>noop         : ярлык для `no_operation`</li>
+   </ul>
+
+   <h3 id="-">Функции-предикаты, возвращают логическое значение</h3>
+   <ul>
+      <li>and2         : (a, b) вернет результат a &amp;&amp; b, удобно вместе с `reduce`</li>
+      <li>is_array     : (item) проверяет является ли `item` массивом. Ярлык для `Array.isArray`</li>
+      <li>is_defined   : (item) проверяет определен ли `item`</li>
+      <li>is_empty     : (array_like) вернет результат array_like.length == `0`</li>
+      <li>is_function  : (item) вернет результат &#39;function&#39; == typeof `item`</li>
+      <li>is_number    : (item) вернет результат &#39;number&#39; == typeof `item`</li>
+      <li>is_object    : (item) вернет результат &#39;object&#39; == typeof `item`</li>
+      <li>is_plain_object : (item) проверяет является ли объект простым. Реализация повторяет
+         `shimIsPlainObject` из lodash. Объект считается простым, если его прототипом является `Object`
+      </li>
+      <li>is_zero      : (num) вернет результат num == `0`</li>
+      <li>not_array    : антагонист `is_array`</li>
+      <li>not_defined  : антагонист `is_defined`</li>
+      <li>not_empty    : антагонист `is_empty`</li>
+      <li>not_function : антагонист `is_function`</li>
+      <li>not_number   : антагонист `is_number`</li>
+      <li>not_object   : антагонист `is_object`</li>
+      <li>not_zero     : антагонист `is_zero`</li>
+   </ul>
+
+   <h3 id="-">Фунцкии обхода массивов с предположениями о свойствах массивов</h3>
+   <ul>
+      <li>
+         invoke       : (method_name, arr) | (method_name, method_args..., arr)
+         вызовет метод `method_name`, на каждом из элементов массива, с аргументами `method_args...`
+         вернет массив с результатами выполнения метода, на каждом из элементов
+         Пример:
+<source lang="coffeescript">
+results = invoke(&#39;peace&#39;, {plant_flowers: true}, [soldier1, soldier1, soldier3])
+# Эквивалент:
+results =
+[ soldier1.peace({plant_flowers: true})
+, soldier2.peace({plant_flowers: true})
+, soldier3.peace({plant_flowers: true}) ]
+</source>
+      </li>
+      <li>pluck        : (key, arr) вернет новый массив наполненный значениями аттрибута `key` для каждого
+         элемента из `arr`
+      </li>
+   </ul>
+
+   <h3 id="-">Работа с объектами</h3>
+   <ul>
+      <li>
+         assign       : (dest, src...) поочередно, для каждого элемента из `src...` записывает все его ключи в `dest`
+<source lang="coffeescript">
+assign({}, {editor: &#39;vim&#39;, foo: &#39;bar&#39;}, {editor: &#39;emacs&#39;}) # {editor: &#39;emacs&#39;, foo: &#39;bar&#39;}
+</source>
+      </li>
+      <li>clone        : (item) вернет поверхностную копию `item`</li>
+      <li>clonedeep    : (item) вернет глубокую копию `item`. Кольцевые ссылки правильно копируются</li>
+      <li>clonedeep2   : (item) то же что и `clonedeep`, другая реализация. Вместо рекурсивного
+         вызова используется внутренний стек.
+      </li>
+      <li>defaults     : (dest, src...) поочередно, для каждого элемента из `src...` записывает каждый его
+         ключ в объект `dest`, если такой ключ еще не определен в `dest`
+      </li>
+      <li>extend       : ярлык для `assign`</li>
+      <li>keys         : (obj) вернет массив ключей переданного объекта</li>
+      <li>merge        : (dest, src) глубокое слияние объектов, без использования рекурсивного вызова</li>
+      <li>
+         o_map        : (obj, keys_list) вернет значения соответствующие ключу в `obj`, для каждого ключа
+         указанного в массиве `keys_list`
+<source lang="coffeescript">
+o_map({age: 35}, [&#39;age&#39;]) # -&gt; [ 35 ]
+</source>
+      </li>
+      <li>o_match      : (criteria_object, matched_object) вернет `true` если каждое свойство
+         внутри `criteria_object` строго равно такому внутри `matched_object`
+      </li>
+      <li>pull         : (key, obj) удалит ключ из объекта и вернет его значение</li>
+      <li>read         : (key, obj) вернет значение ключа `key` из объекта `obj`</li>
+      <li>recurse      : (fn(son, parent, son_idx, son_depth), root, depth) рекурсивно пройдет по дереву
+         где лежат в массиве `sons`, на каждом вызовет функцию `fn`
+      </li>
+      <li>vals         : (obj) вернет массив значений объекта</li>
+   </ul>
+
+   <h3 id="-">Функции для работы со строками</h3>
+   <ul>
+      <li>comma        : (strings...) вернет новую строку составленную из переданных строк соединенный через запятую.
+         Удобно для создания HTML селекторов.
+      </li>
+      <li>head         : (x, string) вернет подстроку от `string` состоящую из ее первых `x` символов</li>
+      <li>match        : (str, regexp) обертка вокруг метода строки `match`</li>
+      <li>mk_regexp    : (regex_str, regex_flags_str) вернет экземпляр `RegExp`</li>
+      <li>space        : (strings...) соединит все переданные строки в одну разделив их пробелом</li>
+      <li>str          : (strings...) соединит все переданные строки в одну</li>
+      <li>str_breplace : (replace_map, string) - заменит все символы указанные в `replace_map` как ключи, на 
+         символы указанные как значения. Полезно для создания функций транслитерации. Пример:
+<source lang="coffeescript">
+en2ru_chars = { &#39;a&#39;: &#39;ф&#39;, &#39;b&#39;: &#39;и&#39;, &#39;f&#39;: &#39;а&#39; }
+en_str = &#39;bafbaffab&#39;
+str_breplace(en2ru_chars, en_str) # &#39;ифаифаафи&#39;
+</source>
+      </li>
+      <li>str_join     : (join_str, strings_arr) соединит строки из массива `strings_arr` через заданную строку `join_str`</li>
+      <li>str_split    : (split_str, string_to_split) разъединит строку `string_to_split` по заданной подстроке `split_str`</li>
+      <li>tail         : (x, string) вернет подстроку от `string` без первых `x` символов</li>
+   </ul>
+
+   <h3 id="-">Разное</h3>
+   <ul>
+      <li>jquery_wrap_to_array : (jquery_wrap) переводит все элементы внутри обертки jquery в массив
+         оберток. Удобно для дальнейшей работы с обычными функциями коллекций.
+      </li>
+      <li>varynum      : (numbers_arr [, start_with_one]) принимает массив чисел. вернет новый массив
+         чисел где каждое число из оригинального массива поочередно умножено на -1 и 1. Пример:
+<source lang="coffeescript">
+varynum([1, 2, 3, 4]) # [-1, 2, -3, 4]
+</source>
+      </li>
+   </ul>
+</habracut>
