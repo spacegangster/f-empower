@@ -3,12 +3,12 @@ define(function() {
   "use strict";
 
   /*
-    F-EMPOWER
-    A set of functions to harness the power functional programming in JS.
-    Author: Ivan Fedorov <sharp.maestro@gmail.com>
-    License: MIT
+  F-EMPOWER
+  A set of functions to harness the power functional programming in JS.
+  Author: Ivan Fedorov <sharp.maestro@gmail.com>
+  License: MIT
    */
-  var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, push, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, unshift, vals, varynum, _clonedeep, _clonedeep2;
+  var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_index_of, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pluck, prelast, pull, push, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, unshift, vals, varynum, _clonedeep, _clonedeep2;
   THRESHOLD_LARGE_ARRAY_SIZE = 64000;
   Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
@@ -17,6 +17,7 @@ define(function() {
   };
   to_string = Object.prototype.toString;
   native_concat = Array.prototype.concat;
+  native_index_of = Array.prototype.indexOf;
   native_slice = Array.prototype.slice;
   slice = function(array_or_arguments, start_idx, end_idx) {
     return native_slice.call(array_or_arguments, start_idx, end_idx);
@@ -475,7 +476,7 @@ define(function() {
     return read(item_idx, array);
   };
   index_of = function(item, array) {
-    return array.indexOf(item);
+    return native_index_of.call(array, item);
   };
   last = function(list) {
     return list[dec(count(list))];

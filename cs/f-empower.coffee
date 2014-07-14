@@ -2,10 +2,10 @@ define ->
   "use strict"
 
   ###
-    F-EMPOWER
-    A set of functions to harness the power functional programming in JS.
-    Author: Ivan Fedorov <sharp.maestro@gmail.com>
-    License: MIT
+  F-EMPOWER
+  A set of functions to harness the power functional programming in JS.
+  Author: Ivan Fedorov <sharp.maestro@gmail.com>
+  License: MIT
   ###
 
   # use 64k as large array size threshold
@@ -19,9 +19,10 @@ define ->
     NOT_FUNCTION              : new TypeError('Something is not function')
     UNEXPECTED_TYPE           : new TypeError('Unexpected type')
 
-  to_string = Object::toString
-  native_concat = Array::concat
-  native_slice  = Array::slice
+  to_string       = Object::toString
+  native_concat   = Array::concat
+  native_index_of = Array::indexOf
+  native_slice    = Array::slice
 
   slice = (array_or_arguments, start_idx, end_idx) ->
     native_slice.call(array_or_arguments, start_idx, end_idx)
@@ -403,7 +404,7 @@ define ->
     (read item_idx, array)
 
   index_of = (item, array) ->
-    array.indexOf(item)
+    native_index_of.call(array, item)
 
   last = (list) ->
     list[(dec (count list))]
