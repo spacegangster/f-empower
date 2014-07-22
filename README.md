@@ -169,6 +169,21 @@ mult2( square( add2( 0 ) ) ) # 8
 map_my_set = partialr(map, [1, 2, 3], ['one', 'two', 'three'])
 map_my_set(list) # [[1, 'one'], [2, 'two'], [3, 'three']]
 ```
+
+- pbind        : (fn(x)) allows to use fn in a method-like fashion. Does it by passing `this`
+as a first argument.
+```coffee
+shout_name = (girl_or_boy) ->
+  alert(girl_or_boy.name + "!")
+
+class Shouter
+  constructor: (@name) ->
+  shout_name: pbind( shout_name )
+
+lisa = new Shouter('Lisa')
+lisa.shout_name()
+```
+
 - pipeline     : (fn...) natural compose
 ```coffee
 steps = pipeline(step1, step2, step3)

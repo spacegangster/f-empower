@@ -120,6 +120,10 @@ define ->
     ->
       (apply fn, (cat (apply list, arguments), right_args))
 
+  pbind = (fn) ->
+    ->
+      fn.apply(null, (concat [this], arguments))
+
   # Executes fn once in the given period
   # BEWARE: if fn should be executed with context, you should bind it before throttling
   throttle = (throttle_millis, fn) ->
@@ -1037,6 +1041,7 @@ define ->
   exports.o_map = o_map
   exports.o_match = o_match
   exports.partial = partial
+  exports.pbind = pbind
   exports.pt = partial
   exports.partialr = partialr
   exports.pipeline = flow
