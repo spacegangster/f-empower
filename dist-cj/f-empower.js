@@ -145,7 +145,7 @@ partialr = function(fn, right_args) {
 
 pbind = function(fn) {
   return function() {
-    return fn.apply(null, concat([this], arguments));
+    return fn.apply(null, cat([this], arguments));
   };
 };
 

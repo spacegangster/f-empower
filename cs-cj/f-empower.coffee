@@ -121,7 +121,7 @@ partialr = (fn, right_args) ->
 
 pbind = (fn) ->
   ->
-    fn.apply(null, (concat [this], arguments))
+    fn.apply(null, (cat [this], arguments))
 
 # Executes fn once in the given period
 # BEWARE: if fn should be executed with context, you should bind it before throttling

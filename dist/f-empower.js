@@ -126,7 +126,7 @@ define(function() {
   };
   pbind = function(fn) {
     return function() {
-      return fn.apply(null, concat([this], arguments));
+      return fn.apply(null, cat([this], arguments));
     };
   };
   throttle = function(throttle_millis, fn) {
