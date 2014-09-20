@@ -23,6 +23,7 @@ tooling   = require './tooling'
   partial
   push
   slice
+  sort
   sumn } = f_empower
 
 # Classes used in some tests
@@ -179,21 +180,29 @@ test_is_plain_object = ->
   #
   log "ok"
 
+test_sort = ->
+  testing "sort"
+  george = {name: 'George', age: 35}
+  chuck  = {name: 'Chuck', age: 80}
+  ivan   = {name: 'Ivan', age: 20}
+  unsorted = [ george, chuck, ivan ]
+  sorted   = [ ivan, george, chuck ]
+  sorted_by_name = [ chuck, george, ivan ]
+  (equal_deep (sort 'age', unsorted)
+            , sorted)
+  (equal_deep (sort 'name', unsorted)
+            , sorted_by_name)
+  log "ok"
 
-test_clonedeep()
-newline()
 
-test_clonedeep2()
-newline()
-
-test_map()
-newline()
-
-test_each()
-newline()
-
-test_merge()
-newline()
-
-test_is_plain_object()
-newline()
+tests =
+  [ test_clonedeep
+  , test_clonedeep2
+  , test_map
+  , test_each
+  , test_merge
+  , test_is_plain_object
+  , test_sort ]
+for test in tests
+  test()
+  newline()

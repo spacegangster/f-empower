@@ -7,7 +7,7 @@ A set of functions to harness the power functional programming in JS.
 Author: Ivan Fedorov <sharp.maestro@gmail.com>
 License: MIT
  */
-var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_index_of, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_zero, o_map, o_match, partial, partialr, pbind, pluck, prelast, pull, push, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, unshift, vals, varynum, _clonedeep, _clonedeep2;
+var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, partial, partialr, pbind, pluck, prelast, pull, push, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, type_of, unshift, vals, varynum, write, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort;
 
 THRESHOLD_LARGE_ARRAY_SIZE = 64000;
 
@@ -226,6 +226,10 @@ is_mergeable = function(item) {
   return (is_array(item)) || (is_plain_object(item));
 };
 
+is_string = function(item) {
+  return "string" === (type_of(item));
+};
+
 is_zero = function(candidate) {
   return candidate === 0;
 };
@@ -243,6 +247,8 @@ not_mergeable = complement(is_mergeable);
 not_number = complement(is_number);
 
 not_object = complement(is_object);
+
+not_string = complement(is_string);
 
 not_zero = complement(is_zero);
 
@@ -575,6 +581,60 @@ list_compact = function() {
   return result;
 };
 
+type_of = function(mixed) {
+  return typeof mixed;
+};
+
+sort = function(criterion, arr) {
+  switch (count(arguments)) {
+    case 1:
+      return criterion.sort();
+    case 2:
+      if (2 > (count(arr))) {
+        return slice(arr);
+      }
+      switch (type_of(criterion)) {
+        case "string":
+          return sort_prop(criterion, arr);
+        case "array":
+          return sort_multi(criterion, arr);
+        case "function":
+          return sort_fn(criterion, arr);
+      }
+  }
+};
+
+sort_prop = function(prop, arr) {
+  var compare_fn, need_string_comparison, sort_suitable_arr;
+  sort_suitable_arr = map(partial(_suit_sort, prop), arr);
+  need_string_comparison = is_string(arr[0][prop]);
+  compare_fn = need_string_comparison && _compare_string || _compare_crit;
+  return pluck('val', sort_suitable_arr.sort(compare_fn));
+};
+
+_suit_sort = function(prop, obj) {
+  return {
+    val: obj,
+    criteria: obj[prop]
+  };
+};
+
+_compare_crit = function(obj1, obj2) {
+  return obj1.criteria - obj2.criteria;
+};
+
+native_locale_compare = String.prototype.localeCompare;
+
+_compare_string = function(obj1, obj2) {
+  return native_locale_compare.call(obj1.criteria, obj2.criteria);
+};
+
+sort_multi = function(props_arr, arr) {};
+
+sort_fn = function(compare_fn, arr) {
+  return arr.sort(compare_fn);
+};
+
 map = function() {
   var args;
   args = arguments;
@@ -764,10 +824,20 @@ reject = function(some_criteria, array) {
 };
 
 remap = function(fn, arr) {
-  var item, item_idx, _i, _len;
-  for (item_idx = _i = 0, _len = arr.length; _i < _len; item_idx = ++_i) {
-    item = arr[item_idx];
-    arr[item_idx] = fn(item);
+  var item, item_idx, prop, _i, _j, _len, _len1;
+  switch (arguments.length) {
+    case 2:
+      for (item_idx = _i = 0, _len = arr.length; _i < _len; item_idx = ++_i) {
+        item = arr[item_idx];
+        arr[item_idx] = fn(item);
+      }
+      break;
+    case 3:
+      fn = arguments[0], prop = arguments[1], arr = arguments[2];
+      for (item_idx = _j = 0, _len1 = arr.length; _j < _len1; item_idx = ++_j) {
+        item = arr[item_idx];
+        arr[item_idx][prop] = fn(item[prop]);
+      }
   }
   return arr;
 };
@@ -795,7 +865,18 @@ rest = function(arr) {
   return slice(arr, 1);
 };
 
-reverse = bind(Function.prototype.call, Array.prototype.reverse);
+reverse = function(arr) {
+  var i, j, len, res;
+  len = arr.length;
+  i = 0;
+  j = len;
+  res = new Array(len);
+  while (--j > -1) {
+    res[i] = arr[j];
+    i += 1;
+  }
+  return res;
+};
 
 splice = bind(Function.prototype.call, Array.prototype.splice);
 
@@ -873,6 +954,16 @@ varynum = function(numbers_arr, start_with_one) {
     _results.push(number * variator);
   }
   return _results;
+};
+
+write = function(dst_coll, prop_name, src_coll) {
+  var dst, idx, src, _i, _len;
+  for (idx = _i = 0, _len = dst_coll.length; _i < _len; idx = ++_i) {
+    dst = dst_coll[idx];
+    src = src_coll[idx];
+    dst[prop_name] = src;
+  }
+  return dst_coll;
 };
 
 assign = function(dest, sources) {
@@ -1339,9 +1430,13 @@ exports.is_object = is_object;
 
 exports.is_plain_object = is_plain_object;
 
+exports.is_string = is_string;
+
 exports.is_zero = is_zero;
 
 exports.jquery_wrap_to_array = jquery_wrap_to_array;
+
+exports.j2a = jquery_wrap_to_array;
 
 exports.keys = keys;
 
@@ -1377,6 +1472,8 @@ exports.not_number = not_number;
 
 exports.not_object = not_object;
 
+exports.not_string = not_string;
+
 exports.not_zero = not_zero;
 
 exports.o_map = o_map;
@@ -1388,6 +1485,8 @@ exports.partial = partial;
 exports.pbind = pbind;
 
 exports.pt = partial;
+
+exports.ptr = partialr;
 
 exports.partialr = partialr;
 
@@ -1443,6 +1542,8 @@ exports.set_symmetric_difference = set_symmetric_difference;
 
 exports.slice = slice;
 
+exports.sort = sort;
+
 exports.space = space;
 
 exports.splice = splice;
@@ -1472,5 +1573,7 @@ exports.unshift = unshift;
 exports.vals = vals;
 
 exports.varynum = varynum;
+
+exports.write = write;
 
 exports;

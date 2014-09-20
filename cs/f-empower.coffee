@@ -195,6 +195,9 @@ define ->
   is_mergeable = (item) ->
     (is_array item) || (is_plain_object item)
 
+  is_string = (item) ->
+    "string" == (type_of item)
+
   is_zero = (candidate) ->
     candidate == 0
 
@@ -212,6 +215,8 @@ define ->
   not_number = (complement is_number)
 
   not_object = (complement is_object)
+
+  not_string = (complement is_string)
 
   not_zero = (complement is_zero)
 
@@ -425,6 +430,49 @@ define ->
         result.push(arg)
     result
 
+  type_of = (mixed) ->
+    typeof mixed
+
+  # arr
+  # criterion, arr
+  sort = (criterion, arr) ->
+    switch (count arguments)
+      when 1
+        return criterion.sort()
+      when 2
+        return (slice arr)  if 2 > (count arr)
+        #
+        switch (type_of criterion)
+          when "string"
+            (sort_prop criterion, arr)
+          when "array"
+            (sort_multi criterion, arr)
+          when "function"
+            (sort_fn criterion, arr)
+
+  sort_prop = (prop, arr) ->
+    sort_suitable_arr = (map (partial _suit_sort, prop), arr)
+    #
+    need_string_comparison = (is_string arr[0][prop])
+    compare_fn = need_string_comparison && _compare_string || _compare_crit
+    (pluck 'val', sort_suitable_arr.sort(compare_fn))
+
+  _suit_sort = (prop, obj) ->
+    {val: obj, criteria: obj[prop]}
+
+  _compare_crit = (obj1, obj2) ->
+    obj1.criteria - obj2.criteria
+
+  native_locale_compare = String::localeCompare
+  _compare_string = (obj1, obj2) ->
+    native_locale_compare.call(obj1.criteria, obj2.criteria)
+
+  sort_multi = (props_arr, arr) ->
+
+  sort_fn = (compare_fn, arr) ->
+    arr.sort(compare_fn)
+
+
   # signatures: 
   #   fn, arr
   #   fn, arr, arr
@@ -564,9 +612,17 @@ define ->
       else
         throw Errors.UNEXPECTED_TYPE
 
+  # fn, arr
+  # fn, prop, arr
   remap = (fn, arr) ->
-    for item, item_idx in arr
-      arr[item_idx] = (fn item)
+    switch arguments.length
+      when 2
+        for item, item_idx in arr
+          arr[item_idx] = (fn item)
+      when 3
+        [fn, prop, arr] = arguments
+        for item, item_idx in arr
+          arr[item_idx][prop] = (fn item[prop])
     arr
 
   # removes item from array based on ref equality
@@ -585,7 +641,15 @@ define ->
   rest = (arr) ->
     (slice arr, 1)
 
-  reverse = (bind Function::call, Array::reverse)
+  reverse = (arr) ->
+    len = arr.length
+    i   = 0
+    j   = len
+    res = new Array(len)
+    while --j > -1
+      res[i] = arr[j]
+      i += 1
+    res
 
   splice = (bind Function::call, Array::splice)
 
@@ -650,6 +714,11 @@ define ->
       variator *= -1
       number * variator
 
+  write = (dst_coll, prop_name, src_coll) ->
+    for dst, idx in dst_coll
+      src = src_coll[idx]
+      dst[prop_name] = src
+    dst_coll
 
   # ============================================================
   # CATEGORY: OBJECTS
@@ -1018,8 +1087,10 @@ define ->
   exports.is_number = is_number
   exports.is_object = is_object
   exports.is_plain_object = is_plain_object
+  exports.is_string = is_string
   exports.is_zero = is_zero
   exports.jquery_wrap_to_array = jquery_wrap_to_array
+  exports.j2a = jquery_wrap_to_array
   exports.keys = keys
   exports.last = last
   exports.list = list
@@ -1037,12 +1108,14 @@ define ->
   exports.not_function = not_function
   exports.not_number = not_number
   exports.not_object = not_object
+  exports.not_string = not_string
   exports.not_zero = not_zero
   exports.o_map = o_map
   exports.o_match = o_match
   exports.partial = partial
   exports.pbind = pbind
   exports.pt = partial
+  exports.ptr = partialr
   exports.partialr = partialr
   exports.pipeline = flow
   exports.pluck = pluck
@@ -1070,6 +1143,7 @@ define ->
   exports.set_difference = set_difference
   exports.set_symmetric_difference = set_symmetric_difference
   exports.slice = slice
+  exports.sort = sort
   exports.space = space
   exports.splice = splice
   exports.str = str
@@ -1085,5 +1159,6 @@ define ->
   exports.unshift = unshift
   exports.vals = vals
   exports.varynum = varynum
+  exports.write = write
 
   exports

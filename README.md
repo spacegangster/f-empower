@@ -115,7 +115,7 @@ map(
 
 - push         : (arr, item)
 - reduce       : (fn, arr) | (fn, val, arr)
-```coffee
+```coffeescript
 reduce(and2, true, [true, null, false]) # false
 reduce(sum2, [1, 2, 3]) # 6
 
@@ -136,13 +136,14 @@ reduce(bind(console.log, console), [1, 2, 3])
 - set_symmetric_difference (arr1, arr2) -> [(set_difference arr1, arr2), (set_difference arr2, arr1)]
 - slice        : (arr [, start_idx, end_idx]) same as standard JS slice
 - splice       : (arr [, start_idx, remove_count, new_elements...])
+- sort         : (arr), (criterion {string, function}, arr) sorts items in array
 - take         : (x, arr) takes first x items from array
 - unshift      : (arr, item)
 
 ### Function
 - apply        : (fn, args...) applies arguments to function
 - bind         : (fn, this_arg) simplified bind function, like makeCallback in lodash or bindJS in Closure
-```coffee
+```coffeescript
 animals = []
 populate_animals = bind(animals.push, animals)
 populate_animals('cat', 'dog', 'monkey')
@@ -225,6 +226,8 @@ results =
   , soldier3.peace({plant_flowers: true}) ]
 ```
 - pluck        : (key, coll)
+- write        : (dst_coll, prop_name, src_coll) for each item in dst_coll writes 
+corresponding item from dst_coll as prop_name.
 
 ### Object
 - assign       : (dest, src...) assigns all src objects to dest object
