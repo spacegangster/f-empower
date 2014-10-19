@@ -87,6 +87,10 @@ debounce = (debounce_timeout, fn) ->
     last_result
 
 delay = (delay_ms, fn) ->
+  if arguments.length == 1
+    fn       = delay_ms
+    delay_ms = 0
+  #
   (setTimeout fn, delay_ms)
 
 flow = ->
@@ -168,6 +172,9 @@ is_defined = (subj) ->
 is_empty = (seq) ->
   seq.length == 0
 
+is_even = (num) ->
+  0 == (num % 2)
+
 is_function = (candidate) ->
   'function' == typeof candidate
 
@@ -243,6 +250,8 @@ a_contains = (array, searched_item) ->
       return true
   false
 
+# TODO implement signature like:
+#   array..., fn
 a_each = (array, fn) ->
   (each fn, array)
 
@@ -335,6 +344,14 @@ filter_obj_2kv = (obj, array) ->
 filter_obj = (obj, array) ->
   item for item in array when (o_match obj, item)
 
+filter_re = (regex, strings) ->
+  results = []
+  for string in strings
+    if regex.test(string)
+      results.push(string)
+  results
+
+
 filter = (some_criteria, array) ->
   switch (typeof some_criteria)
     when "string"
@@ -342,15 +359,18 @@ filter = (some_criteria, array) ->
     when "function"
       (filter_fn some_criteria, array)
     when "object"
-      switch (count (keys some_criteria))
-        when 0
-          throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-        when 1
-          (filter_obj_1kv some_criteria, array)
-        when 2
-          (filter_obj_2kv some_criteria, array)
-        else
-          (filter_obj some_criteria, array)
+      if '[object RegExp]' == to_string.call(some_criteria)
+        (filter_re some_criteria, array)
+      else
+        switch (count (keys some_criteria))
+          when 0
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+          when 1
+            (filter_obj_1kv some_criteria, array)
+          when 2
+            (filter_obj_2kv some_criteria, array)
+          else
+            (filter_obj some_criteria, array)
     else
       throw Errors.UNEXPECTED_TYPE
 
@@ -476,15 +496,24 @@ sort_fn = (compare_fn, arr) ->
 #   fn, arr
 #   fn, arr, arr
 #   fn, arrs...
+#   str, arr
+#   obj, arr
 map = ->
   args = arguments
+  arg0 = args[0]
   switch (count args)
     when 0, 1
       throw new Error("Map doesn't have a signature of that arity")
     when 2
-      (map2 args[0], args[1])
+      switch typeof arg0
+        when 'function'
+          (map2 arg0, args[1])
+        when 'string'
+          (pluck arg0, args[1])
+        when 'object'
+          (o_map arg0, args[1])
     when 3
-      (map3 args[0], args[1], args[2])
+      (map3 arg0, args[1], args[2])
     else
       (apply mapn, args)
 
@@ -539,6 +568,10 @@ prelast = (array) ->
 
 push = (arr, item) ->
   arr.push(item)
+  arr
+
+push_all = (arr, items_to_push_arr) ->
+  arr.push.apply(arr, items_to_push_arr)
   arr
 
 # (fn(memo, cur), array)
@@ -663,6 +696,13 @@ set_symmetric_difference = (set_a, set_b) ->
 
 take = (items_number_to_take, array_like) ->
   (slice array_like, 0, items_number_to_take)
+
+union = (arr1, arr2) ->
+  result = arr1.slice()
+  for item in arr2
+    if !(contains item, arr1)
+      result.push(item)
+  result
 
 unshift = (arr, item) ->
   arr.unshift(item)
@@ -934,6 +974,9 @@ str_split = (split_str, string_to_split) ->
 tail = (chars_to_drop, str) ->
   str.substr(chars_to_drop)
 
+trim = (str) ->
+  str.trim()
+
 
 # ============================================================
 # CATEGORY: MISCELLANEOUS
@@ -995,16 +1038,16 @@ This is a function that iterates with another function
 over the nodes of a tree structure.
 @param fn {function} function that operates on the node.
   signature: son, parent, son_idx, depth
-@param root {hash} a tree whose children lie in the sons
+@param root {hash} a tree whose children lie in the children
   list (i.e. ordered collection).
 @param depth: indicates depth of recursion
 ###
 recurse = (fn, root, depth = 0) ->
-  { sons } = root
+  { children } = root
   depth++
-  for son, idx in sons
+  for son, idx in children
     (fn son, root, idx, depth)
-  for son in sons
+  for son in children
     (recurse fn, son, depth)
   root
 
@@ -1066,6 +1109,7 @@ exports.filter_obj = filter_obj
 exports.filter_obj_1kv = filter_obj_1kv
 exports.filter_obj_2kv = filter_obj_2kv
 exports.filter_prop = filter_prop
+exports.filter_re = filter_re
 exports.find = find
 exports.find_index = find_index
 exports.find_index_fn = find_index_fn
@@ -1081,6 +1125,7 @@ exports.invoke = invoke
 exports.is_array = is_array
 exports.is_defined = is_defined
 exports.is_empty = is_empty
+exports.is_even  = is_even
 exports.is_function = is_function
 exports.is_mergeable = is_mergeable
 exports.is_number = is_number
@@ -1120,6 +1165,7 @@ exports.pipeline = flow
 exports.pluck = pluck
 exports.pull = pull
 exports.push = push
+exports.push_all = push_all
 exports.range = range
 exports.read = read
 exports.recurse = recurse
@@ -1155,6 +1201,8 @@ exports.take = take
 exports.tail = tail
 exports.throttle = throttle
 exports.time = time
+exports.trim = trim
+exports.union = union
 exports.unshift = unshift
 exports.vals = vals
 exports.varynum = varynum

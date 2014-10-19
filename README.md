@@ -93,12 +93,15 @@ It is much closer to Clojure, though here is no lazyness or immutability.
 - drop         : (x, arr) drops first x items from array
 - each         : (fn, arr...)
 - filter       : (criteria(fn/obj/string), arr)
+- filter       : (regexp, string_arr) takes all strings from string_arr that match regexp
 - first        : (arr)
 - index_of     : (item, arr)
 - last         : (arr) returns last item from array
 - list         : (items...) returns an array composed from items, like `Array(1, 2, 3) # -> [1, 2, 3]`
 - list_compact : list and compact functions composed. Equal to (compact (list args...))
 - map          : (fn, arrs...) map that works with arbitrary number of arrays
+- map          : (str, arr) @see pluck
+- map          : (obj, array_of_keys) @see o_map
 ```coffeescript
 map(
     Array,
@@ -114,6 +117,7 @@ map(
 ```
 
 - push         : (arr, item)
+- push_all     : (dest_arr, array_to_push) -- pushes one array to another
 - reduce       : (fn, arr) | (fn, val, arr)
 ```coffeescript
 reduce(and2, true, [true, null, false]) # false
@@ -139,6 +143,7 @@ reduce(bind(console.log, console), [1, 2, 3])
 - sort         : (arr), (criterion {string, function}, arr) sorts items in array
 - take         : (x, arr) takes first x items from array
 - unshift      : (arr, item)
+- union        : (set_arr1, set_arr2) - returns a new array that has all items from the first array, plus items from the second array, that are not in the former one
 
 ### Function
 - apply        : (fn, args...) applies arguments to function
@@ -162,6 +167,7 @@ mult2( square( add2( 0 ) ) ) # 8
 
 - complement   : (predicate_fn) inverts predicate function
 - debounce     : (debounce_timeout, fn)
+- delay        : (fn) `setTimeout` with zero delay
 - delay        : (delay_ms, fn) `setTimeout` with flipped signature
 - multicall    : (fn...) returns a function that will call the all of the functions, when called
 - partial      : (fn, args...)
@@ -202,6 +208,7 @@ step3( step2( step1() ) )
 - is_array     : (item) predicate that tests if object is array
 - is_defined   : (item)
 - is_empty     : (array_like) checks some array like thing for length == 0
+- is_even      : (number) checks number for being even
 - is_function  : (item)
 - is_number    : (item)
 - is_object    : (item)
@@ -263,6 +270,7 @@ str_breplace(en2ru_chars, en_str) # 'ифаифаафи'
 - str_join     : (join_str, Array<string>)
 - str_split    : (split_str, string_to_split)
 - tail         : (x, string) drops first chars from string
+- trim         : (str) removes leading and tailing whitespace
 
 ### Misc
 - jquery_wrap_to_array : maps jquery wrapped array into array of jquery wrapped elements
