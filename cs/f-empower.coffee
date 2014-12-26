@@ -40,7 +40,7 @@ define ->
     ->
       fn.apply(null, args.concat((slice arguments)))
 
-  
+
   # ============================================================
   # CATEGORY: FUNCTIONAL
   # ============================================================
@@ -51,6 +51,13 @@ define ->
 
   and2 = (a, b) ->
     a && b
+
+  # prop_names..., this_arg
+  bind_all = ->
+    props = (butlast arguments)
+    this_arg = (last arguments)
+    a_each props, (prop) ->
+      this_arg[prop] = (bind this_arg[prop], this_arg)
 
   # Composes a list of functions into one
   compose = ->
@@ -66,7 +73,7 @@ define ->
       while --i >= 0
         memo = [ functions[i].apply(null, memo) ]
       (first memo)
-  
+
   complement = (predicate) ->
     ->
       !(apply predicate, arguments)
@@ -234,7 +241,7 @@ define ->
 
   butlast = (array) ->
     (slice array, 0, ((count array) - 1))
-  
+
   # @param arrays...
   cat = (array) ->
     native_concat.apply(array, (slice arguments, 1))
@@ -270,6 +277,10 @@ define ->
 
   a_reject = (array, fn) ->
     (reject fn, array)
+
+  # @return {boolean} true if array contains an element matching the condition
+  any = (fn, arr) ->
+    -1 != (find_index_fn fn, arr)
 
   compact = (coll) ->
     item for item in coll when item
@@ -374,7 +385,7 @@ define ->
               (filter_obj some_criteria, array)
       else
         throw Errors.UNEXPECTED_TYPE
-  
+
   find_index_fn = (fn, array) ->
     for item, idx in array
       if (fn item)
@@ -760,10 +771,25 @@ define ->
       dst[prop_name] = src
     dst_coll
 
+  # returns unique
+  unique_by_prop = (prop_name, arr) ->
+    help_hash = {}
+    out = []
+    #
+    a_each arr, (item) ->
+      prop_val = item[prop_name]
+      if !help_hash[prop_val]
+        help_hash[prop_val] = true
+        out.push(item)
+    #
+    out
+
+  unique = unique_by_prop
+
+
   # ============================================================
   # CATEGORY: OBJECTS
   # ============================================================
-
 
   # @param {object} dest the place where all properties
   #  from all sources will be written
@@ -776,7 +802,12 @@ define ->
   assign_one = (dest, src) ->
     for key, val of src
       dest[key] = val
-  
+
+  build_index = (index_prop, list_to_index, accumulator = {}) ->
+    for item in list_to_index
+      accumulator[ item[index_prop] ] = item
+    accumulator
+
   clone_obj = (obj) ->
     res = {}
     for key, val of obj
@@ -855,15 +886,59 @@ define ->
         [cur_src, cur_dst, cur_keys, cur_key_idx] = stack_act.pop()
 
     dst
+
+
+  # useful when you want to instantiate a list of instances
+  # from a list of data
+  create = (ctor, arg) ->
+    new ctor(arg)
     
   defaults = (dest = {}) ->
     (reduce defaults2, dest, (rest arguments))
-  
+
   defaults2 = (dest, source) ->
     for key, val of source
       if ('undefined' == typeof dest[key])
         dest[key] = val
     dest
+
+  # tests objects for deep equality
+  # draft version, works only for arrays
+  equal = (o1, o2) ->
+    (equal_array o1, o2)
+
+  equal_array = (arr1, arr2) ->
+    len1 = (count arr1)
+    len2 = (count arr2)
+    #
+    ((0 == len1) && (0 == len2)) ||
+      ((len1 == len2) && (equal_array_start arr1, arr2))
+
+
+  equal_array_start = (arr1, arr2) ->
+   (reduce and2, true, (map equal_val, arr1, arr2))
+
+  equal_val = (v1, v2) ->
+    v1 == v2
+
+  flattenp_recursive = (key, root, accumulator) ->
+    (push_all accumulator, root[key])
+    if children = root[key]
+      for son in children
+        (flattenp_recursive key, son, accumulator)
+    return accumulator
+
+  # flattens a tree-like structure into array
+  # Example:
+  #   struct =
+  #     { id: 'Zero'
+  #     , children:
+  #       [ {id: 1}, {id: 2} ] }
+  #   (flattenp 'children', struct)
+  #   # -> [ {id: 'Zero', children: [...] }, {id: 1}, {id: 2} ]
+  flattenp = (key, root, {include_root} = {include_root: true}) ->
+    accumulator = include_root && [root] || []
+    (flattenp_recursive key, root, accumulator)
 
   keys = (hash) ->
     Object.keys(hash)
@@ -937,18 +1012,39 @@ define ->
     delete hash[key]
     val
 
+  pick = (props..., obj) ->
+    res = {}
+    for prop in props
+      if obj[prop] != undefined
+        res[prop] = obj[prop]
+    res
+
   vals = (hash) ->
     (o_map hash, (keys hash))
+
+  o_set = (obj, key, val) ->
+    obj[key] = val
+
+  zip_obj = (keys, vals) ->
+    obj = {}
+    (each (partial o_set, obj), keys, vals)
+    obj
 
   # ============================================================
   # CATEGORY: STRINGS
   # ============================================================
-  
+
   head = (chars_to_take, str) ->
     str.substr(0, chars_to_take)
-  
-  match = (source_str, regexp) ->
+
+  match = (regexp, source_str) ->
     source_str.match(regexp)
+
+  matches = (regexp, str) ->
+    if 'string' == (type_of regexp)
+      (mk_regexp regexp).test(str)
+    else
+      regexp.test(str)
 
   comma = ->
     (str_join ',', (slice arguments))
@@ -995,7 +1091,7 @@ define ->
     i = -1
     while ++i < wrap_len
       jquery_wrap.eq(i)
-  
+
   mk_regexp = (rx_str, rx_settings) ->
     rx_settings = rx_settings || ""
     new RegExp(rx_str, rx_settings)
@@ -1078,9 +1174,12 @@ define ->
   exports.a_reject = a_reject
   exports.a_sum = a_sum
   exports.and2 = and2
+  exports.any  = any
   exports.assign = assign
   exports.apply = apply
   exports.bind = bind
+  exports.bind_all = bind_all
+  exports.build_index = build_index
   exports.butlast = butlast
   exports.cat = cat
   exports.clone = clone
@@ -1093,6 +1192,7 @@ define ->
   exports.concat = cat
   exports.contains = contains
   exports.count = count
+  exports.create = create
   exports.debounce = debounce
   exports.dec = dec
   exports.defaults = defaults
@@ -1100,9 +1200,11 @@ define ->
   exports.detect = find
   exports.drop = drop
   exports.each = each
+  exports.equal = equal
+  exports.equal_array_start = equal_array_start
+  exports.equal_val = equal_val
   exports.extend = assign
   exports.fastbind = bind
-  exports.flow = flow
   exports.first = first
   exports.filter = filter
   exports.filter_fn = filter_fn
@@ -1118,6 +1220,8 @@ define ->
   exports.find_index_obj_1kv = find_index_obj_1kv
   exports.find_index_obj_2kv = find_index_obj_2kv
   exports.find_index_obj = find_index_obj
+  exports.flattenp = flattenp
+  exports.flow = flow
   exports.get = read
   exports.head = head
   exports.inc = inc
@@ -1142,6 +1246,7 @@ define ->
   exports.list_compact = list_compact
   exports.map = map
   exports.match = match
+  exports.matches = matches
   exports.merge = merge
   exports.mk_regexp = mk_regexp
   exports.multicall = multicall
@@ -1162,6 +1267,7 @@ define ->
   exports.pt = partial
   exports.ptr = partialr
   exports.partialr = partialr
+  exports.pick = pick
   exports.pipeline = flow
   exports.pluck = pluck
   exports.pull = pull
@@ -1204,9 +1310,11 @@ define ->
   exports.time = time
   exports.trim = trim
   exports.union = union
+  exports.unique = unique
   exports.unshift = unshift
   exports.vals = vals
   exports.varynum = varynum
   exports.write = write
+  exports.zip_obj = zip_obj
 
   exports

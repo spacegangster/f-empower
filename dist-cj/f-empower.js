@@ -7,7 +7,8 @@ A set of functions to harness the power functional programming in JS.
 Author: Ivan Fedorov <sharp.maestro@gmail.com>
 License: MIT
  */
-var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, apply, assign, assign_one, bind, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, partial, partialr, pbind, pluck, prelast, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, trim, type_of, union, unshift, vals, varynum, write, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort;
+var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, any, apply, assign, assign_one, bind, bind_all, build_index, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, create, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, equal, equal_array, equal_array_start, equal_val, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flattenp, flattenp_recursive, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, matches, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, o_set, partial, partialr, pbind, pick, pluck, prelast, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, trim, type_of, union, unique, unique_by_prop, unshift, vals, varynum, write, zip_obj, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort,
+  __slice = [].slice;
 
 THRESHOLD_LARGE_ARRAY_SIZE = 64000;
 
@@ -54,6 +55,15 @@ apply = function(fn, args_list) {
 
 and2 = function(a, b) {
   return a && b;
+};
+
+bind_all = function() {
+  var props, this_arg;
+  props = butlast(arguments);
+  this_arg = last(arguments);
+  return a_each(props, function(prop) {
+    return this_arg[prop] = bind(this_arg[prop], this_arg);
+  });
 };
 
 compose = function() {
@@ -312,6 +322,10 @@ a_reduce = function(array, fn, val) {
 
 a_reject = function(array, fn) {
   return reject(fn, array);
+};
+
+any = function(fn, arr) {
+  return -1 !== (find_index_fn(fn, arr));
 };
 
 compact = function(coll) {
@@ -1016,6 +1030,23 @@ write = function(dst_coll, prop_name, src_coll) {
   return dst_coll;
 };
 
+unique_by_prop = function(prop_name, arr) {
+  var help_hash, out;
+  help_hash = {};
+  out = [];
+  a_each(arr, function(item) {
+    var prop_val;
+    prop_val = item[prop_name];
+    if (!help_hash[prop_val]) {
+      help_hash[prop_val] = true;
+      return out.push(item);
+    }
+  });
+  return out;
+};
+
+unique = unique_by_prop;
+
 assign = function(dest, sources) {
   if (dest == null) {
     dest = {};
@@ -1033,6 +1064,18 @@ assign_one = function(dest, src) {
     _results.push(dest[key] = val);
   }
   return _results;
+};
+
+build_index = function(index_prop, list_to_index, accumulator) {
+  var item, _i, _len;
+  if (accumulator == null) {
+    accumulator = {};
+  }
+  for (_i = 0, _len = list_to_index.length; _i < _len; _i++) {
+    item = list_to_index[_i];
+    accumulator[item[index_prop]] = item;
+  }
+  return accumulator;
 };
 
 clone_obj = function(obj) {
@@ -1121,6 +1164,10 @@ _clonedeep2 = function(src) {
   return dst;
 };
 
+create = function(ctor, arg) {
+  return new ctor(arg);
+};
+
 defaults = function(dest) {
   if (dest == null) {
     dest = {};
@@ -1137,6 +1184,46 @@ defaults2 = function(dest, source) {
     }
   }
   return dest;
+};
+
+equal = function(o1, o2) {
+  return equal_array(o1, o2);
+};
+
+equal_array = function(arr1, arr2) {
+  var len1, len2;
+  len1 = count(arr1);
+  len2 = count(arr2);
+  return ((0 === len1) && (0 === len2)) || ((len1 === len2) && (equal_array_start(arr1, arr2)));
+};
+
+equal_array_start = function(arr1, arr2) {
+  return reduce(and2, true, map(equal_val, arr1, arr2));
+};
+
+equal_val = function(v1, v2) {
+  return v1 === v2;
+};
+
+flattenp_recursive = function(key, root, accumulator) {
+  var children, son, _i, _len;
+  push_all(accumulator, root[key]);
+  if (children = root[key]) {
+    for (_i = 0, _len = children.length; _i < _len; _i++) {
+      son = children[_i];
+      flattenp_recursive(key, son, accumulator);
+    }
+  }
+  return accumulator;
+};
+
+flattenp = function(key, root, _arg) {
+  var accumulator, include_root;
+  include_root = (_arg != null ? _arg : {
+    include_root: true
+  }).include_root;
+  accumulator = include_root && [root] || [];
+  return flattenp_recursive(key, root, accumulator);
 };
 
 keys = function(hash) {
@@ -1205,16 +1292,48 @@ pull = function(key, hash) {
   return val;
 };
 
+pick = function() {
+  var obj, prop, props, res, _i, _j, _len;
+  props = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), obj = arguments[_i++];
+  res = {};
+  for (_j = 0, _len = props.length; _j < _len; _j++) {
+    prop = props[_j];
+    if (obj[prop] !== void 0) {
+      res[prop] = obj[prop];
+    }
+  }
+  return res;
+};
+
 vals = function(hash) {
   return o_map(hash, keys(hash));
+};
+
+o_set = function(obj, key, val) {
+  return obj[key] = val;
+};
+
+zip_obj = function(keys, vals) {
+  var obj;
+  obj = {};
+  each(partial(o_set, obj), keys, vals);
+  return obj;
 };
 
 head = function(chars_to_take, str) {
   return str.substr(0, chars_to_take);
 };
 
-match = function(source_str, regexp) {
+match = function(regexp, source_str) {
   return source_str.match(regexp);
+};
+
+matches = function(regexp, str) {
+  if ('string' === (type_of(regexp))) {
+    return (mk_regexp(regexp)).test(str);
+  } else {
+    return regexp.test(str);
+  }
 };
 
 comma = function() {
@@ -1380,11 +1499,17 @@ exports.a_sum = a_sum;
 
 exports.and2 = and2;
 
+exports.any = any;
+
 exports.assign = assign;
 
 exports.apply = apply;
 
 exports.bind = bind;
+
+exports.bind_all = bind_all;
+
+exports.build_index = build_index;
 
 exports.butlast = butlast;
 
@@ -1410,6 +1535,8 @@ exports.contains = contains;
 
 exports.count = count;
 
+exports.create = create;
+
 exports.debounce = debounce;
 
 exports.dec = dec;
@@ -1424,11 +1551,15 @@ exports.drop = drop;
 
 exports.each = each;
 
+exports.equal = equal;
+
+exports.equal_array_start = equal_array_start;
+
+exports.equal_val = equal_val;
+
 exports.extend = assign;
 
 exports.fastbind = bind;
-
-exports.flow = flow;
 
 exports.first = first;
 
@@ -1459,6 +1590,10 @@ exports.find_index_obj_1kv = find_index_obj_1kv;
 exports.find_index_obj_2kv = find_index_obj_2kv;
 
 exports.find_index_obj = find_index_obj;
+
+exports.flattenp = flattenp;
+
+exports.flow = flow;
 
 exports.get = read;
 
@@ -1508,6 +1643,8 @@ exports.map = map;
 
 exports.match = match;
 
+exports.matches = matches;
+
 exports.merge = merge;
 
 exports.mk_regexp = mk_regexp;
@@ -1547,6 +1684,8 @@ exports.pt = partial;
 exports.ptr = partialr;
 
 exports.partialr = partialr;
+
+exports.pick = pick;
 
 exports.pipeline = flow;
 
@@ -1632,6 +1771,8 @@ exports.trim = trim;
 
 exports.union = union;
 
+exports.unique = unique;
+
 exports.unshift = unshift;
 
 exports.vals = vals;
@@ -1639,5 +1780,7 @@ exports.vals = vals;
 exports.varynum = varynum;
 
 exports.write = write;
+
+exports.zip_obj = zip_obj;
 
 exports;
