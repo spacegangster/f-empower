@@ -21,7 +21,7 @@ test_debounce = (next) ->
   fn = ->
     ++a * 2
   # INIT 
-  dfn = (debounce 100, fn)
+  dfn = (debounce 90, fn)
   #
   (equal dfn(), undefined)
   setTimeout ->

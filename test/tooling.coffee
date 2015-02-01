@@ -2,7 +2,7 @@ assert = require 'assert'
 fn     = require 'f-empower'
 
 { bind
-  partial } = fn
+, partial } = fn
 
 log     = (bind console.log, console)
 testing = (partial log, "testing")
@@ -16,8 +16,8 @@ equal_deep = assert.deepEqual
 
 module.exports =
   { equal
-    equal_deep
-    log
-    newline
-    print_json
-    testing }
+  , equal_deep
+  , log
+  , newline
+  , print_json
+  , testing }

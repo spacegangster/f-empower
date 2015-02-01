@@ -1,5 +1,5 @@
 { "name"        : "f-empower"
-, "version"     : "3.9.0"
+, "version"     : "3.10.0"
 , "description" : "Utility functions designed for functional programming and composition"
 
 , "keywords"    : [ "functional"
@@ -13,7 +13,8 @@
 , "repository"  : { "type" : "git"
                   , "url"  : "https://github.com/ognivo/f-empower" }
 
-, "devDependencies": { "fella": "1.x.x" }
+, "devDependencies": { "fella": "1.x.x"
+                     , "f-empower": "3.x.x" }
 
 , "scripts"     : { "prepublish": "./build" }
 

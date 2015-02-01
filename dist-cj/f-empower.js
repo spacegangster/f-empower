@@ -7,7 +7,7 @@ A set of functions to harness the power functional programming in JS.
 Author: Ivan Fedorov <sharp.maestro@gmail.com>
 License: MIT
  */
-var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, any, apply, assign, assign_one, bind, bind_all, build_index, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, create, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, equal, equal_array, equal_array_start, equal_val, exports, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flattenp, flattenp_recursive, flow, head, inc, index_of, invoke, is_array, is_atom, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, matches, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, o_set, partial, partialr, pbind, pick, pluck, prelast, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, throttle, time, to_string, trim, type_of, union, unique, unique_by_prop, unshift, vals, varynum, write, zip_obj, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort,
+var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, any, apply, assign, assign_one, bind, bind_all, build_index, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, create, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, equal, equal_array, equal_array_start, equal_val, exports, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flattenp, flattenp_recursive, flow, head, inc, index_of, invoke, is_array, is_atomic, is_date, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, matches, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, o_set, partial, partialr, pbind, pick, pluck, prelast, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, repeatf, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, third, throttle, time, to_string, trim, type_of, type_of2, union, unique, unique_by_prop, unshift, vals, varynum, without, write, zip_obj, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort,
   __slice = [].slice;
 
 THRESHOLD_LARGE_ARRAY_SIZE = 64000;
@@ -196,10 +196,6 @@ throttle = function(throttle_millis, fn) {
 };
 
 is_array = Array.isArray;
-
-is_atom = function(val) {
-  return !((is_array(val)) || (is_object(val)));
-};
 
 is_defined = function(subj) {
   return 'undefined' !== (typeof subj);
@@ -623,6 +619,10 @@ type_of = function(mixed) {
   return typeof mixed;
 };
 
+type_of2 = function(val) {
+  return to_string.call(val);
+};
+
 sort = function(criterion, arr) {
   switch (count(arguments)) {
     case 1:
@@ -907,8 +907,17 @@ remove_at = function(idx, arr) {
 repeat = function(times, value) {
   var _results;
   _results = [];
-  while (--times >= 0) {
+  while (--times > -1) {
     _results.push(value);
+  }
+  return _results;
+};
+
+repeatf = function(times, fn) {
+  var _results;
+  _results = [];
+  while (--times > -1) {
+    _results.push(fn());
   }
   return _results;
 };
@@ -956,6 +965,10 @@ take = function(items_number_to_take, array_like) {
   return slice(array_like, 0, items_number_to_take);
 };
 
+third = function(arr) {
+  return arr[2];
+};
+
 union = function(arr1, arr2) {
   var item, result, _i, _len;
   result = arr1.slice();
@@ -970,6 +983,11 @@ union = function(arr1, arr2) {
 
 unshift = function(arr, item) {
   arr.unshift(item);
+  return arr;
+};
+
+without = function(item, arr) {
+  remove(item, arr);
   return arr;
 };
 
@@ -1105,12 +1123,29 @@ clonedeep = function(src) {
   return _clonedeep(src, dst = (is_array(src)) && [] || {}, stack_dst = [dst], stack_src = [src]);
 };
 
+is_atomic = function(val) {
+  switch (type_of2(val)) {
+    case '[object Object]':
+    case '[object Array]':
+    case '[object Date]':
+      return false;
+    default:
+      return true;
+  }
+};
+
+is_date = function(val) {
+  return '[object Date]' === (type_of2(val));
+};
+
 _clonedeep = function(src, dst, stack_dst, stack_src) {
   var child_dst, key, val, val_idx;
   for (key in src) {
     val = src[key];
-    if (not_mergeable(val)) {
+    if (is_atomic(val)) {
       dst[key] = val;
+    } else if (is_date(val)) {
+      dst[key] = new Date(val.getTime());
     } else {
       val_idx = index_of(val, stack_src);
       if (val_idx === -1) {
@@ -1139,8 +1174,10 @@ _clonedeep2 = function(src) {
   while (--cur_key_idx >= 0) {
     key = cur_keys[cur_key_idx];
     val = cur_src[key];
-    if (not_mergeable(val)) {
+    if (is_atomic(val)) {
       cur_dst[key] = val;
+    } else if (is_date(val)) {
+      cur_dst[key] = new Date(val.getTime());
     } else {
       val_idx = index_of(val, stack_src);
       if (val_idx === -1) {
@@ -1203,6 +1240,10 @@ equal_array_start = function(arr1, arr2) {
 
 equal_val = function(v1, v2) {
   return v1 === v2;
+};
+
+extend = function(extended, extension) {
+  return assign(Object.create(extended), extension);
 };
 
 flattenp_recursive = function(key, root, accumulator) {
@@ -1557,7 +1598,7 @@ exports.equal_array_start = equal_array_start;
 
 exports.equal_val = equal_val;
 
-exports.extend = assign;
+exports.extend = extend;
 
 exports.fastbind = bind;
 
@@ -1727,6 +1768,8 @@ exports.remove_at = remove_at;
 
 exports.repeat = repeat;
 
+exports.repeatf = repeatf;
+
 exports.rest = rest;
 
 exports.reverse = reverse;
@@ -1763,6 +1806,8 @@ exports.take = take;
 
 exports.tail = tail;
 
+exports.third = third;
+
 exports.throttle = throttle;
 
 exports.time = time;
@@ -1778,6 +1823,8 @@ exports.unshift = unshift;
 exports.vals = vals;
 
 exports.varynum = varynum;
+
+exports.without = without;
 
 exports.write = write;
 

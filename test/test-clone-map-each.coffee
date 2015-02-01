@@ -10,7 +10,8 @@ tooling   = require './tooling'
   print_json
   testing } = tooling
 
-{ bind
+{ a_each
+  bind
   clonedeep
   clonedeep2
   each
@@ -33,6 +34,31 @@ class Python extends Snake
   constructor: (@length = 10) ->
     super()
 
+class Tree
+  constructor: (children) ->
+    @float_id = Math.random()
+    @parent   = null
+    @children = []
+    if children
+      @set_children(children)
+
+  set_children: (children) ->
+    @children.length = 0
+    for child in children
+      @children.push(child)
+      child.parent = this
+
+# child1 = new Tree()
+# child2 = new Tree()
+# child3 = new Tree()
+# complex_src2 = new Tree([
+#   child1, child2, child3
+# ])
+# #
+# #
+# result = (fn.clonedeep2 complex_src2)
+
+
 test_clonefn = (cloningfn) ->
   # INIT
   list   = [ "no", "rest", "for", "the", "wicked"]
@@ -46,20 +72,33 @@ test_clonefn = (cloningfn) ->
     , list   : list
     , obj    : singer }
   #
+  child1 = new Tree()
+  child2 = new Tree()
+  child3 = new Tree()
+  complex_src2 = new Tree([
+    child1, child2, child3
+  ])
+  #
+  #
   result = (cloningfn complex_src)
-  (equal_deep complex_src, result)
-
-  # class instance should not be cloned
+  for key, val of result
+    if typeof val != 'object'
+      (equal complex_src[key], val)
+  # class instance should be cloned as plain object
   python.length = 20
-  (equal result.python.length, 20)
-
-  # object should have been cloned
+  (equal result.python.length, 10)
+  # object must be cloned
   singer.name = "Mary"
   (equal result.obj.name, "Johny")
-  
   # array must be cloned
   list[0] = "there will be"
   (equal result.list[0], "no")
+  #
+  #
+  result2 = (cloningfn complex_src2)
+  (assert.ok result2.children.length == 3)
+  (assert.ok result2.children[0].parent == result2)
+
 
 test_clonedeep = ->
   console.log "testing clonedeep..."

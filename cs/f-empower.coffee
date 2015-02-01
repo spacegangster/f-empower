@@ -171,9 +171,6 @@ define ->
 
   is_array = Array.isArray
 
-  is_atom = (val) ->
-    !((is_array val) || (is_object val))
-
   is_defined = (subj) ->
     'undefined' != (typeof subj)
 
@@ -464,6 +461,9 @@ define ->
   type_of = (mixed) ->
     typeof mixed
 
+  type_of2 = (val) ->
+    to_string.call(val)
+
   # arr
   # criterion, arr
   sort = (criterion, arr) ->
@@ -678,8 +678,12 @@ define ->
     (splice arr, idx, 1)
 
   repeat = (times, value) ->
-    while --times >= 0
+    while --times > -1
       value
+
+  repeatf = (times, fn) ->
+    while --times > -1
+      fn()
 
   # @return {Array} whole array except the first item
   rest = (arr) ->
@@ -709,6 +713,9 @@ define ->
   take = (items_number_to_take, array_like) ->
     (slice array_like, 0, items_number_to_take)
 
+  third = (arr) ->
+    arr[2]
+
   union = (arr1, arr2) ->
     result = arr1.slice()
     for item in arr2
@@ -718,6 +725,10 @@ define ->
 
   unshift = (arr, item) ->
     arr.unshift(item)
+    arr
+
+  without = (item, arr) ->
+    (remove item, arr)
     arr
 
   # ============================================================
@@ -829,10 +840,26 @@ define ->
               , stack_dst = [dst]
               , stack_src = [src])
 
+
+
+  is_atomic = (val) ->
+    switch (type_of2 val)
+      when '[object Object]'
+      ,    '[object Array]'
+      ,    '[object Date]'
+        false
+      else
+        true
+
+  is_date = (val) ->
+    '[object Date]' == (type_of2 val)
+
   _clonedeep = (src, dst, stack_dst, stack_src) ->
     for key, val of src
-      if (not_mergeable val)
+      if (is_atomic val)
         dst[key] = val
+      else if (is_date val)
+        dst[key] = new Date(val.getTime())
       else
         val_idx = (index_of val, stack_src)
         if (val_idx == -1)
@@ -850,20 +877,22 @@ define ->
     dst = (is_array src) && [] || {}
     cur_src = src
     cur_dst = dst
-
+    #
     stack_src = [src]
     stack_dst = [dst]
     stack_act = []
-
+    #
     cur_keys = (is_array cur_src) && (range (count cur_src)) || (reverse (keys cur_src))
     cur_key_idx = (count cur_keys)
-
+    #
     while --cur_key_idx >= 0
       key = cur_keys[cur_key_idx]
       val = cur_src[key]
-
-      if (not_mergeable val)
+      #
+      if (is_atomic val)
         cur_dst[key] = val
+      else if (is_date val)
+        cur_dst[key] = new Date(val.getTime())
       else
         val_idx = (index_of val, stack_src)
         if (val_idx == -1)
@@ -920,6 +949,9 @@ define ->
 
   equal_val = (v1, v2) ->
     v1 == v2
+
+  extend = (extended, extension) ->
+    (assign Object.create(extended), extension)
 
   flattenp_recursive = (key, root, accumulator) ->
     (push_all accumulator, root[key])
@@ -1203,7 +1235,7 @@ define ->
   exports.equal = equal
   exports.equal_array_start = equal_array_start
   exports.equal_val = equal_val
-  exports.extend = assign
+  exports.extend = extend
   exports.fastbind = bind
   exports.first = first
   exports.filter = filter
@@ -1288,6 +1320,7 @@ define ->
   exports.remove = remove
   exports.remove_at = remove_at
   exports.repeat = repeat
+  exports.repeatf = repeatf
   exports.rest = rest
   exports.reverse = reverse
   exports.second = second
@@ -1306,6 +1339,7 @@ define ->
   exports.sumn = (flow list, (partial reduce, sum2))
   exports.take = take
   exports.tail = tail
+  exports.third = third
   exports.throttle = throttle
   exports.time = time
   exports.trim = trim
@@ -1314,6 +1348,7 @@ define ->
   exports.unshift = unshift
   exports.vals = vals
   exports.varynum = varynum
+  exports.without = without
   exports.write = write
   exports.zip_obj = zip_obj
 
