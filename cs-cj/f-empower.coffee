@@ -170,7 +170,19 @@ throttle = (throttle_millis, fn) ->
 # CATEGORY: PREDICATES
 # ============================================================
 
+is_atomic = (val) ->
+  switch (type_of2 val)
+    when '[object Object]'
+    ,    '[object Array]'
+    ,    '[object Date]'
+      false
+    else
+      true
+
 is_array = Array.isArray
+
+is_date = (val) ->
+  '[object Date]' == (type_of2 val)
 
 is_defined = (subj) ->
   'undefined' != (typeof subj)
@@ -907,20 +919,6 @@ clonedeep = (src) ->
             , dst = (is_array src) && [] || {}
             , stack_dst = [dst]
             , stack_src = [src])
-
-
-
-is_atomic = (val) ->
-  switch (type_of2 val)
-    when '[object Object]'
-    ,    '[object Array]'
-    ,    '[object Date]'
-      false
-    else
-      true
-
-is_date = (val) ->
-  '[object Date]' == (type_of2 val)
 
 _clonedeep = (src, dst, stack_dst, stack_src) ->
   for key, val of src

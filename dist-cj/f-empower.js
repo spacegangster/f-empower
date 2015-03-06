@@ -198,7 +198,22 @@ throttle = function(throttle_millis, fn) {
   };
 };
 
+is_atomic = function(val) {
+  switch (type_of2(val)) {
+    case '[object Object]':
+    case '[object Array]':
+    case '[object Date]':
+      return false;
+    default:
+      return true;
+  }
+};
+
 is_array = Array.isArray;
+
+is_date = function(val) {
+  return '[object Date]' === (type_of2(val));
+};
 
 is_defined = function(subj) {
   return 'undefined' !== (typeof subj);
@@ -1197,21 +1212,6 @@ clone = function(data) {
 clonedeep = function(src) {
   var dst, stack_dst, stack_src;
   return _clonedeep(src, dst = (is_array(src)) && [] || {}, stack_dst = [dst], stack_src = [src]);
-};
-
-is_atomic = function(val) {
-  switch (type_of2(val)) {
-    case '[object Object]':
-    case '[object Array]':
-    case '[object Date]':
-      return false;
-    default:
-      return true;
-  }
-};
-
-is_date = function(val) {
-  return '[object Date]' === (type_of2(val));
 };
 
 _clonedeep = function(src, dst, stack_dst, stack_src) {
