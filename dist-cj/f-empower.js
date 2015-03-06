@@ -7,8 +7,7 @@ A set of functions to harness the power functional programming in JS.
 Author: Ivan Fedorov <sharp.maestro@gmail.com>
 License: MIT
  */
-var Errors, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, any, apply, assign, assign_one, bind, bind_all, build_index, butlast, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, create, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, eachn, equal, equal_array, equal_array_start, equal_val, exports, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flattenp, flattenp_recursive, flow, head, inc, index_of, invoke, is_array, is_atomic, is_date, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, matches, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, no_operation, not_array, not_contains, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, o_set, partial, partialr, pbind, pick, pluck, prelast, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, repeatf, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, third, throttle, time, to_string, trim, type_of, type_of2, union, unique, unique_by_prop, unshift, vals, varynum, without, write, zip_obj, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort,
-  __slice = [].slice;
+var Errors, Reduced, THRESHOLD_LARGE_ARRAY_SIZE, a_contains, a_each, a_filter, a_index_of, a_map, a_reduce, a_reject, a_sum, and2, and_r, any, apply, assign, assign_one, bind, bind_all, build_index, butlast, calc_shortest_length, cat, clone, clone_obj, clonedeep, comma, compact, complement, compose, contains, count, create, debounce, dec, defaults, defaults2, delay, drop, each, each2, each3, each_idx, each_idx2, each_idxn, eachn, equal, equal_array, equal_array_start, equal_object, equal_set, equal_val, exports, extend, filter, filter_fn, filter_obj, filter_obj_1kv, filter_obj_2kv, filter_prop, filter_re, find, find_index, find_index_fn, find_index_obj, find_index_obj_1kv, find_index_obj_2kv, find_index_prop, first, flatten, flattenp, flattenp_recursive, flow, head, inc, index_of, invoke, invokem, is_array, is_atomic, is_date, is_defined, is_empty, is_even, is_function, is_mergeable, is_number, is_object, is_plain_object, is_string, is_zero, jquery_wrap_to_array, keys, last, list, list_compact, make_array, map, map2, map3, mapn, match, matches, merge, mk_regexp, multicall, native_concat, native_index_of, native_locale_compare, native_slice, next, no_operation, not_array, not_contains, not_date, not_defined, not_empty, not_function, not_mergeable, not_number, not_object, not_string, not_zero, o_map, o_match, o_set, omit, partial, partialr, pbind, pick, pick_all, pluck, prelast, prev, pull, push, push_all, range, read, read_1kv, recurse, reduce, reducer, reject, reject_fn, reject_obj, reject_obj_1kv, reject_obj_2kv, reject_prop, remap, remove, remove_at, repeat, repeatf, rest, reverse, second, set, set_difference, set_symmetric_difference, slice, sort, sort_fn, sort_multi, sort_prop, space, splice, str, str_breplace, str_join, str_split, sum2, tail, take, third, throttle, time, to_string, trim, type_of, type_of2, union, unique, unique_by_prop, unshift, vals, varynum, without, write, zip_obj, _clonedeep, _clonedeep2, _compare_crit, _compare_string, _suit_sort;
 
 THRESHOLD_LARGE_ARRAY_SIZE = 64000;
 
@@ -16,6 +15,10 @@ Errors = {
   NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
   NOT_FUNCTION: new TypeError('Something is not function'),
   UNEXPECTED_TYPE: new TypeError('Unexpected type')
+};
+
+Reduced = function(val) {
+  return this.val = val;
 };
 
 to_string = Object.prototype.toString;
@@ -31,13 +34,9 @@ slice = function(array_or_arguments, start_idx, end_idx) {
 };
 
 bind = function(fn, this_arg) {
-  var other_args;
-  other_args = slice(arguments, 2);
-  return (count(arguments)) <= 2 && (function() {
+  return function() {
     return fn.apply(this_arg, arguments);
-  }) || (function() {
-    return fn.apply(this_arg, other_args.concat(slice(arguments)));
-  });
+  };
 };
 
 partial = function() {
@@ -55,6 +54,10 @@ apply = function(fn, args_list) {
 
 and2 = function(a, b) {
   return a && b;
+};
+
+and_r = function(a, b) {
+  return (a && b) || new Reduced(false);
 };
 
 bind_all = function() {
@@ -250,6 +253,8 @@ is_zero = function(candidate) {
 
 not_array = complement(is_array);
 
+not_date = complement(is_date);
+
 not_defined = complement(is_defined);
 
 not_empty = complement(is_empty);
@@ -378,17 +383,52 @@ each3 = function(fn, arr1, arr2) {
   }
 };
 
+calc_shortest_length = function(arrs) {
+  return apply(Math.min, map2(count, arrs));
+};
+
 eachn = function() {
-  var args, arrs, fn, i, local_apply, local_pluck, shortest_idx;
+  var args, arrs, fn, i, local_apply, local_pluck, shortest_len;
   args = arguments;
   fn = first(args);
   arrs = rest(args);
-  shortest_idx = apply(Math.min, map2(count, arrs));
+  shortest_len = calc_shortest_length(arrs);
   i = -1;
   local_pluck = pluck;
   local_apply = apply;
-  while (++i < shortest_idx) {
+  while (++i < shortest_len) {
     local_apply(fn, local_pluck(i, arrs));
+  }
+};
+
+each_idx = function() {
+  if (arguments.length === 2) {
+    return each_idx2(arguments[0], arguments[1]);
+  } else {
+    return apply(each_idxn, arguments);
+  }
+};
+
+each_idx2 = function(fn, arr) {
+  var i, len;
+  len = arr.length;
+  i = -1;
+  while (++i < len) {
+    fn(arr[i], i);
+  }
+};
+
+each_idxn = function() {
+  var args, arrs, fn, local_apply, local_pluck, shortest_len;
+  fn = first(arguments);
+  arrs = rest(arguments);
+  shortest_len = calc_shortest_length(arrs);
+  local_pluck = pluck;
+  local_apply = apply;
+  while (++i < shortest_len) {
+    args = local_pluck(i, arrs);
+    args.push(i);
+    local_apply(fn, args);
   }
 };
 
@@ -590,6 +630,10 @@ find = function(some_criteria, array) {
   return read(item_idx, array);
 };
 
+flatten = function(arr) {
+  return apply(cat, arr);
+};
+
 index_of = function(item, array) {
   return native_index_of.call(array, item);
 };
@@ -613,6 +657,14 @@ list_compact = function() {
     }
   }
   return result;
+};
+
+next = function(arr, item) {
+  return arr[(index_of(item, arr)) + 1];
+};
+
+prev = function(arr, item) {
+  return arr[(index_of(item, arr)) - 1];
 };
 
 type_of = function(mixed) {
@@ -766,10 +818,14 @@ reduce = function(fn, val, array) {
     idx = 1;
   }
   len = count(array);
-  while (++idx < len) {
+  while (++idx < len && (!val || val.constructor !== Reduced)) {
     val = fn(val, array[idx]);
   }
-  return val;
+  if (val && val.constructor === Reduced) {
+    return val.val;
+  } else {
+    return val;
+  }
 };
 
 reducer = function(fn, val, arr) {
@@ -1015,6 +1071,27 @@ invoke = function(method_name, coll) {
   return results;
 };
 
+invokem = function(method_name, coll) {
+  var args_count, i, item, len, method_args;
+  args_count = count(arguments);
+  if (args_count >= 3) {
+    method_args = slice(arguments, 1, args_count - 1);
+    coll = last(arguments);
+  }
+  len = count(coll);
+  i = -1;
+  if (args_count >= 3) {
+    while (++i < len) {
+      item = coll[i];
+      item[method_name].apply(item, method_args);
+    }
+  } else {
+    while (++i < len) {
+      coll[i][method_name]();
+    }
+  }
+};
+
 pluck = function(key, coll) {
   var i, len, result;
   len = count(coll);
@@ -1075,13 +1152,12 @@ assign = function(dest, sources) {
 };
 
 assign_one = function(dest, src) {
-  var key, val, _results;
-  _results = [];
+  var key, val;
   for (key in src) {
     val = src[key];
-    _results.push(dest[key] = val);
+    dest[key] = val;
   }
-  return _results;
+  return dest;
 };
 
 build_index = function(index_prop, list_to_index, accumulator) {
@@ -1224,7 +1300,11 @@ defaults2 = function(dest, source) {
 };
 
 equal = function(o1, o2) {
-  return equal_array(o1, o2);
+  if ((is_array(o1)) && (is_array(o2))) {
+    return equal_array(o1, o2);
+  } else {
+    return equal_object(o1, o2);
+  }
 };
 
 equal_array = function(arr1, arr2) {
@@ -1235,7 +1315,26 @@ equal_array = function(arr1, arr2) {
 };
 
 equal_array_start = function(arr1, arr2) {
-  return reduce(and2, true, map(equal_val, arr1, arr2));
+  return reduce(and_r, true, map(equal_val, arr1, arr2));
+};
+
+equal_object = function(o1, o2) {
+  var keys1, keys2, vals1, vals2;
+  keys1 = keys(o1);
+  keys2 = keys(o2);
+  if (keys1.length === keys2.length && (equal_set(keys1, keys2))) {
+    vals1 = o_map(o1, keys1);
+    vals2 = o_map(o2, keys1);
+    return equal_array_start(vals1, vals2);
+  } else {
+    return false;
+  }
+};
+
+equal_set = function(keyset1, keyset2) {
+  var diff1, diff2, _ref;
+  _ref = set_symmetric_difference(keyset1, keyset2), diff1 = _ref[0], diff2 = _ref[1];
+  return (is_empty(diff1)) && (is_empty(diff2));
 };
 
 equal_val = function(v1, v2) {
@@ -1305,6 +1404,19 @@ merge = function(dst, src) {
   return dst;
 };
 
+omit = function(obj, props) {
+  var key, res, val;
+  res = {};
+  props = rest(arguments);
+  for (key in obj) {
+    val = obj[key];
+    if (not_contains(key, props)) {
+      res[key] = val;
+    }
+  }
+  return res;
+};
+
 o_map = function(hash, keys_list) {
   var key, _i, _len, _results;
   _results = [];
@@ -1326,6 +1438,10 @@ o_match = function(criteria_obj, subject) {
   return true;
 };
 
+o_set = function(obj, key, val) {
+  return obj[key] = val;
+};
+
 pull = function(key, hash) {
   var val;
   val = hash[key];
@@ -1333,12 +1449,15 @@ pull = function(key, hash) {
   return val;
 };
 
-pick = function() {
-  var obj, prop, props, res, _i, _j, _len;
-  props = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), obj = arguments[_i++];
+pick = function(obj, props) {
+  return pick_all(obj, rest(arguments));
+};
+
+pick_all = function(obj, props) {
+  var prop, res, _i, _len;
   res = {};
-  for (_j = 0, _len = props.length; _j < _len; _j++) {
-    prop = props[_j];
+  for (_i = 0, _len = props.length; _i < _len; _i++) {
+    prop = props[_i];
     if (obj[prop] !== void 0) {
       res[prop] = obj[prop];
     }
@@ -1348,10 +1467,6 @@ pick = function() {
 
 vals = function(hash) {
   return o_map(hash, keys(hash));
-};
-
-o_set = function(obj, key, val) {
-  return obj[key] = val;
 };
 
 zip_obj = function(keys, vals) {
@@ -1522,6 +1637,8 @@ time = function(fn) {
 
 exports = ("undefined" !== typeof module) && module.exports || {};
 
+exports.Reduced = Reduced;
+
 exports.a_contains = a_contains;
 
 exports.a_each = a_each;
@@ -1592,6 +1709,8 @@ exports.drop = drop;
 
 exports.each = each;
 
+exports.each_idx = each_idx;
+
 exports.equal = equal;
 
 exports.equal_array_start = equal_array_start;
@@ -1632,6 +1751,8 @@ exports.find_index_obj_2kv = find_index_obj_2kv;
 
 exports.find_index_obj = find_index_obj;
 
+exports.flatten = flatten;
+
 exports.flattenp = flattenp;
 
 exports.flow = flow;
@@ -1646,7 +1767,11 @@ exports.index_of = index_of;
 
 exports.invoke = invoke;
 
+exports.invokem = invokem;
+
 exports.is_array = is_array;
+
+exports.is_date = is_date;
 
 exports.is_defined = is_defined;
 
@@ -1692,11 +1817,15 @@ exports.mk_regexp = mk_regexp;
 
 exports.multicall = multicall;
 
+exports.next = next;
+
 exports.no_operation = no_operation;
 
 exports.noop = no_operation;
 
 exports.not_array = not_array;
+
+exports.not_date = not_date;
 
 exports.not_defined = not_defined;
 
@@ -1711,6 +1840,8 @@ exports.not_object = not_object;
 exports.not_string = not_string;
 
 exports.not_zero = not_zero;
+
+exports.omit = omit;
 
 exports.o_map = o_map;
 
@@ -1728,9 +1859,13 @@ exports.partialr = partialr;
 
 exports.pick = pick;
 
+exports.pick_all = pick_all;
+
 exports.pipeline = flow;
 
 exports.pluck = pluck;
+
+exports.prev = prev;
 
 exports.pull = pull;
 

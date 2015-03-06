@@ -18,6 +18,9 @@ Errors =
   NOT_FUNCTION              : new TypeError('Something is not function')
   UNEXPECTED_TYPE           : new TypeError('Unexpected type')
 
+Reduced = (val) ->
+  @val = val
+
 to_string       = Object::toString
 native_concat   = Array::concat
 native_index_of = Array::indexOf
@@ -26,12 +29,8 @@ native_slice    = Array::slice
 slice = (array_or_arguments, start_idx, end_idx) ->
   native_slice.call(array_or_arguments, start_idx, end_idx)
 
-bind = (fn, this_arg) -> # TODO make dumb
-  other_args = (slice arguments, 2)
-  (count arguments) <= 2 &&
-    (-> fn.apply(this_arg, arguments)) ||
-    # deprecated
-    (-> fn.apply(this_arg, other_args.concat((slice arguments))))
+bind = (fn, this_arg) ->
+  (-> fn.apply(this_arg, arguments))
 
 partial = ->
   fn = arguments[0]
@@ -50,6 +49,9 @@ apply = (fn, args_list) ->
 
 and2 = (a, b) ->
   a && b
+
+and_r = (a, b) ->
+  (a && b) || new Reduced(false)
 
 # prop_names..., this_arg
 bind_all = ->
@@ -214,6 +216,8 @@ is_zero = (candidate) ->
 
 not_array = (complement is_array)
 
+not_date = (complement is_date)
+
 not_defined = (complement is_defined)
 
 not_empty = (complement is_empty)
@@ -317,17 +321,45 @@ each3 = (fn, arr1, arr2) ->
     (fn arr1[i], arr2[i])
   return
 
+calc_shortest_length = (arrs) ->
+  (apply Math.min, (map2 count, arrs))
+
 # each of arity = n
 eachn = ->
   args         = arguments
   fn           = (first args)
   arrs         = (rest args)
-  shortest_idx = (apply Math.min, (map2 count, arrs))
+  shortest_len = (calc_shortest_length arrs)
   i            = -1
   local_pluck  = pluck
   local_apply  = apply
-  while ++i < shortest_idx
+  while ++i < shortest_len
     (local_apply fn, (local_pluck i, arrs))
+  return
+
+each_idx = ->
+  if arguments.length == 2
+    (each_idx2 arguments[0], arguments[1])
+  else
+    (apply each_idxn, arguments)
+
+each_idx2 = (fn, arr) ->
+  len = arr.length
+  i   = -1
+  while ++i < len
+    (fn arr[i], i)
+  return
+
+each_idxn = -> # TODO test
+  fn   = (first arguments)
+  arrs = (rest arguments)
+  shortest_len = (calc_shortest_length arrs)
+  local_pluck  = pluck
+  local_apply  = apply
+  while ++i < shortest_len
+    args = (local_pluck i, arrs)
+    args.push(i)
+    (local_apply fn, args)
   return
 
 first = (array) ->
@@ -439,6 +471,9 @@ find = (some_criteria, array) ->
   return  if item_idx == -1
   (read item_idx, array)
 
+flatten = (arr) ->
+  (apply cat, arr)
+
 index_of = (item, array) ->
   native_index_of.call(array, item)
 
@@ -456,6 +491,12 @@ list_compact = ->
     if !!arg
       result.push(arg)
   result
+
+next = (arr, item) ->
+  arr[(index_of item, arr) + 1]
+
+prev = (arr, item) ->
+  arr[(index_of item, arr) - 1]
 
 type_of = (mixed) ->
   typeof mixed
@@ -595,10 +636,13 @@ reduce = (fn, val, array) ->
     idx = 1
   len = (count array)
   #
-  while ++idx < len
+  while ++idx < len && (!val || val.constructor != Reduced)
     val = (fn val, array[idx])
   #
-  val
+  if val && val.constructor == Reduced
+    val.val
+  else
+    val
 
 # (fn, array)
 # (fn, val, array)
@@ -759,6 +803,30 @@ invoke = (method_name, coll) ->
   #
   results
 
+# Muted invoke, returns undefined
+# @param {string} method_name
+# @param {var_args...} [method_args]
+# @param {Array} coll
+invokem = (method_name, coll) ->
+  args_count = (count arguments)
+  #
+  if args_count >= 3
+    method_args = (slice arguments, 1, args_count - 1)
+    coll = (last arguments)
+  #
+  len = (count coll)
+  i = -1
+  #
+  if args_count >= 3
+    while ++i < len
+      item = coll[i]
+      item[method_name].apply(item, method_args)
+  else
+    while ++i < len
+      coll[i][method_name]()
+  #
+  return
+
 pluck = (key, coll) ->
   len    = (count coll)
   result = (make_array len)
@@ -812,6 +880,7 @@ assign = (dest = {}, sources) ->
 assign_one = (dest, src) ->
   for key, val of src
     dest[key] = val
+  dest
 
 build_index = (index_prop, list_to_index, accumulator = {}) ->
   for item in list_to_index
@@ -933,7 +1002,10 @@ defaults2 = (dest, source) ->
 # tests objects for deep equality
 # draft version, works only for arrays
 equal = (o1, o2) ->
-  (equal_array o1, o2)
+  if (is_array o1) && (is_array o2)
+    (equal_array o1, o2)
+  else
+    (equal_object o1, o2)
 
 equal_array = (arr1, arr2) ->
   len1 = (count arr1)
@@ -942,9 +1014,23 @@ equal_array = (arr1, arr2) ->
   ((0 == len1) && (0 == len2)) ||
     ((len1 == len2) && (equal_array_start arr1, arr2))
 
-
 equal_array_start = (arr1, arr2) ->
- (reduce and2, true, (map equal_val, arr1, arr2))
+ (reduce and_r, true, (map equal_val, arr1, arr2))
+
+# shallow equality check
+equal_object = (o1, o2) ->
+  keys1 = (keys o1)
+  keys2 = (keys o2)
+  if keys1.length == keys2.length && (equal_set keys1, keys2)
+    vals1 = (o_map o1, keys1)
+    vals2 = (o_map o2, keys1)
+    (equal_array_start vals1, vals2)
+  else
+    false
+
+equal_set = (keyset1, keyset2) ->
+  [diff1, diff2] = (set_symmetric_difference keyset1, keyset2)
+  (is_empty diff1) && (is_empty diff2)
 
 equal_val = (v1, v2) ->
   v1 == v2
@@ -1014,6 +1100,17 @@ merge = (dst, src) ->
   #
   dst
 
+# @param {object} obj
+# @param {string} props...
+omit = (obj, props) ->
+  res   = {}
+  props = (rest arguments)
+  #
+  for key, val of obj
+    if (not_contains key, props)
+      res[key] = val
+  #
+  res
 
 # @param {object} hash source
 # @param {array<string>} keys_list
@@ -1038,12 +1135,22 @@ o_match = (criteria_obj, subject) ->
       return false
   true
 
+o_set = (obj, key, val) ->
+  obj[key] = val
+
 pull = (key, hash) ->
   val = hash[key]
   delete hash[key]
   val
 
-pick = (props..., obj) ->
+# @param {object} obj
+# @param {string...} props
+pick = (obj, props) ->
+  (pick_all obj, (rest arguments))
+
+# @param {object} obj
+# @param array<string> props
+pick_all = (obj, props) ->
   res = {}
   for prop in props
     if obj[prop] != undefined
@@ -1052,9 +1159,6 @@ pick = (props..., obj) ->
 
 vals = (hash) ->
   (o_map hash, (keys hash))
-
-o_set = (obj, key, val) ->
-  obj[key] = val
 
 zip_obj = (keys, vals) ->
   obj = {}
@@ -1196,159 +1300,171 @@ time = (fn) ->
 # EXPORTS
 exports = ("undefined" != typeof module) && module.exports || {}
 #
-exports.a_contains = a_contains
-exports.a_each = a_each
-exports.a_filter = a_filter
-exports.a_index_of = a_index_of
-exports.a_map = a_map
-exports.a_reduce = a_reduce
-exports.a_reject = a_reject
-exports.a_sum = a_sum
-exports.and2 = and2
-exports.any  = any
-exports.assign = assign
-exports.apply = apply
-exports.bind = bind
-exports.bind_all = bind_all
-exports.build_index = build_index
-exports.butlast = butlast
-exports.cat = cat
-exports.clone = clone
-exports.clonedeep = clonedeep
-exports.clonedeep2 = _clonedeep2
-exports.comma = comma
-exports.compact = compact
-exports.compose = compose
-exports.complement = complement
-exports.concat = cat
-exports.contains = contains
-exports.count = count
-exports.create = create
-exports.debounce = debounce
-exports.dec = dec
-exports.defaults = defaults
-exports.delay = delay
-exports.detect = find
-exports.drop = drop
-exports.each = each
-exports.equal = equal
+exports.Reduced           = Reduced
+#
+exports.a_contains        = a_contains
+exports.a_each            = a_each
+exports.a_filter          = a_filter
+exports.a_index_of        = a_index_of
+exports.a_map             = a_map
+exports.a_reduce          = a_reduce
+exports.a_reject          = a_reject
+exports.a_sum             = a_sum
+exports.and2              = and2
+exports.any               = any
+exports.assign            = assign
+exports.apply             = apply
+exports.bind              = bind
+exports.bind_all          = bind_all
+exports.build_index       = build_index
+exports.butlast           = butlast
+exports.cat               = cat
+exports.clone             = clone
+exports.clonedeep         = clonedeep
+exports.clonedeep2        = _clonedeep2
+exports.comma             = comma
+exports.compact           = compact
+exports.compose           = compose
+exports.complement        = complement
+exports.concat            = cat
+exports.contains          = contains
+exports.count             = count
+exports.create            = create
+exports.debounce          = debounce
+exports.dec               = dec
+exports.defaults          = defaults
+exports.delay             = delay
+exports.detect            = find
+exports.drop              = drop
+exports.each              = each
+exports.each_idx          = each_idx
+exports.equal             = equal
 exports.equal_array_start = equal_array_start
-exports.equal_val = equal_val
-exports.extend = extend
-exports.fastbind = bind
-exports.first = first
-exports.filter = filter
-exports.filter_fn = filter_fn
-exports.filter_obj = filter_obj
-exports.filter_obj_1kv = filter_obj_1kv
-exports.filter_obj_2kv = filter_obj_2kv
-exports.filter_prop = filter_prop
-exports.filter_re = filter_re
-exports.find = find
-exports.find_index = find_index
-exports.find_index_fn = find_index_fn
-exports.find_index_prop = find_index_prop
+exports.equal_val         = equal_val
+exports.extend            = extend
+exports.fastbind          = bind
+exports.first             = first
+exports.filter            = filter
+exports.filter_fn         = filter_fn
+exports.filter_obj        = filter_obj
+exports.filter_obj_1kv    = filter_obj_1kv
+exports.filter_obj_2kv    = filter_obj_2kv
+exports.filter_prop       = filter_prop
+exports.filter_re         = filter_re
+exports.find              = find
+exports.find_index        = find_index
+exports.find_index_fn     = find_index_fn
+exports.find_index_prop   = find_index_prop
 exports.find_index_obj_1kv = find_index_obj_1kv
 exports.find_index_obj_2kv = find_index_obj_2kv
-exports.find_index_obj = find_index_obj
-exports.flattenp = flattenp
-exports.flow = flow
-exports.get = read
-exports.head = head
-exports.inc = inc
-exports.index_of = index_of
-exports.invoke = invoke
-exports.is_array = is_array
-exports.is_defined = is_defined
-exports.is_empty = is_empty
-exports.is_even  = is_even
-exports.is_function = is_function
-exports.is_mergeable = is_mergeable
-exports.is_number = is_number
-exports.is_object = is_object
-exports.is_plain_object = is_plain_object
-exports.is_string = is_string
-exports.is_zero = is_zero
+exports.find_index_obj    = find_index_obj
+exports.flatten           = flatten
+exports.flattenp          = flattenp
+exports.flow              = flow
+exports.get               = read
+exports.head              = head
+exports.inc               = inc
+exports.index_of          = index_of
+exports.invoke            = invoke
+exports.invokem           = invokem
+exports.is_array          = is_array
+exports.is_date           = is_date
+exports.is_defined        = is_defined
+exports.is_empty          = is_empty
+exports.is_even           = is_even
+exports.is_function       = is_function
+exports.is_mergeable      = is_mergeable
+exports.is_number         = is_number
+exports.is_object         = is_object
+exports.is_plain_object   = is_plain_object
+exports.is_string         = is_string
+exports.is_zero           = is_zero
 exports.jquery_wrap_to_array = jquery_wrap_to_array
-exports.j2a = jquery_wrap_to_array
-exports.keys = keys
-exports.last = last
-exports.list = list
-exports.list_compact = list_compact
-exports.map = map
-exports.match = match
-exports.matches = matches
-exports.merge = merge
-exports.mk_regexp = mk_regexp
-exports.multicall = multicall
-exports.no_operation = no_operation
-exports.noop = no_operation
-exports.not_array = not_array
-exports.not_defined = not_defined
-exports.not_empty = not_empty
-exports.not_function = not_function
-exports.not_number = not_number
-exports.not_object = not_object
-exports.not_string = not_string
-exports.not_zero = not_zero
-exports.o_map = o_map
-exports.o_match = o_match
-exports.partial = partial
-exports.pbind = pbind
-exports.pt = partial
-exports.ptr = partialr
-exports.partialr = partialr
-exports.pick = pick
-exports.pipeline = flow
-exports.pluck = pluck
-exports.pull = pull
-exports.push = push
-exports.push_all = push_all
-exports.range = range
-exports.read = read
-exports.recurse = recurse
-exports.reduce = reduce
-exports.reducer = reducer
-exports.reject = reject
-exports.reject_fn = reject_fn
-exports.reject_obj = reject_obj
-exports.reject_obj_1kv = reject_obj_1kv
-exports.reject_obj_2kv = reject_obj_2kv
-exports.reject_prop = reject_prop
-exports.remap = remap
-exports.remove = remove
-exports.remove_at = remove_at
-exports.repeat = repeat
-exports.repeatf = repeatf
-exports.rest = rest
-exports.reverse = reverse
-exports.second = second
-exports.set = set
-exports.set_difference = set_difference
+exports.j2a               = jquery_wrap_to_array
+exports.keys              = keys
+exports.last              = last
+exports.list              = list
+exports.list_compact      = list_compact
+exports.map               = map
+exports.match             = match
+exports.matches           = matches
+exports.merge             = merge
+exports.mk_regexp         = mk_regexp
+exports.multicall         = multicall
+exports.next              = next
+exports.no_operation      = no_operation
+exports.noop              = no_operation
+exports.not_array         = not_array
+exports.not_date          = not_date
+exports.not_defined       = not_defined
+exports.not_empty         = not_empty
+exports.not_function      = not_function
+exports.not_number        = not_number
+exports.not_object        = not_object
+exports.not_string        = not_string
+exports.not_zero          = not_zero
+exports.omit              = omit
+exports.o_map             = o_map
+exports.o_match           = o_match
+exports.partial           = partial
+exports.pbind             = pbind
+exports.pt                = partial
+exports.ptr               = partialr
+exports.partialr          = partialr
+exports.pick              = pick
+exports.pick_all          = pick_all
+exports.pipeline          = flow
+exports.pluck             = pluck
+exports.prev              = prev
+exports.pull              = pull
+exports.push              = push
+exports.push_all          = push_all
+exports.range             = range
+exports.read              = read
+exports.recurse           = recurse
+exports.reduce            = reduce
+exports.reducer           = reducer
+exports.reject            = reject
+exports.reject_fn         = reject_fn
+exports.reject_obj        = reject_obj
+exports.reject_obj_1kv    = reject_obj_1kv
+exports.reject_obj_2kv    = reject_obj_2kv
+exports.reject_prop       = reject_prop
+exports.remap             = remap
+exports.remove            = remove
+exports.remove_at         = remove_at
+exports.repeat            = repeat
+exports.repeatf           = repeatf
+exports.rest              = rest
+exports.reverse           = reverse
+exports.second            = second
+exports.set               = set
+exports.set_difference    = set_difference
 exports.set_symmetric_difference = set_symmetric_difference
-exports.slice = slice
-exports.sort = sort
-exports.space = space
-exports.splice = splice
-exports.str = str
-exports.str_breplace = str_breplace
-exports.str_join = str_join
-exports.str_split = str_split
-exports.sum2 = sum2
-exports.sumn = (flow list, (partial reduce, sum2))
-exports.take = take
-exports.tail = tail
-exports.third = third
-exports.throttle = throttle
-exports.time = time
-exports.trim = trim
-exports.union = union
-exports.unique = unique
-exports.unshift = unshift
-exports.vals = vals
-exports.varynum = varynum
-exports.without = without
-exports.write = write
-exports.zip_obj = zip_obj
+exports.slice             = slice
+exports.sort              = sort
+exports.space             = space
+exports.splice            = splice
+exports.str               = str
+exports.str_breplace      = str_breplace
+exports.str_join          = str_join
+exports.str_split         = str_split
+exports.sum2              = sum2
+exports.sumn              = (flow list, (partial reduce, sum2))
+exports.take              = take
+exports.tail              = tail
+exports.third             = third
+exports.throttle          = throttle
+exports.time              = time
+exports.trim              = trim
+exports.union             = union
+exports.unique            = unique
+exports.unshift           = unshift
+exports.vals              = vals
+exports.varynum           = varynum
+exports.without           = without
+exports.write             = write
+exports.zip_obj           = zip_obj
+
 
 exports
