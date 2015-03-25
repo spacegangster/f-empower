@@ -19,8 +19,11 @@ define ->
     NOT_FUNCTION              : new TypeError('Something is not function')
     UNEXPECTED_TYPE           : new TypeError('Unexpected type')
 
-  Reduced = (val) ->
+  ReducedClass = (val) ->
     @val = val
+
+  Reduced = (val) ->
+    new ReducedClass(val)
 
   to_string       = Object::toString
   native_concat   = Array::concat
@@ -52,7 +55,7 @@ define ->
     a && b
 
   and_r = (a, b) ->
-    (a && b) || new Reduced(false)
+    (a && b) || Reduced(false)
 
   # prop_names..., this_arg
   bind_all = ->
@@ -180,7 +183,16 @@ define ->
       else
         true
 
+  is_arguments = (v) ->
+    '[object Arguments]' == (type_of2 v)
+
   is_array = Array.isArray
+
+  is_array_like = (v) ->
+    (is_array v) || (is_arguments v)
+
+  is_boolean = (v) ->
+    'boolean' == (typeof v)
 
   is_date = (val) ->
     '[object Date]' == (type_of2 val)
@@ -228,6 +240,8 @@ define ->
 
 
   not_array = (complement is_array)
+
+  not_boolean = (complement is_boolean)
 
   not_date = (complement is_date)
 
@@ -285,8 +299,13 @@ define ->
   a_map = (array, fn) ->
     (map fn, array)
 
-  a_reduce = (array, fn, val) ->
-    (reduce fn, val, array)
+  # (array, fn)
+  # (array, val, fn)
+  a_reduce = (array, val, fn) ->
+    if (is_function val)
+      (reduce val, array)
+    else
+      (reduce fn, val, array)
 
   a_reject = (array, fn) ->
     (reject fn, array)
@@ -363,7 +382,7 @@ define ->
       (fn arr[i], i)
     return
 
-  each_idxn = -> # TODO test
+  each_idxn = ->
     fn   = (first arguments)
     arrs = (rest arguments)
     shortest_len = (calc_shortest_length arrs)
@@ -374,6 +393,16 @@ define ->
       args.push(i)
       (local_apply fn, args)
     return
+
+  every = (pred, coll) ->
+    return true  if (is_empty coll)
+    #
+    pred = ((is_function pred) && pred) || (wrap_invoke_obj pred)
+    (every_fn pred, coll)
+
+  every_fn = (fn, coll) ->
+    a_reduce coll, true, (v1, v2) ->
+      (v1 && (fn v2)) || Reduced(false)
 
   first = (array) ->
     array[0]
@@ -643,16 +672,16 @@ define ->
   # (fn(memo, cur), val, array)
   reduce = (fn, val, array) ->
     idx = -1
-    if !array && (is_array val)
+    if !array && (is_array_like val)
       array = val
       val = (fn (first array), (second array))
       idx = 1
     len = (count array)
     #
-    while ++idx < len && (!val || val.constructor != Reduced)
+    while ++idx < len && (!val || val.constructor != ReducedClass)
       val = (fn val, array[idx])
     #
-    if val && val.constructor == Reduced
+    if val && val.constructor == ReducedClass
       val.val
     else
       val
@@ -877,6 +906,11 @@ define ->
 
   unique = unique_by_prop
 
+  wrap_invoke_obj = (o) ->
+    (key) ->
+      o[key]
+
+
 
   # ============================================================
   # CATEGORY: OBJECTS
@@ -895,7 +929,7 @@ define ->
       dest[key] = val
     dest
 
-  build_index = (index_prop, list_to_index, accumulator = {}) ->
+  index_by = (index_prop, list_to_index, accumulator = {}) ->
     for item in list_to_index
       accumulator[ item[index_prop] ] = item
     accumulator
@@ -998,9 +1032,16 @@ define ->
         dest[key] = val
     dest
 
-  # tests objects for deep equality
-  # draft version, works only for arrays
-  equal = (o1, o2) ->
+  # tests objects and arrays for shallow equality
+  # @signatures
+  #  @signature object...
+  #  @signature array...
+  equal = ->
+    val = a_reduce arguments, (v1, v2) ->
+      (equal2 v1, v2) && v2 || (Reduced false)
+    !!val
+
+  equal2 = (o1, o2) ->
     if (is_array o1) && (is_array o2)
       (equal_array o1, o2)
     else
@@ -1315,7 +1356,6 @@ define ->
   exports.apply             = apply
   exports.bind              = bind
   exports.bind_all          = bind_all
-  exports.build_index       = build_index
   exports.butlast           = butlast
   exports.cat               = cat
   exports.clone             = clone
@@ -1329,6 +1369,7 @@ define ->
   exports.contains          = contains
   exports.count             = count
   exports.create            = create
+  exports.every             = every
   exports.debounce          = debounce
   exports.dec               = dec
   exports.defaults          = defaults
@@ -1363,10 +1404,13 @@ define ->
   exports.get               = read
   exports.head              = head
   exports.inc               = inc
+  exports.index_by          = index_by
+  exports.index_by_id       = (partial index_by, 'id')
   exports.index_of          = index_of
   exports.invoke            = invoke
   exports.invokem           = invokem
   exports.is_array          = is_array
+  exports.is_boolean        = is_boolean
   exports.is_date           = is_date
   exports.is_defined        = is_defined
   exports.is_empty          = is_empty
@@ -1394,6 +1438,7 @@ define ->
   exports.no_operation      = no_operation
   exports.noop              = no_operation
   exports.not_array         = not_array
+  exports.not_boolean       = not_boolean
   exports.not_date          = not_date
   exports.not_defined       = not_defined
   exports.not_empty         = not_empty
@@ -1414,6 +1459,7 @@ define ->
   exports.pick_all          = pick_all
   exports.pipeline          = flow
   exports.pluck             = pluck
+  exports.pluck_id          = (partial pluck, 'id')
   exports.prev              = prev
   exports.pull              = pull
   exports.push              = push
