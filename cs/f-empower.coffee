@@ -1,5 +1,5 @@
+"use strict"
 define ->
-  "use strict"
 
   ###
   F-EMPOWER
@@ -21,6 +21,7 @@ define ->
 
   ReducedClass = (val) ->
     @val = val
+    return
 
   Reduced = (val) ->
     new ReducedClass(val)
@@ -99,6 +100,11 @@ define ->
       #
       last_result
 
+  debug_wrap = (fn) ->
+    ->
+      debugger
+      fn.apply(null, arguments)
+
   delay = (delay_ms, fn) ->
     if arguments.length == 1
       fn       = delay_ms
@@ -136,9 +142,21 @@ define ->
     ->
       (apply fn, (cat (apply list, arguments), right_args))
 
+  periodically = (interval, countdown, fn) ->
+    if (not_number countdown) || (countdown < 1)
+      throw new Error("Bad countdown")
+    interval_id = set_interval interval, ->
+      fn()
+      countdown = countdown - 1
+      if 0 == countdown
+        (clearInterval interval_id)
+
   pbind = (fn) ->
     ->
       fn.apply(null, (cat [this], (slice arguments)))
+
+  set_interval = (ms, fn) ->
+    (setInterval fn, ms)
 
   # Executes fn once in the given period
   # BEWARE: if fn should be executed with context, you should bind it before throttling
@@ -189,7 +207,8 @@ define ->
   is_array = Array.isArray
 
   is_array_like = (v) ->
-    (is_array v) || (is_arguments v)
+    #(is_array v) || (is_arguments v)
+    (is_number v.length)
 
   is_boolean = (v) ->
     'boolean' == (typeof v)
@@ -200,8 +219,11 @@ define ->
   is_defined = (subj) ->
     'undefined' != (typeof subj)
 
-  is_empty = (seq) ->
-    seq.length == 0
+  is_empty = (o) ->
+    0 == (count o)
+
+  is_empty$ = (o) ->
+    !o || (is_empty o)
 
   is_even = (num) ->
     0 == (num % 2)
@@ -232,8 +254,14 @@ define ->
   is_mergeable = (item) ->
     (is_array item) || (is_plain_object item)
 
+  is_regexp = (item) ->
+    '[object RegExp]' == (type_of2 item)
+
   is_string = (item) ->
     "string" == (type_of item)
+
+  is_subset = (subset, superset) ->
+    (is_empty (difference subset, superset))
 
   is_zero = (candidate) ->
     candidate == 0
@@ -249,6 +277,8 @@ define ->
 
   not_empty = (complement is_empty)
 
+  not_empty$ = (complement is_empty$)
+
   not_function = (complement is_function)
 
   not_mergeable = (complement is_mergeable)
@@ -258,6 +288,8 @@ define ->
   not_object = (complement is_object)
 
   not_string = (complement is_string)
+
+  not_subset = (complement is_subset)
 
   not_zero = (complement is_zero)
 
@@ -317,8 +349,11 @@ define ->
   compact = (coll) ->
     item for item in coll when item
     
-  count = (array) ->
-    array.length
+  count = (o) ->
+    if (is_array_like o)
+      o.length
+    else
+      (keys o).length
 
   drop = (items_number_to_drop, array_like) ->
     (slice array_like, items_number_to_drop)
@@ -408,11 +443,25 @@ define ->
     array[0]
 
   # ARRAY FILTERING FUNCTIONS
-  filter_fn = (fn, array) ->
-    item for item in array when (fn item)
+  filter_fn = (fn, arr) ->
+    res = []
+    len = arr.length
+    i = -1
+    while ++i < len
+      item = arr[i]
+      if (fn item)
+        res.push(item)
+    res
 
-  filter_prop = (prop_name, array) ->
-    item for item in array when !!item[prop_name]
+  filter_prop = (prop_name, arr) ->
+    res = []
+    len = arr.length
+    i = -1
+    while ++i < len
+      item = arr[i]
+      if item[prop_name]
+        res.push(item)
+    res
 
   filter_obj_1kv = (obj, array) ->
     [key, val] = (read_1kv obj)
@@ -433,7 +482,6 @@ define ->
         results.push(string)
     results
 
-
   filter = (some_criteria, array) ->
     switch (typeof some_criteria)
       when "string"
@@ -441,7 +489,7 @@ define ->
       when "function"
         (filter_fn some_criteria, array)
       when "object"
-        if '[object RegExp]' == to_string.call(some_criteria)
+        if (is_regexp some_criteria)
           (filter_re some_criteria, array)
         else
           switch (count (keys some_criteria))
@@ -519,6 +567,10 @@ define ->
   index_of = (item, array) ->
     native_index_of.call(array, item)
 
+  insert_at = (items, idx, item) ->
+    items.splice(idx, 0, item)
+    items
+
   last = (list) ->
     list[(dec (count list))]
 
@@ -533,6 +585,10 @@ define ->
       if !!arg
         result.push(arg)
     result
+
+  log_pipe = (val) ->
+    console.log.apply(console, val)
+    val
 
   next = (arr, item) ->
     arr[(index_of item, arr) + 1]
@@ -746,12 +802,18 @@ define ->
   remap = (fn, arr) ->
     switch arguments.length
       when 2
-        for item, item_idx in arr
-          arr[item_idx] = (fn item)
+        (remap2 fn, arr)
       when 3
-        [fn, prop, arr] = arguments
-        for item, item_idx in arr
-          arr[item_idx][prop] = (fn item[prop])
+        (remap3 fn, arguments[1], arguments[2])
+
+  remap2 = (fn, arr) ->
+    for item, item_idx in arr
+      arr[item_idx] = (fn item)
+    arr
+
+  remap3 = (fn, prop, arr) ->
+    for item, item_idx in arr
+      arr[item_idx][prop] = (fn item[prop])
     arr
 
   # removes item from array based on ref equality
@@ -788,12 +850,6 @@ define ->
 
   second = (array) ->
     array[1]
-
-  set_difference = (set_a, set_b) ->
-    item for item in set_a when (not_contains item, set_b)
-
-  set_symmetric_difference = (set_a, set_b) ->
-    [(set_difference set_a, set_b), (set_difference set_b, set_a)]
 
   take = (items_number_to_take, array_like) ->
     (slice array_like, 0, items_number_to_take)
@@ -891,6 +947,20 @@ define ->
       dst[prop_name] = src
     dst_coll
 
+  # prop, array
+  # array
+  unique = (prop, array) ->
+    if array
+      (unique_by_prop prop, array)
+    else
+      array = prop
+      if (is_empty array)
+        []
+      else if (is_number array[0])
+        (unique_plain array)
+      else
+        throw Error("only propped uniq and plain number uniq")
+
   # returns unique
   unique_by_prop = (prop_name, arr) ->
     help_hash = {}
@@ -904,7 +974,16 @@ define ->
     #
     out
 
-  unique = unique_by_prop
+  unique_plain = (arr) ->
+    help_hash = {}
+    out = []
+    #
+    a_each arr, (val) ->
+      if !help_hash[val]
+        help_hash[val] = true
+        out.push(val)
+    #
+    out
 
   wrap_invoke_obj = (o) ->
     (key) ->
@@ -928,11 +1007,6 @@ define ->
     for key, val of src
       dest[key] = val
     dest
-
-  index_by = (index_prop, list_to_index, accumulator = {}) ->
-    for item in list_to_index
-      accumulator[ item[index_prop] ] = item
-    accumulator
 
   clone_obj = (obj) ->
     res = {}
@@ -1017,7 +1091,6 @@ define ->
 
     dst
 
-
   # useful when you want to instantiate a list of instances
   # from a list of data
   create = (ctor, arg) ->
@@ -1032,6 +1105,31 @@ define ->
         dest[key] = val
     dest
 
+  difference = (o1, o2) ->
+    if (is_object o1) && (is_object o2)
+      if (is_array o1) && (is_array o2)
+        (difference_sets o1, o2)
+      else
+        (difference_objs_vals o1, o2)
+    else
+      throw new TypeError("Tried to find difference between not objects")
+
+  # @param {object} o1, o2
+  # @return {object} object containing keys from o1,
+  #  which are defined in o2 and have different value
+  difference_objs_vals = (o1, o2) ->
+    res = {}
+    for key, val1 of o1
+      if (is_defined  val2 = o2[key]) && !(equal2 val1, val2)
+        res[key] = val1
+    res
+
+  difference_sets = (set_a, set_b) ->
+    item for item in set_a when (not_contains item, set_b)
+
+  set_symmetric_difference = (set_a, set_b) ->
+    [(difference_sets set_a, set_b), (difference_sets set_b, set_a)]
+
   # tests objects and arrays for shallow equality
   # @signatures
   #  @signature object...
@@ -1042,10 +1140,17 @@ define ->
     !!val
 
   equal2 = (o1, o2) ->
-    if (is_array o1) && (is_array o2)
-      (equal_array o1, o2)
+    if (o1 == null) || (o2 == null) || (o1 == undefined) || (o2 == undefined)
+      o1 == o2
+    else if (is_object o1) && (is_object o2)
+      if (is_array o1) && (is_array o2)
+        (equal_array o1, o2)
+      else if (is_date o1)
+        o1.valueOf() == o2.valueOf()
+      else
+        (equal_object o1, o2)
     else
-      (equal_object o1, o2)
+      o1 == o2
 
   equal_array = (arr1, arr2) ->
     len1 = (count arr1)
@@ -1078,12 +1183,13 @@ define ->
   extend = (extended, extension) ->
     (assign Object.create(extended), extension)
 
-  flattenp_recursive = (key, root, accumulator) ->
-    (push_all accumulator, root[key])
-    if children = root[key]
-      for son in children
-        (flattenp_recursive key, son, accumulator)
-    return accumulator
+  flatten_path = (prop, obj, opts) ->
+    opts ?= {inlude_root: false}
+    res = opts.include_root && [obj] || []
+    while (obj = obj[prop])
+      res.push(obj)
+    res
+
 
   # flattens a tree-like structure into array
   # Example:
@@ -1096,6 +1202,23 @@ define ->
   flattenp = (key, root, {include_root} = {include_root: true}) ->
     accumulator = include_root && [root] || []
     (flattenp_recursive key, root, accumulator)
+
+  flattenp_recursive = (key, root, accumulator) ->
+    (push_all accumulator, root[key])
+    if children = root[key]
+      for son in children
+        (flattenp_recursive key, son, accumulator)
+    return accumulator
+
+  for_own = (fn, obj) ->
+    a_each (keys obj), (key) ->
+      (fn key, obj[key])
+    return
+
+  index_by = (index_prop, list_to_index, accumulator = {}) ->
+    for item in list_to_index
+      accumulator[ item[index_prop] ] = item
+    accumulator
 
   keys = (hash) ->
     Object.keys(hash)
@@ -1143,14 +1266,17 @@ define ->
   # @param {object} obj
   # @param {string} props...
   omit = (obj, props) ->
+    (omit_all obj, (rest arguments))
+
+  omit_all = (obj, props_arr) ->
     res   = {}
-    props = (rest arguments)
-    #
     for key, val of obj
-      if (not_contains key, props)
+      if (not_contains key, props_arr)
         res[key] = val
-    #
     res
+
+  o_for_own = (obj, fn) ->
+    (for_own fn, obj)
 
   # @param {object} hash source
   # @param {array<string>} keys_list
@@ -1196,6 +1322,26 @@ define ->
       if obj[prop] != undefined
         res[prop] = obj[prop]
     res
+
+  transform = (fn, obj, keys) ->
+    keys &&
+      (transform3 fn, obj, keys) ||
+      (transform2 fn, obj)
+
+  transform2 = (fn, obj) ->
+    for key, val of obj
+      obj[key] = (fn val)
+    obj
+
+  transform3 = (fn, obj, keys) ->
+    for key in keys
+      obj[key] = (fn obj[key])
+    obj
+
+  update_in = (obj, key, update_fn) ->
+    if (is_defined (val = obj[key]))
+      obj[key] = (update_fn val)
+    obj
 
   vals = (hash) ->
     (o_map hash, (keys hash))
@@ -1369,18 +1515,22 @@ define ->
   exports.contains          = contains
   exports.count             = count
   exports.create            = create
-  exports.every             = every
+  exports.debug_wrap        = debug_wrap
   exports.debounce          = debounce
   exports.dec               = dec
   exports.defaults          = defaults
   exports.delay             = delay
   exports.detect            = find
+  exports.diff              = difference
+  exports.difference        = difference
+  exports.difference_sets   = difference_sets
   exports.drop              = drop
   exports.each              = each
   exports.each_idx          = each_idx
   exports.equal             = equal
   exports.equal_array_start = equal_array_start
   exports.equal_val         = equal_val
+  exports.every             = every
   exports.extend            = extend
   exports.fastbind          = bind
   exports.first             = first
@@ -1400,13 +1550,16 @@ define ->
   exports.find_index_obj    = find_index_obj
   exports.flatten           = flatten
   exports.flattenp          = flattenp
+  exports.flatten_path      = flatten_path
   exports.flow              = flow
+  exports.for_own           = for_own
   exports.get               = read
   exports.head              = head
   exports.inc               = inc
   exports.index_by          = index_by
   exports.index_by_id       = (partial index_by, 'id')
   exports.index_of          = index_of
+  exports.insert_at         = insert_at
   exports.invoke            = invoke
   exports.invokem           = invokem
   exports.is_array          = is_array
@@ -1414,6 +1567,7 @@ define ->
   exports.is_date           = is_date
   exports.is_defined        = is_defined
   exports.is_empty          = is_empty
+  exports.is_empty$         = is_empty$
   exports.is_even           = is_even
   exports.is_function       = is_function
   exports.is_mergeable      = is_mergeable
@@ -1421,6 +1575,7 @@ define ->
   exports.is_object         = is_object
   exports.is_plain_object   = is_plain_object
   exports.is_string         = is_string
+  exports.is_subset         = is_subset
   exports.is_zero           = is_zero
   exports.jquery_wrap_to_array = jquery_wrap_to_array
   exports.j2a               = jquery_wrap_to_array
@@ -1428,6 +1583,7 @@ define ->
   exports.last              = last
   exports.list              = list
   exports.list_compact      = list_compact
+  exports.log_pipe          = log_pipe
   exports.map               = map
   exports.match             = match
   exports.matches           = matches
@@ -1442,16 +1598,21 @@ define ->
   exports.not_date          = not_date
   exports.not_defined       = not_defined
   exports.not_empty         = not_empty
+  exports.not_empty$        = not_empty$
   exports.not_function      = not_function
   exports.not_number        = not_number
   exports.not_object        = not_object
   exports.not_string        = not_string
+  exports.not_subset        = not_subset
   exports.not_zero          = not_zero
   exports.omit              = omit
+  exports.omit_all          = omit_all
+  exports.o_for_own         = o_for_own
   exports.o_map             = o_map
   exports.o_match           = o_match
   exports.partial           = partial
   exports.pbind             = pbind
+  exports.periodically      = periodically
   exports.pt                = partial
   exports.ptr               = partialr
   exports.partialr          = partialr
@@ -1484,7 +1645,7 @@ define ->
   exports.reverse           = reverse
   exports.second            = second
   exports.set               = set
-  exports.set_difference    = set_difference
+  exports.set_difference    = difference_sets
   exports.set_symmetric_difference = set_symmetric_difference
   exports.slice             = slice
   exports.sort              = sort
@@ -1492,8 +1653,10 @@ define ->
   exports.splice            = splice
   exports.str               = str
   exports.str_breplace      = str_breplace
+  exports.str_drop          = tail
   exports.str_join          = str_join
   exports.str_split         = str_split
+  exports.str_take          = head
   exports.sum2              = sum2
   exports.sumn              = (flow list, (partial reduce, sum2))
   exports.take              = take
@@ -1501,7 +1664,9 @@ define ->
   exports.third             = third
   exports.throttle          = throttle
   exports.time              = time
+  exports.transform         = transform
   exports.trim              = trim
+  exports.update_in         = update_in
   exports.union             = union
   exports.unique            = unique
   exports.unshift           = unshift
