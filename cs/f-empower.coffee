@@ -85,15 +85,21 @@ define ->
       !(apply predicate, arguments)
 
   debounce = (debounce_timeout, fn) ->
+    if arguments.length == 1
+      fn = debounce_timeout
+      debounce_timeout = 0
+    #
     last_result = undefined
     last_args   = null
     last_timeout_id = null
+    last_this = null
     #
     exec = ->
-      last_result = (apply fn, last_args)
+      last_result = fn.apply(last_this, last_args)
     #
     ->
       last_args = (slice arguments)
+      last_this = this
       #
       (clearTimeout last_timeout_id)
       last_timeout_id = (delay debounce_timeout, exec)
@@ -220,7 +226,7 @@ define ->
     'undefined' != (typeof subj)
 
   is_empty = (o) ->
-    0 == (count o)
+    0 == (count1 o)
 
   is_empty$ = (o) ->
     !o || (is_empty o)
@@ -299,7 +305,7 @@ define ->
   # ============================================================
 
   butlast = (array) ->
-    (slice array, 0, ((count array) - 1))
+    (slice array, 0, ((count1 array) - 1))
 
   # @param arrays...
   cat = (array) ->
@@ -310,6 +316,8 @@ define ->
       if searched_item == item
         return true
     false
+
+  not_contains = (complement contains)
 
   a_contains = (array, searched_item) ->
     for item in array
@@ -343,17 +351,36 @@ define ->
     (reject fn, array)
 
   # @return {boolean} true if array contains an element matching the condition
-  any = (fn, arr) ->
-    -1 != (find_index_fn fn, arr)
+  any = (pred, arr) ->
+    if arguments.length == 1
+      arr = pred
+      pred = true
+    #
+    -1 != (find_index pred, arr)
 
   compact = (coll) ->
     item for item in coll when item
+
+  count = (pred, coll) ->
+    if !coll
+      (count1 pred)
+    else if !pred
+      coll.length
+    else
+      (count2 pred, coll)
     
-  count = (o) ->
+  count1 = (o) ->
     if (is_array_like o)
       o.length
     else
       (keys o).length
+
+  count2 = (pred, coll) ->
+    cnt = 0
+    for item in coll
+      if (pred item)
+        cnt++
+    cnt
 
   drop = (items_number_to_drop, array_like) ->
     (slice array_like, items_number_to_drop)
@@ -362,17 +389,16 @@ define ->
   #   fn, arr
   #   fn, arr, arr
   #   fn, arrs...
-  each = ->
-    args = arguments
-    switch (count args)
+  each = (fn, coll) ->
+    switch arguments.length
       when 0, 1
         throw new Error("Each doesn't have a signature of that arity")
       when 2
-        (each2 args[0], args[1])
+        (each2 fn, coll)
       when 3
-        (each3 args[0], args[1], args[2])
+        (each3 fn, coll, arguments[2])
       else
-        (apply eachn, args)
+        (apply eachn, arguments)
 
   # each of arity = 2
   each2 = (fn, arr) ->
@@ -382,14 +408,14 @@ define ->
 
   # each of arity = 3
   each3 = (fn, arr1, arr2) ->
-    length_of_shortest = (Math.min (count arr1), (count arr2))
+    length_of_shortest = (Math.min (count1 arr1), (count1 arr2))
     i                  = -1
     while ++i < length_of_shortest
       (fn arr1[i], arr2[i])
     return
 
   calc_shortest_length = (arrs) ->
-    (apply Math.min, (map2 count, arrs))
+    (apply Math.min, (map2 count1, arrs))
 
   # each of arity = n
   eachn = ->
@@ -492,7 +518,7 @@ define ->
         if (is_regexp some_criteria)
           (filter_re some_criteria, array)
         else
-          switch (count (keys some_criteria))
+          switch (count1 (keys some_criteria))
             when 0
               throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
             when 1
@@ -537,22 +563,24 @@ define ->
         return idx
     -1
 
-  find_index = (some_criteria, array) ->
-    switch (typeof some_criteria)
+  find_index = (pred, array) ->
+    switch (typeof pred)
       when "string"
-        (find_index_prop some_criteria, array)
+        (find_index_prop pred, array)
       when "function"
-        (find_index_fn some_criteria, array)
+        (find_index_fn pred, array)
+      when "boolean", "number"
+        (index_of pred, array)
       when "object"
-        switch (count (keys some_criteria))
+        switch (count1 (keys pred))
           when 0
             throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
           when 1
-            (find_index_obj_1kv some_criteria, array)
+            (find_index_obj_1kv pred, array)
           when 2
-            (find_index_obj_2kv some_criteria, array)
+            (find_index_obj_2kv pred, array)
           else
-            (find_index_obj some_criteria, array)
+            (find_index_obj pred, array)
       else
         throw Errors.UNEXPECTED_TYPE
 
@@ -562,7 +590,10 @@ define ->
     (read item_idx, array)
 
   flatten = (arr) ->
-    (apply cat, arr)
+    if (is_empty arr)
+      []
+    else
+      (apply cat, arr)
 
   index_of = (item, array) ->
     native_index_of.call(array, item)
@@ -572,10 +603,10 @@ define ->
     items
 
   last = (list) ->
-    list[(dec (count list))]
+    list[(dec (count1 list))]
 
   list = ->
-    (count (args = arguments)) && (slice args) || []
+    (count1 (args = arguments)) && (slice args) || []
 
   # Produces list from arguments and then applies compact
   # function (which removes all falsies)
@@ -605,11 +636,11 @@ define ->
   # arr
   # criterion, arr
   sort = (criterion, arr) ->
-    switch (count arguments)
+    switch (count1 arguments)
       when 1
         return criterion.sort()
       when 2
-        return (slice arr)  if 2 > (count arr)
+        return (slice arr)  if 2 > (count1 arr)
         #
         switch (type_of criterion)
           when "string"
@@ -648,24 +679,22 @@ define ->
   #   fn, arrs...
   #   str, arr
   #   obj, arr
-  map = ->
-    args = arguments
-    arg0 = args[0]
-    switch (count args)
+  map = (mapper, coll) ->
+    switch arguments.length
       when 0, 1
         throw new Error("Map doesn't have a signature of that arity")
       when 2
-        switch typeof arg0
+        switch typeof mapper
           when 'function'
-            (map2 arg0, args[1])
+            (map2 mapper, coll)
           when 'string'
-            (pluck arg0, args[1])
+            (pluck mapper, coll)
           when 'object'
-            (o_map arg0, args[1])
+            (o_map mapper, coll)
       when 3
-        (map3 arg0, args[1], args[2])
+        (map3 mapper, coll, arguments[2])
       else
-        (apply mapn, args)
+        (apply mapn, arguments)
 
   # @private
   make_array = (len) ->
@@ -675,7 +704,7 @@ define ->
   # map of arity = 2
   map2 = (fn, arr) ->
     i      = -1
-    len    = (count arr)
+    len    = (count1 arr)
     result = (make_array len)
     #
     while ++i < len
@@ -685,7 +714,7 @@ define ->
 
   # map of arity = 3
   map3 = (fn, arr1, arr2) ->
-    length_of_shortest = (Math.min (count arr1), (count arr2))
+    length_of_shortest = (Math.min (count1 arr1), (count1 arr2))
     i                  = -1
     result             = (make_array length_of_shortest)
     #
@@ -700,7 +729,7 @@ define ->
     args         = arguments
     fn           = (first args)
     arrs         = (rest args)
-    shortest_len = (apply Math.min, (map2 count, arrs))
+    shortest_len = (apply Math.min, (map2 count1, arrs))
     i            = -1
     local_pluck  = pluck
     local_apply  = apply
@@ -714,7 +743,7 @@ define ->
   not_contains = (complement contains)
 
   prelast = (array) ->
-    array[(count array) - 2]
+    array[(count1 array) - 2]
 
   push = (arr, item) ->
     arr.push(item)
@@ -732,7 +761,7 @@ define ->
       array = val
       val = (fn (first array), (second array))
       idx = 1
-    len = (count array)
+    len = (count1 array)
     #
     while ++idx < len && (!val || val.constructor != ReducedClass)
       val = (fn val, array[idx])
@@ -749,9 +778,9 @@ define ->
     if !arr && (is_array val)
       arr = val
       val = (fn (last arr), (prelast arr))
-      idx = (count arr) - 2
+      idx = (count1 arr) - 2
     else
-      idx = (count arr)
+      idx = (count1 arr)
     #
     while --idx > -1
       val = (fn val, arr[idx])
@@ -785,7 +814,7 @@ define ->
       when "function"
         (reject_fn some_criteria, array)
       when "object"
-        switch (count (keys some_criteria))
+        switch (count1 (keys some_criteria))
           when 0
             throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
           when 1
@@ -880,53 +909,80 @@ define ->
   # @param {var_args...} [method_args]
   # @param {Array} coll
   invoke = (method_name, coll) ->
-    args_count = (count arguments)
-    #
-    if args_count >= 3
-      method_args = (slice arguments, 1, args_count - 1)
-      coll = (last arguments)
-    #
-    len = (count coll)
+    switch arguments.length
+      when 2
+        (invoke0 method_name, coll)
+      when 3
+        (invoke1 method_name, coll, arguments[2])
+      else
+        invoken.apply(null, arguments)
+
+  invoke0 = (method_name, coll) ->
+    len = coll.length
     results = (make_array len)
     i = -1
-    #
-    if args_count >= 3
-      while ++i < len
-        item = coll[i]
-        results[i] = item[method_name].apply(item, method_args)
-    else
-      while ++i < len
-        item = coll[i]
-        results[i] = item[method_name]()
-    #
+    while ++i < len
+      results[i] = coll[i][method_name]()
     results
+
+  invoke1 = (method_name, arg, coll) ->
+    len = coll.length
+    results = (make_array len)
+    i = -1
+    while ++i < len
+      item = coll[i]
+      results[i] = item[method_name].call(item, arg)
+    results
+
+  invoken = (method_name, args..., coll) ->
+    len = coll.length
+    results = (make_array len)
+    i = -1
+    while ++i < len
+      item = coll[i]
+      results[i] = item[method_name].apply(item, args)
+    results
+
 
   # Muted invoke, returns undefined
   # @param {string} method_name
   # @param {var_args...} [method_args]
   # @param {Array} coll
   invokem = (method_name, coll) ->
-    args_count = (count arguments)
-    #
-    if args_count >= 3
-      method_args = (slice arguments, 1, args_count - 1)
-      coll = (last arguments)
-    #
-    len = (count coll)
+    switch arguments.length
+      when 2
+        (invokem0 method_name, coll)
+      when 3
+        (invokem1 method_name, coll, arguments[2])
+      else
+        invokemn.apply(null, arguments)
+
+  invokem1 = (method_name, arg, coll) ->
     i = -1
-    #
-    if args_count >= 3
-      while ++i < len
-        item = coll[i]
-        item[method_name].apply(item, method_args)
-    else
-      while ++i < len
-        coll[i][method_name]()
-    #
+    len = coll.length
+    while ++i < len
+      item = coll[i]
+      item[method_name].call(item, arg)
     return
 
+  invokem0 = (method_name, coll) ->
+    i = -1
+    len = coll.length
+    while ++i < len
+      coll[i][method_name]()
+    return
+
+  invokemn = (method_name, args..., coll) ->
+    i = -1
+    len = coll.length
+    while ++i < len
+      item = coll[i]
+      item[method_name].apply(item, args)
+    return
+
+
   pluck = (key, coll) ->
-    len    = (count coll)
+    len    = (count1 coll)
     result = (make_array len)
     i      = -1
     #
@@ -999,20 +1055,12 @@ define ->
   #  from all sources will be written
   # @param {varargs} sources: 1 or more sources
   assign = (dest = {}, sources) ->
-    sources = (drop 1, arguments)
-    (each (partial assign_one, dest), sources)
-    dest
+    (reduce assign_one, dest, (drop 1, arguments))
 
   assign_one = (dest, src) ->
     for key, val of src
       dest[key] = val
     dest
-
-  clone_obj = (obj) ->
-    res = {}
-    for key, val of obj
-      res[key] = val
-    res
 
   clone = (data) ->
     if (is_object data)
@@ -1023,11 +1071,23 @@ define ->
     else
       throw Errors.UNEXPECTED_TYPE
 
+  # сигнатура функции
+  # @param {object} dst
+  # @param {object...} var_src
+  cloneassign = (dst, var_src) ->
+    (reduce assign_one, (clonedeep dst), (drop 1, arguments))
+
   clonedeep = (src) ->
     (_clonedeep src
               , dst = (is_array src) && [] || {}
               , stack_dst = [dst]
               , stack_src = [src])
+
+  clone_obj = (obj) ->
+    res = {}
+    for key, val of obj
+      res[key] = val
+    res
 
   _clonedeep = (src, dst, stack_dst, stack_src) ->
     for key, val of src
@@ -1057,8 +1117,8 @@ define ->
     stack_dst = [dst]
     stack_act = []
     #
-    cur_keys = (is_array cur_src) && (range (count cur_src)) || (reverse (keys cur_src))
-    cur_key_idx = (count cur_keys)
+    cur_keys = (is_array cur_src) && (range (count1 cur_src)) || (reverse (keys cur_src))
+    cur_key_idx = (count1 cur_keys)
     #
     while --cur_key_idx >= 0
       key = cur_keys[cur_key_idx]
@@ -1078,15 +1138,15 @@ define ->
 
           cur_src = val
           cur_dst = child_dst
-          cur_keys = (is_array cur_src) && (range (count cur_src)) || (reverse (keys cur_src))
-          cur_key_idx = (count cur_keys)
+          cur_keys = (is_array cur_src) && (range (count1 cur_src)) || (reverse (keys cur_src))
+          cur_key_idx = (count1 cur_keys)
 
           stack_src.push(cur_src)
           stack_dst.push(cur_dst)
         else
           cur_dst[key] = stack_dst[val_idx]
 
-      while (is_zero cur_key_idx) && (not_zero (count stack_act))
+      while (is_zero cur_key_idx) && (not_zero (count1 stack_act))
         [cur_src, cur_dst, cur_keys, cur_key_idx] = stack_act.pop()
 
     dst
@@ -1124,11 +1184,12 @@ define ->
         res[key] = val1
     res
 
-  difference_sets = (set_a, set_b) ->
-    item for item in set_a when (not_contains item, set_b)
+  difference_sets = (set_a, set_b, contains_fn = contains) ->
+    a_reject set_a, (item) ->
+      (contains_fn item, set_b)
 
-  set_symmetric_difference = (set_a, set_b) ->
-    [(difference_sets set_a, set_b), (difference_sets set_b, set_a)]
+  set_symmetric_difference = (set_a, set_b, contains_fn) ->
+    [(difference_sets set_a, set_b, contains_fn), (difference_sets set_b, set_a, contains_fn)]
 
   # tests objects and arrays for shallow equality
   # @signatures
@@ -1153,8 +1214,8 @@ define ->
       o1 == o2
 
   equal_array = (arr1, arr2) ->
-    len1 = (count arr1)
-    len2 = (count arr2)
+    len1 = arr1.length
+    len2 = arr2.length
     #
     ((0 == len1) && (0 == len2)) ||
       ((len1 == len2) && (equal_array_start arr1, arr2))
@@ -1220,6 +1281,26 @@ define ->
       accumulator[ item[index_prop] ] = item
     accumulator
 
+  interpose = (sep, coll) ->
+    coll_len   = coll.length
+    seps_count = coll_len - 1
+    new_len = coll_len + seps_count
+    new_res = (make_array new_len)
+    #
+    i_coll = -1
+    i_res  = 0
+    while ++i_coll < coll_len
+      new_res[i_res] = coll[i_coll]
+      if (i_res + 1) < new_len
+        new_res[i_res + 1] = sep
+      i_res += 2
+    #
+    new_res
+
+  intersection = (coll1, coll2, contains_fn = contains) ->
+    a_filter coll1, (item) ->
+      (contains_fn item, coll2)
+
   keys = (hash) ->
     Object.keys(hash)
 
@@ -1236,7 +1317,7 @@ define ->
     cur_dst     = dst
     cur_src     = src
     cur_keys    = (keys src)
-    cur_key_idx = (count cur_keys)
+    cur_key_idx = (count1 cur_keys)
     #
     while --cur_key_idx >= 0
       key = cur_keys[cur_key_idx]
@@ -1256,7 +1337,7 @@ define ->
           cur_dst     = cur_dst[key]
           cur_src     = cur_src[key]
           cur_keys    = (keys cur_src)
-          cur_key_idx = (count cur_keys)
+          cur_key_idx = (count1 cur_keys)
       #
       while (is_zero cur_key_idx) && (not_empty call_stack)
         [cur_dst, cur_src, cur_keys, cur_key_idx] = call_stack.pop()
@@ -1408,7 +1489,7 @@ define ->
     num + 1
 
   jquery_wrap_to_array = (jquery_wrap) ->
-    wrap_len = (count jquery_wrap)
+    wrap_len = jquery_wrap.length
     i = -1
     while ++i < wrap_len
       jquery_wrap.eq(i)
@@ -1422,7 +1503,7 @@ define ->
   #  start_idx, end_idx
   #  start_idx, end_idx, step
   range = (start_idx, end_idx, step) ->
-    switch (count arguments)
+    switch arguments.length
       when 1
         end_idx   = start_idx
         start_idx = 0
@@ -1472,7 +1553,7 @@ define ->
   sum2 = (a, b) ->
     a + b
 
-  a_sum = (partial reduce, sum2)
+  a_sum = (partial reduce, sum2, 0)
 
   set = (prop_name, val, hash) ->
     hash[prop_name] = val
@@ -1505,6 +1586,7 @@ define ->
   exports.butlast           = butlast
   exports.cat               = cat
   exports.clone             = clone
+  exports.cloneassign       = cloneassign
   exports.clonedeep         = clonedeep
   exports.clonedeep2        = _clonedeep2
   exports.comma             = comma
@@ -1530,6 +1612,7 @@ define ->
   exports.equal             = equal
   exports.equal_array_start = equal_array_start
   exports.equal_val         = equal_val
+  exports.equal_set         = equal_set
   exports.every             = every
   exports.extend            = extend
   exports.fastbind          = bind
@@ -1560,6 +1643,8 @@ define ->
   exports.index_by_id       = (partial index_by, 'id')
   exports.index_of          = index_of
   exports.insert_at         = insert_at
+  exports.intersection      = intersection
+  exports.interpose         = interpose
   exports.invoke            = invoke
   exports.invokem           = invokem
   exports.is_array          = is_array
@@ -1585,6 +1670,7 @@ define ->
   exports.list_compact      = list_compact
   exports.log_pipe          = log_pipe
   exports.map               = map
+  exports.magic             = no_operation
   exports.match             = match
   exports.matches           = matches
   exports.merge             = merge
@@ -1595,6 +1681,7 @@ define ->
   exports.noop              = no_operation
   exports.not_array         = not_array
   exports.not_boolean       = not_boolean
+  exports.not_contains      = not_contains
   exports.not_date          = not_date
   exports.not_defined       = not_defined
   exports.not_empty         = not_empty
@@ -1658,7 +1745,7 @@ define ->
   exports.str_split         = str_split
   exports.str_take          = head
   exports.sum2              = sum2
-  exports.sumn              = (flow list, (partial reduce, sum2))
+  exports.sum               = a_sum
   exports.take              = take
   exports.tail              = tail
   exports.third             = third
