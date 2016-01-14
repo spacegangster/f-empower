@@ -80,6 +80,7 @@ It is much closer to Clojure, though here is no lazyness or immutability.
 ### Array
 - a_contains   : (arr, item) array first `contains`, like in underscore, tests reference equality
 - a_each       : (arr, fn) array first `each`, works with only one collection
+- a_find_index : (arr, pred) array first `find_index`
 - a_filter     : (arr, fn) array first `filter`
 - a_map        : (arr, fn) array first `map`, works with only one collection
 - a_reduce     : (arr, fn) | (arr, fn, val) array first `reduce`
@@ -89,11 +90,14 @@ It is much closer to Clojure, though here is no lazyness or immutability.
 - cat          : (arrays..) concatenate arrays
 - compact      : (arr) returns new version of the array without elements that evaluate to falsee
 - contains     : (item, arr) tests array if it contains the item
-- count        : (array_like) reads `length` property of something
+- count        : (array_like) reads `length` property of something, or counts keys of the object
 - drop         : (x, arr) drops first x items from array
 - each         : (fn, arr...)
 - filter       : (criteria(fn/obj/string), arr)
 - filter       : (regexp, string_arr) takes all strings from string_arr that match regexp
+- find         : (pred, arr)
+- find_index   : (pred, arr)
+- find_index_last: (pred, arr)
 - first        : (arr)
 - index_of     : (item, arr)
 - last         : (arr) returns last item from array
@@ -116,6 +120,7 @@ map(
 #   [ 3, 'three', 'три' , 'tre'  ] ]
 ```
 
+- map_async    : (map_fn, arr, on_res)
 - push         : (arr, item)
 - push_all     : (dest_arr, array_to_push) -- pushes one array to another
 - reduce       : (fn, arr) | (fn, val, arr)
@@ -144,6 +149,7 @@ reduce(bind(console.log, console), [1, 2, 3])
 - take         : (x, arr) takes first x items from array
 - unshift      : (arr, item)
 - union        : (set_arr1, set_arr2) - returns a new array that has all items from the first array, plus items from the second array, that are not in the former one
+
 
 ### Function
 - apply        : (fn, args...) applies arguments to function
@@ -203,6 +209,7 @@ step3( step2( step1() ) )
 - no_operation : function that does nothing, and returns undefined
 - noop -> no_operation
 
+
 ### Predicate
 - and2         : (a, b) -> a && b
 - is_array     : (item) predicate that tests if object is array
@@ -222,6 +229,7 @@ step3( step2( step1() ) )
 - not_object   : antagonist for is_object
 - not_zero     : antagonist for is_zero
 
+
 ### Collection
 - invoke       : (method_name, arr) | (method_name, method_args..., arr)
 ```coffee
@@ -238,6 +246,7 @@ corresponding item from dst_coll as prop_name.
 
 ### Object
 - assign       : (dest, src...) assigns all src objects to dest object
+- assign_keys  : (keys_arr, dst, src)
 - clone        : (item) shallow copy of the object
 - clonedeep    : (item) deep clone for data structures, able to clone structures with circular references
 - clonedeep2   : (item) deep clone without recursion, able to clone very deep structures with circular references
@@ -245,6 +254,7 @@ corresponding item from dst_coll as prop_name.
 - extend       -> assign
 - keys         : (obj) returns keys of object
 - merge        : (dest, src) deep non-recursive merge of two objects
+- merge_with   : (merge_fn, obj1, obj2)
 - o_map        : (obj, keys_list) hash based mapping function `(o_map {age: 35}, ['age']) # -> [ 35 ]`
 - o_match      : (criteria_object, matched_object) returns true if every property of the criteria_object is
 equal to the corresponding property of the matched_object
@@ -254,8 +264,15 @@ equal to the corresponding property of the matched_object
 are stored in `sons` array
 - vals         : (obj) returns the list of object's values
 
+
 ### String
 - comma        : (strings...)
+- format       : (template_str, args...)
+```javascript
+format("My name is {0}, I drink", "Barbariana", "Ale")
+"My name is Barbariana, I drink Ale"
+```
+
 - head         : (x, string) takes first x chars from string
 - match        : (str, regexp)
 - mk_regexp    : (regex_str, regex_options_str)
