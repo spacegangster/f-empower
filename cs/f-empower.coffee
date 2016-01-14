@@ -52,6 +52,9 @@ define ->
   apply = (fn, args_list) ->
     fn.apply(this, args_list)
 
+  add2 = (a, b) ->
+    a + b
+
   and2 = (a, b) ->
     a && b
 
@@ -162,6 +165,10 @@ define ->
       fn.apply(null, (cat [this], (slice arguments)))
 
   set_interval = (ms, fn) ->
+    if !fn
+      fn = ms
+      ms = 0
+    #
     (setInterval fn, ms)
 
   # Executes fn once in the given period
@@ -333,6 +340,9 @@ define ->
   a_filter = (array, fn) ->
     (filter fn, array)
 
+  a_find_index = (array, pred) ->
+    (find_index pred, array)
+
   a_index_of = (array, item) ->
     array.indexOf(item)
 
@@ -367,15 +377,21 @@ define ->
     else if !pred
       coll.length
     else
-      (count2 pred, coll)
-    
+      if (is_function pred)
+        (count_pred pred, coll)
+      else
+        (count_obj pred, coll)
+
   count1 = (o) ->
     if (is_array_like o)
       o.length
     else
       (keys o).length
 
-  count2 = (pred, coll) ->
+  count_obj = (pred, coll) ->
+    (filter pred, coll).length
+
+  count_pred = (pred, coll) ->
     cnt = 0
     for item in coll
       if (pred item)
@@ -384,6 +400,13 @@ define ->
 
   drop = (items_number_to_drop, array_like) ->
     (slice array_like, items_number_to_drop)
+
+  drop_last = (chars_to_drop, string) ->
+    len = string.length
+    if chars_to_drop > len
+      ""
+    else
+      string.substring(0, len - chars_to_drop)
 
   # signatures: 
   #   fn, arr
@@ -455,10 +478,18 @@ define ->
       (local_apply fn, args)
     return
 
+  check_keys = (obj, keys_to_check) ->
+    (every (wrap_invoke_obj obj), keys_to_check)
+
+  check_true = (val) ->
+    val == true
+
   every = (pred, coll) ->
+    if !coll
+      coll = pred
+      pred = check_true
     return true  if (is_empty coll)
     #
-    pred = ((is_function pred) && pred) || (wrap_invoke_obj pred)
     (every_fn pred, coll)
 
   every_fn = (fn, coll) ->
@@ -530,6 +561,32 @@ define ->
       else
         throw Errors.UNEXPECTED_TYPE
 
+  find = (some_criteria, array) ->
+    item_idx = (find_index some_criteria, array)
+    return  if item_idx == -1
+    (read item_idx, array)
+
+  find_index = (pred, array) ->
+    switch (typeof pred)
+      when "string"
+        (find_index_prop pred, array)
+      when "function"
+        (find_index_fn pred, array)
+      when "boolean", "number"
+        (index_of pred, array)
+      when "object"
+        switch (count1 (keys pred))
+          when 0
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+          when 1
+            (find_index_obj_1kv pred, array)
+          when 2
+            (find_index_obj_2kv pred, array)
+          else
+            (find_index_obj pred, array)
+      else
+        throw Errors.UNEXPECTED_TYPE
+
   find_index_fn = (fn, array) ->
     for item, idx in array
       if (fn item)
@@ -563,31 +620,34 @@ define ->
         return idx
     -1
 
-  find_index = (pred, array) ->
-    switch (typeof pred)
-      when "string"
-        (find_index_prop pred, array)
-      when "function"
-        (find_index_fn pred, array)
-      when "boolean", "number"
-        (index_of pred, array)
-      when "object"
-        switch (count1 (keys pred))
-          when 0
-            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-          when 1
-            (find_index_obj_1kv pred, array)
-          when 2
-            (find_index_obj_2kv pred, array)
-          else
-            (find_index_obj pred, array)
-      else
-        throw Errors.UNEXPECTED_TYPE
 
-  find = (some_criteria, array) ->
-    item_idx = (find_index some_criteria, array)
-    return  if item_idx == -1
-    (read item_idx, array)
+  base_find_index_r = (iter_fn, array) ->
+    i = array.length
+    while --i > -1
+      if (iter_fn array[i], i, array)
+        return i
+    return -1
+
+  equal_bool = (b1, b2) ->
+    b1 == b2
+
+  equal_number = (n1, n2) ->
+    n1 == n2
+
+  dispatch_find_index_matcher = (pred) ->
+    switch (typeof pred)
+      when 'function'
+        pred
+      when 'boolean'
+        (partial equal_bool, pred)
+      when 'number'
+        (partial equal_number, pred)
+      else
+        throw new Error("No matcher for #{typeof pred} yet")
+
+  find_index_last = (pred, array) ->
+    (base_find_index_r (dispatch_find_index_matcher pred), array)
+
 
   flatten = (arr) ->
     if (is_empty arr)
@@ -696,9 +756,39 @@ define ->
       else
         (apply mapn, arguments)
 
+
+  _async_mapper = (err_fn, map_fn, accumulator, report_arr, item, idx) ->
+    map_fn item, (err, res) ->
+      return (err_fn err) if err
+      #
+      accumulator[idx] = res
+      report_arr[idx] = true
+
+  # Parallel mapper
+  # @param {function} map_fn
+  # @param {Array} items
+  # @param {function} on_res(err, mapped_result)
+  map_async = (map_fn, items, on_res) ->
+    len = items.length
+    help_arr = (repeat len, false)
+    res_arr  = (make_array len)
+    #
+    int_id = set_interval 2, ->
+      if (every help_arr)
+        (clearInterval int_id)
+        (on_res null, res_arr)
+    #
+    err_fn = (err) ->
+      (clearInterval int_id)
+      (on_res err)
+    #
+    (each_idx2 (partial _async_mapper, err_fn, map_fn, res_arr, help_arr), items)
+
+
   # @private
+  # use V8 array size optimization
   make_array = (len) ->
-    len > THRESHOLD_LARGE_ARRAY_SIZE && [] || new Array(len)
+    (len > THRESHOLD_LARGE_ARRAY_SIZE) && [] || new Array(len)
 
 
   # map of arity = 2
@@ -853,13 +943,19 @@ define ->
   remove_at = (idx, arr) ->
     (splice arr, idx, 1)
 
+  # @param {int} times
+  # @param {mixed} value
   repeat = (times, value) ->
+    array = (make_array times)
     while --times > -1
-      value
+      array[times] = value
+    array
 
   repeatf = (times, fn) ->
+    array = (make_array times)
     while --times > -1
-      fn()
+      array[times] = fn()
+    array
 
   # @return {Array} whole array except the first item
   rest = (arr) ->
@@ -1012,10 +1108,10 @@ define ->
       array = prop
       if (is_empty array)
         []
-      else if (is_number array[0])
+      else if (is_number array[0]) || (is_string array[0])
         (unique_plain array)
       else
-        throw Error("only propped uniq and plain number uniq")
+        throw Error("only propped uniq and plain number or string uniqueing supported")
 
   # returns unique
   unique_by_prop = (prop_name, arr) ->
@@ -1056,6 +1152,15 @@ define ->
   # @param {varargs} sources: 1 or more sources
   assign = (dest = {}, sources) ->
     (reduce assign_one, dest, (drop 1, arguments))
+
+  assign_keys = (keys, dst, src) ->
+    i = -1
+    l = keys.length
+    while ++i < l
+      key = keys[i]
+      if undefined != src[key]
+        dst[key] = src[key]
+    dst
 
   assign_one = (dest, src) ->
     for key, val of src
@@ -1344,6 +1449,19 @@ define ->
     #
     dst
 
+  merge_with = (fn, o1, o2) ->
+    res = {}
+    keyset = (unique (cat (keys o1), (keys o2)))
+    for key in keyset
+      v1 = o1[key]
+      v2 = o2[key]
+      #
+      if v1 && v2
+        res[key] = (fn v1, v2)
+      else
+        res[key] = v1 || v2
+    res
+
   # @param {object} obj
   # @param {string} props...
   omit = (obj, props) ->
@@ -1376,6 +1494,8 @@ define ->
       hash[key]
 
   # tests subject to match the criteria object
+  # (o_match {id: 3}, {id: 3, name: 'Katie'}) # true
+  # (o_match {id: 3}, {id: 1, name: 'Stacy'}) # false
   o_match = (criteria_obj, subject) ->
     for key, val of criteria_obj
       if subject[key] != val
@@ -1435,6 +1555,15 @@ define ->
   # ============================================================
   # CATEGORY: STRINGS
   # ============================================================
+
+
+  # Маленький форматтер строк:
+  # (format "My name is {0}, I drink {1}", "Ivan", "coffee")
+  # -> My name is Ivan, I drink coffee
+  format = (template_str) ->
+    args = (rest arguments)
+    template_str.replace /{(\d+)}/g, (match, number) ->
+      (typeof args[number] != 'undefined') && args[number] || match
 
   head = (chars_to_take, str) ->
     str.substr(0, chars_to_take)
@@ -1572,14 +1701,17 @@ define ->
   exports.a_contains        = a_contains
   exports.a_each            = a_each
   exports.a_filter          = a_filter
+  exports.a_find_index      = a_find_index
   exports.a_index_of        = a_index_of
   exports.a_map             = a_map
   exports.a_reduce          = a_reduce
   exports.a_reject          = a_reject
   exports.a_sum             = a_sum
   exports.and2              = and2
+  exports.add2              = add2
   exports.any               = any
   exports.assign            = assign
+  exports.assign_keys       = assign_keys
   exports.apply             = apply
   exports.bind              = bind
   exports.bind_all          = bind_all
@@ -1607,6 +1739,7 @@ define ->
   exports.difference        = difference
   exports.difference_sets   = difference_sets
   exports.drop              = drop
+  exports.drop_last         = drop_last
   exports.each              = each
   exports.each_idx          = each_idx
   exports.equal             = equal
@@ -1631,12 +1764,15 @@ define ->
   exports.find_index_obj_1kv = find_index_obj_1kv
   exports.find_index_obj_2kv = find_index_obj_2kv
   exports.find_index_obj    = find_index_obj
+  exports.find_index_last   = find_index_last
   exports.flatten           = flatten
   exports.flattenp          = flattenp
   exports.flatten_path      = flatten_path
   exports.flow              = flow
   exports.for_own           = for_own
+  exports.format            = format
   exports.get               = read
+  exports.check_keys        = check_keys
   exports.head              = head
   exports.inc               = inc
   exports.index_by          = index_by
@@ -1645,6 +1781,7 @@ define ->
   exports.insert_at         = insert_at
   exports.intersection      = intersection
   exports.interpose         = interpose
+  exports.interval          = set_interval
   exports.invoke            = invoke
   exports.invokem           = invokem
   exports.is_array          = is_array
@@ -1670,10 +1807,12 @@ define ->
   exports.list_compact      = list_compact
   exports.log_pipe          = log_pipe
   exports.map               = map
+  exports.map_async         = map_async
   exports.magic             = no_operation
   exports.match             = match
   exports.matches           = matches
   exports.merge             = merge
+  exports.merge_with        = merge_with
   exports.mk_regexp         = mk_regexp
   exports.multicall         = multicall
   exports.next              = next
