@@ -1635,15 +1635,16 @@ define(function() {
      * @signature vals...
      */
     function equal() {
-        return !!reduce(_equal_reducer, arguments)
-    }
-
-    function _equal_reducer(v1, v2) {
-        return equal_r(v1, v2) ? v2 : Reduced(false)
+        var args_length = arguments.length,
+            all_args_equal = true
+        while (all_args_equal && (--args_length > 0)) {
+            all_args_equal = equal_r(arguments[args_length], arguments[args_length - 1])
+        }
+        return all_args_equal
     }
 
     /**
-     * Recursive loop-free equality checker
+     * Shallow equality check for objects and arrays
      */
     function equal2(o1, o2) {
         if ((o1 == null) || (o1 == false)) { // special falsee trick
@@ -1665,8 +1666,11 @@ define(function() {
         }
     }
 
+    /**
+     * Recursive loop-free equality checker
+     */
     function equal_r(o1, o2) {
-        if (!is_mergeable(o1) && !is_mergeable(o2) || (o1 === o2)) {
+        if (!is_mergeable(o1) || !is_mergeable(o2) || (o1 === o2)) {
             return o1 === o2
         }
         //
