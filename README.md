@@ -62,7 +62,7 @@ which converts a jQuery wrap, into array of jQuery wraps.
 It is not so polished in terms of speed as Lodash. Although it respects functional 
 monomorphism.
 
-It is much closer to Clojure, though here is no lazyness or immutability.
+It is much closer to Clojure, though here is no laziness or immutability.
 
 ### Features not in Underscore
 - `map`, `each`. `map` and `each` work with arbitrary number of arrays.
