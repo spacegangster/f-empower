@@ -6,7 +6,7 @@ is emphasized where possible).
 
 Inspired by Clojure standard library functions and Underscore.
 
-Only 7.2k when minified and gzipped.
+Only 7.2k when minified and gzipped. (6.3k for Brotli)
 
 CommonJS and AMD loaders are supported.
 
