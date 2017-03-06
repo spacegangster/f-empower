@@ -1,10 +1,10 @@
 # f-empower
 #### Utility belt inspired by Clojure
 
-Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
+Over 200 functions for hashes, arrays, sets and functions. Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
 is emphasized where possible).
 
-Inspired by Clojure standard functions and Underscore.
+Inspired by Clojure standard library functions and Underscore.
 
 Only 7.2k when minified and gzipped.
 

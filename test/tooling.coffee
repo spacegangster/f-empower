@@ -1,11 +1,8 @@
 assert = require 'assert'
-fn     = require 'f-empower'
+fn     = require '../f-empower'
 
-{ bind
-, partial } = fn
-
-log     = (bind console.log, console)
-testing = (partial log, "testing")
+log     = fn.bind(console.log, console)
+testing = fn.partial(log, "testing")
 newline = log
 
 print_json = (obj) ->

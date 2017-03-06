@@ -1,4 +1,4 @@
-f_empower = require '../cs-cj/f-empower'
+f_empower = require '../f-empower'
 fs        = require 'fs'
 assert    = require 'assert'
 tooling   = require './tooling'

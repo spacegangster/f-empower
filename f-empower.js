@@ -5,7 +5,13 @@
  * License: MIT
  */
 
-define(function() {
+(function(factory_fn) {
+    if ('function' === typeof define) {
+        define(factory_fn)
+    } else if ('object' === typeof module) {
+        module.exports = factory_fn()
+    }
+}(function() {
     "use strict";
 
     var slice1 = [].slice,
@@ -1516,9 +1522,10 @@ define(function() {
     }
 
     function clonedeep(src) {
+        var dst = is_array(src) && [] || {} // destination object or array
         return _clonedeep(
             src,
-            is_array(src) && [] || {}, // destination object or array
+            dst,
             [dst], // destination stack
             [src]  // source object stack
         )
@@ -2239,6 +2246,15 @@ define(function() {
         return a + b
     }
 
+    function sumn() {
+        var res = 0,
+            i = arguments.length
+        while (--i > -1) {
+            res += arguments[i]
+        }
+        return res
+    }
+
     function a_sum(nums_array) {
         return reduce(sum2, 0, nums_array)
     }
@@ -2303,230 +2319,229 @@ define(function() {
 
 
 
-    var exports = ("undefined" !== typeof module) && module.exports || {}
-    exports.once = once
-    exports.delayed = delayed
-    exports.matches = matches
-    exports.Reduced              = Reduced
-    exports.a_contains           = a_contains
-    exports.a_each               = a_each
-    exports.a_each_idx           = a_each_idx
-    exports.a_filter             = a_filter
-    exports.a_find_index         = a_find_index
-    exports.a_index_of           = a_index_of
-    exports.a_map                = a_map
-    exports.a_reduce             = a_reduce
-    exports.a_reject             = a_reject
-    exports.a_sum                = a_sum
-    exports.and2                 = and2
-    exports.add2                 = add2
-    exports.any                  = any
-    exports.assign               = assign
-    exports.assign_keys          = assign_keys
-    exports.apply                = apply
-    exports.bind                 = bind
-    exports.bind_all             = bind_all
-    exports.butlast              = butlast
+    return {
+        a_contains           : a_contains,
+        a_each               : a_each,
+        a_each_idx           : a_each_idx,
+        a_filter             : a_filter,
+        a_find_index         : a_find_index,
+        a_index_of           : a_index_of,
+        a_map                : a_map,
+        a_reduce             : a_reduce,
+        a_reject             : a_reject,
+        a_sum                : a_sum,
+        and2                 : and2,
+        add2                 : add2,
+        any                  : any,
+        assign               : assign,
+        assign_keys          : assign_keys,
+        apply                : apply,
+        bind                 : bind,
+        bind_all             : bind_all,
+        butlast              : butlast,
 
-    exports.cat                  = cat
-    exports.check_keys           = check_keys
-    exports.clone                = clone
-    exports.cloneassign          = cloneassign
-    exports.clonedeep            = clonedeep
-    exports.clonedeep2           = _clonedeep2
-    exports.comma                = comma
-    exports.compact              = compact
-    exports.compose              = compose
-    exports.complement           = complement
-    exports.concat               = cat
-    exports.contains             = contains
-    exports.count                = count
-    exports.create               = create
-    exports.debug_wrap           = debug_wrap
-    exports.debounce             = debounce
-    exports.dec                  = dec
-    exports.defaults             = defaults
-    exports.delay                = delay
-    exports.detect               = find
-    exports.diff                 = difference
-    exports.difference           = difference
-    exports.difference_sets      = difference_sets
-    exports.drop                 = drop
-    exports.drop_last            = drop_last
+        cat                  : cat,
+        check_keys           : check_keys,
+        clone                : clone,
+        cloneassign          : cloneassign,
+        clonedeep            : clonedeep,
+        clonedeep2           : _clonedeep2,
+        comma                : comma,
+        compact              : compact,
+        compose              : compose,
+        complement           : complement,
+        concat               : cat,
+        contains             : contains,
+        count                : count,
+        create               : create,
 
-    exports.each                 = each
-    exports.each_idx             = each_idx
-    exports.equal                = equal
-    exports.equal_array_start    = equal_array_start
-    exports.equal_val            = equal_val
-    exports.equal_set            = equal_set
-    exports.every                = every
-    exports.extend               = extend
-    exports.fastbind             = bind
-    exports.first                = first
-    exports.filter               = filter
-    exports.filter_fn            = filter_fn
-    exports.filter_obj           = filter_obj
-    exports.filter_obj_1kv       = filter_obj_1kv
-    exports.filter_obj_2kv       = filter_obj_2kv
-    exports.filter_prop          = filter_prop
-    exports.filter_re            = filter_re
-    exports.find                 = find
-    exports.find_index           = find_index
-    exports.find_index_fn        = find_index_fn
-    exports.find_index_prop      = find_index_prop
-    exports.find_index_obj_1kv   = find_index_obj_1kv
-    exports.find_index_obj_2kv   = find_index_obj_2kv
-    exports.find_index_obj       = find_index_obj
-    exports.find_index_last      = find_index_last
-    exports.flatten              = flatten
-    exports.flattenp             = flattenp
-    exports.flatten_path         = flatten_path
-    exports.flow                 = flow
-    exports.for_own              = for_own
-    exports.format               = format
+        delayed              : delayed,
+        debug_wrap           : debug_wrap,
+        debounce             : debounce,
+        dec                  : dec,
+        defaults             : defaults,
+        delay                : delay,
+        detect               : find,
+        diff                 : difference,
+        difference           : difference,
+        difference_sets      : difference_sets,
+        drop                 : drop,
+        drop_last            : drop_last,
 
-    exports.get                  = read
-    exports.head                 = head
-    exports.inverse_object       = inverse_object
-    exports.inc                  = inc
-    exports.index_by             = index_by
-    exports.index_by_id          = partial(index_by, 'id')
-    exports.index_of             = index_of
-    exports.insert_at            = insert_at
-    exports.intersection         = intersection
-    exports.interpose            = interpose
-    exports.interval             = set_interval
-    exports.invoke               = invoke
-    exports.invokem              = invokem
-    exports.is_array             = is_array
-    exports.is_arguments         = is_arguments
-    exports.is_boolean           = is_boolean
-    exports.is_date              = is_date
-    exports.is_defined           = is_defined
-    exports.is_empty             = is_empty
-    exports.is_empty$            = is_empty$
-    exports.is_even              = is_even
-    exports.is_function          = is_function
-    exports.is_mergeable         = is_mergeable
-    exports.is_number            = is_number
-    exports.is_integer           = is_integer
-    exports.is_object            = is_object
-    exports.is_plain_object      = is_plain_object
-    exports.is_string            = is_string
-    exports.is_subset            = is_subset
-    exports.is_zero              = is_zero
+        each                 : each,
+        each_idx             : each_idx,
+        equal                : equal,
+        equal_array_start    : equal_array_start,
+        equal_val            : equal_val,
+        equal_set            : equal_set,
+        every                : every,
+        extend               : extend,
+        fastbind             : bind,
+        first                : first,
+        filter               : filter,
+        filter_fn            : filter_fn,
+        filter_obj           : filter_obj,
+        filter_obj_1kv       : filter_obj_1kv,
+        filter_obj_2kv       : filter_obj_2kv,
+        filter_prop          : filter_prop,
+        filter_re            : filter_re,
+        find                 : find,
+        find_index           : find_index,
+        find_index_fn        : find_index_fn,
+        find_index_prop      : find_index_prop,
+        find_index_obj_1kv   : find_index_obj_1kv,
+        find_index_obj_2kv   : find_index_obj_2kv,
+        find_index_obj       : find_index_obj,
+        find_index_last      : find_index_last,
+        flatten              : flatten,
+        flattenp             : flattenp,
+        flatten_path         : flatten_path,
+        flow                 : flow,
+        for_own              : for_own,
+        format               : format,
 
-    exports.jquery_wrap_to_array = jquery_wrap_to_array
-    exports.j2a                  = jquery_wrap_to_array
-    exports.keys                 = keys
-    exports.last                 = last
-    exports.list                 = list
-    exports.list_compact         = list_compact
-    exports.log_pipe             = log_pipe
-    exports.map                  = map
-    exports.map_async            = map_async
-    exports.magic                = no_operation
-    exports.match                = match
-    exports.matches              = matches
-    exports.merge                = merge
-    exports.merge_with           = merge_with
-    exports.mk_regexp            = mk_regexp
-    exports.multicall            = multicall
-    exports.next                 = next
-    exports.no_operation         = no_operation
-    exports.noop                 = no_operation
-    exports.not_array            = not_array
-    exports.not_boolean          = not_boolean
-    exports.not_contains         = not_contains
-    exports.not_date             = not_date
-    exports.not_defined          = not_defined
-    exports.not_empty            = not_empty
-    exports.not_empty$           = not_empty$
-    exports.not_function         = not_function
-    exports.not_number           = not_number
-    exports.not_object           = not_object
-    exports.not_string           = not_string
-    exports.not_subset           = not_subset
-    exports.not_zero             = not_zero
-    exports.omit                 = omit
-    exports.omit_all             = omit_all
-    exports.o_for_own            = o_for_own
-    exports.o_map                = o_map
-    exports.o_match              = o_match
+        get                  : read,
+        head                 : head,
+        inverse_object       : inverse_object,
+        inc                  : inc,
+        index_by             : index_by,
+        index_by_id          : partial(index_by, 'id'),
+        index_of             : index_of,
+        insert_at            : insert_at,
+        intersection         : intersection,
+        interpose            : interpose,
+        interval             : set_interval,
+        invoke               : invoke,
+        invokem              : invokem,
+        is_array             : is_array,
+        is_arguments         : is_arguments,
+        is_boolean           : is_boolean,
+        is_date              : is_date,
+        is_defined           : is_defined,
+        is_empty             : is_empty,
+        is_empty$            : is_empty$,
+        is_even              : is_even,
+        is_function          : is_function,
+        is_mergeable         : is_mergeable,
+        is_number            : is_number,
+        is_integer           : is_integer,
+        is_object            : is_object,
+        is_plain_object      : is_plain_object,
+        is_string            : is_string,
+        is_subset            : is_subset,
+        is_zero              : is_zero,
 
-    exports.partial              = partial
-    exports.pbind                = pbind
-    exports.periodically         = periodically
-    exports.pt                   = partial
-    exports.ptr                  = partialr
-    exports.partialr             = partialr
-    exports.pick                 = pick
-    exports.pick_all             = pick_all
-    exports.pipeline             = flow
-    exports.pluck                = pluck
-    exports.pluck_id             = partial(pluck, 'id')
-    exports.prev                 = prev
-    exports.pull                 = pull
-    exports.push                 = push
-    exports.push_all             = push_all
+        jquery_wrap_to_array : jquery_wrap_to_array,
+        j2a                  : jquery_wrap_to_array,
+        keys                 : keys,
+        last                 : last,
+        list                 : list,
+        list_compact         : list_compact,
+        log_pipe             : log_pipe,
+        map                  : map,
+        map_async            : map_async,
+        magic                : no_operation,
+        match                : match,
+        matches              : matches,
+        merge                : merge,
+        merge_with           : merge_with,
+        mk_regexp            : mk_regexp,
+        multicall            : multicall,
+        next                 : next,
+        no_operation         : no_operation,
+        noop                 : no_operation,
+        not_array            : not_array,
+        not_boolean          : not_boolean,
+        not_contains         : not_contains,
+        not_date             : not_date,
+        not_defined          : not_defined,
+        not_empty            : not_empty,
+        not_empty$           : not_empty$,
+        not_function         : not_function,
+        not_number           : not_number,
+        not_object           : not_object,
+        not_string           : not_string,
+        not_subset           : not_subset,
+        not_zero             : not_zero,
+        omit                 : omit,
+        omit_all             : omit_all,
+        once : once,
+        o_for_own            : o_for_own,
+        o_map                : o_map,
+        o_match              : o_match,
 
-    exports.range                = range
-    exports.read                 = read
-    exports.recurse              = recurse
-    exports.reduce               = reduce
-    exports.reducer              = reducer
-    exports.reject               = reject
-    exports.reject_fn            = reject_fn
-    exports.reject_obj           = reject_obj
-    exports.reject_obj_1kv       = reject_obj_1kv
-    exports.reject_obj_2kv       = reject_obj_2kv
-    exports.reject_prop          = reject_prop
-    exports.remap                = remap
-    exports.remove               = remove
-    exports.remove_at            = remove_at
-    exports.repeat               = repeat
-    exports.repeatf              = repeatf
-    exports.rest                 = rest
-    exports.reverse              = reverse
+        partial              : partial,
+        pbind                : pbind,
+        periodically         : periodically,
+        pt                   : partial,
+        ptr                  : partialr,
+        partialr             : partialr,
+        pick                 : pick,
+        pick_all             : pick_all,
+        pipeline             : flow,
+        pluck                : pluck,
+        pluck_id             : partial(pluck, 'id'),
+        prev                 : prev,
+        pull                 : pull,
+        push                 : push,
+        push_all             : push_all,
 
-    // S
-    exports.second                   = second
-    exports.set                      = set
-    exports.set_difference           = difference_sets
-    exports.set_symmetric_difference = set_symmetric_difference
-    exports.slice                    = slice
-    exports.sort                     = sort
-    exports.space                    = space
-    exports.splice                   = splice
-    exports.str                      = str
-    exports.str_breplace             = str_breplace
-    exports.str_drop                 = tail
-    exports.str_join                 = str_join
-    exports.str_join_lines           = str_join_lines
-    exports.str_split                = str_split
-    exports.str_split_lines          = str_split_lines
-    exports.str_take                 = head
-    exports.sum2                     = sum2
-    exports.sum                      = a_sum
+        range                : range,
+        read                 : read,
+        recurse              : recurse,
+        reduce               : reduce,
+        Reduced              : Reduced,
+        reducer              : reducer,
+        reject               : reject,
+        reject_fn            : reject_fn,
+        reject_obj           : reject_obj,
+        reject_obj_1kv       : reject_obj_1kv,
+        reject_obj_2kv       : reject_obj_2kv,
+        reject_prop          : reject_prop,
+        remap                : remap,
+        remove               : remove,
+        remove_at            : remove_at,
+        repeat               : repeat,
+        repeatf              : repeatf,
+        rest                 : rest,
+        reverse              : reverse,
 
-    exports.take         = take
-    exports.tail         = tail
-    exports.third        = third
-    exports.throttle     = throttle
-    exports.time         = time
-    exports.transform    = transform
-    exports.trim         = trim
-    exports.update_in    = update_in
-    exports.union        = union
-    exports.unique       = unique
-    exports.unshift      = unshift
-    exports.vals         = vals
-    exports.varynum      = varynum
-    exports.without      = without
-    exports.write        = write
-    exports.zip_obj      = zip_obj
+        second                   : second,
+        set                      : set,
+        set_difference           : difference_sets,
+        set_symmetric_difference : set_symmetric_difference,
+        slice                    : slice,
+        sort                     : sort,
+        space                    : space,
+        splice                   : splice,
+        str                      : str,
+        str_breplace             : str_breplace,
+        str_drop                 : tail,
+        str_join                 : str_join,
+        str_join_lines           : str_join_lines,
+        str_split                : str_split,
+        str_split_lines          : str_split_lines,
+        str_take                 : head,
+        sum2                     : sum2,
+        sum                      : a_sum,
+        sumn                     : sumn,
 
-    return exports
+        take         : take,
+        tail         : tail,
+        third        : third,
+        throttle     : throttle,
+        time         : time,
+        transform    : transform,
+        trim         : trim,
+        update_in    : update_in,
+        union        : union,
+        unique       : unique,
+        unshift      : unshift,
+        vals         : vals,
+        varynum      : varynum,
+        without      : without,
+        write        : write,
+        zip_obj      : zip_obj,
+    }
 
-})
+}))
