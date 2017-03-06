@@ -291,27 +291,33 @@ define(function() {
         return 'number' === typeof candidate
     }
 
+    function is_integer(n) {
+        return (Number(n) === n) && (n % 1 === 0)
+    }
+
     function is_object(candidate) {
         return 'object' === typeof candidate
     }
 
     function is_plain_object(subj) {
-        var ctor, is_defnd, is_objct, key, latest_key, val
-        is_defnd = 'undefined' !== typeof subj
-        is_objct = is_defnd && ('[object Object]' === to_string.call(subj)) && !(is_function(subj))
-        if (!is_objct || (!hasOwnProperty.call(subj, 'constructor') && ((ctor = subj.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
+        var ctor = null,
+            is_defnd = 'undefined' !== typeof subj,
+            is_objct = is_defnd && ('[object Object]' === to_string.call(subj)) && !(is_function(subj))
+        //
+        if (!is_objct || (!hasOwnProperty.call(subj, 'constructor') &&
+                    ((ctor = subj.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
             return false
         }
-        latest_key = null
-        for (key in subj) {
-            val = subj[key]
+        var latest_key = null
+        for (var key in subj) {
+            var val = subj[key]
             latest_key = key
         }
-        return (not_defined(key)) || hasOwnProperty.call(subj, latest_key)
+        return not_defined(key) || hasOwnProperty.call(subj, latest_key)
     }
 
     function is_mergeable(item) {
-        return (is_array(item)) || (is_plain_object(item))
+        return is_array(item) || is_plain_object(item)
     }
 
     function is_regexp(item) {
@@ -376,7 +382,11 @@ define(function() {
     }
 
     function a_each(array, fn) {
-        return each(fn, array)
+        each(fn, array)
+    }
+
+    function a_each_idx(array, fn) {
+        each_idx(fn, array)
     }
 
     function a_filter(array, fn) {
@@ -412,7 +422,7 @@ define(function() {
             arr = pred
             pred = true
         }
-        return -1 !== (find_index(pred, arr))
+        return -1 < find_index(pred, arr)
     }
 
     function compact(coll) {
@@ -490,7 +500,7 @@ define(function() {
             case 3:
                 return each3(fn, coll, arguments[2])
             default:
-                return apply(eachn, arguments)
+                return eachn.apply(null, arguments)
         }
     }
 
@@ -515,25 +525,27 @@ define(function() {
         return apply(Math.min, map2(count1, arrs))
     }
 
-    function eachn() {
-        var args, arrs, fn, i, local_apply, local_pluck, shortest_len
-        args = arguments
-        fn = first(args)
-        arrs = rest(args)
-        shortest_len = calc_shortest_length(arrs)
-        i = -1
-        local_pluck = pluck
-        local_apply = apply
+    /**
+     * Variant of `each` that traverses `n` arrays with `fn`
+     * fn, array1, array2, array3...
+     */
+    function eachn(fn) {
+        var args         = arguments,
+            arrs         = rest(args),
+            shortest_len = calc_shortest_length(arrs),
+            local_pluck  = pluck,
+            local_apply  = apply,
+            i            = -1;
         while (++i < shortest_len) {
             local_apply(fn, local_pluck(i, arrs))
         }
     }
 
-    function each_idx() {
+    function each_idx(fn, arr) {
         if (arguments.length === 2) {
-            return each_idx2(arguments[0], arguments[1])
+            each_idx2(fn, arr)
         } else {
-            return apply(each_idxn, arguments)
+            each_idxn.apply(null, arguments)
         }
     }
 
@@ -885,12 +897,16 @@ define(function() {
         return to_string.call(val)
     }
 
+    /**
+     * @signature arr
+     * @signature criterion, arr
+     */
     function sort(criterion, arr) {
-        switch (count1(arguments)) {
+        switch (arguments.length) {
             case 1:
                 return criterion.sort()
             case 2:
-                if (2 > (count1(arr))) {
+                if (2 > arr.length) {
                     return slice(arr)
                 }
                 switch (type_of(criterion)) {
@@ -904,11 +920,13 @@ define(function() {
         }
     }
 
+    /**
+     * WARNING: immutable
+     */
     function sort_prop(prop, arr) {
-        var compare_fn, need_string_comparison, sort_suitable_arr
-        sort_suitable_arr = map(partial(_suit_sort, prop), arr)
-        need_string_comparison = is_string(arr[0][prop])
-        compare_fn = need_string_comparison && _compare_string || _compare_crit
+        var sort_suitable_arr = map(partial(_suit_sort, prop), arr),
+            need_string_comparison = is_string(arr[0][prop]),
+            compare_fn = need_string_comparison && _compare_string || _compare_numeric;
         return pluck('val', sort_suitable_arr.sort(compare_fn))
     }
 
@@ -919,7 +937,7 @@ define(function() {
         }
     }
 
-    function _compare_crit(obj1, obj2) {
+    function _compare_numeric(obj1, obj2) {
         return obj1.criteria - obj2.criteria
     }
 
@@ -1388,11 +1406,10 @@ define(function() {
     }
 
     function write(dst_coll, prop_name, src_coll) {
-        var dst, idx, k, len3, src
-        for (idx = k = 0, len3 = dst_coll.length; k < len3; idx = ++k) {
-            dst = dst_coll[idx]
-            src = src_coll[idx]
-            dst[prop_name] = src
+        var dst, src,
+            idx = dst_coll.length
+        while (--idx > -1) {
+            dst_coll[idx][prop_name] = src_coll[idx]
         }
         return dst_coll
     }
@@ -1812,7 +1829,7 @@ define(function() {
 
     function for_own(fn, obj) {
         a_each(keys(obj), function(key) {
-            return fn(key, obj[key])
+            fn(key, obj[key])
         })
     }
 
@@ -1853,6 +1870,21 @@ define(function() {
         return a_filter(coll1, function(item) {
             return contains_fn(item, coll2)
         })
+    }
+
+    /**
+     * Inverses object
+     * Designed for plain <string -> string> objects.
+     * inverse_object({a: 1, b: 2}) // yields {'1': 'a', '2': 'b'}
+     */
+    function inverse_object(obj) {
+        var res = {},
+            _keys = keys(obj),
+            i = _keys.length
+        while (--i > -1) {
+            res[obj[_keys[i]]] = _keys[i]
+        }
+        return res
     }
 
     function keys(hash) {
@@ -1934,14 +1966,19 @@ define(function() {
         return for_own(fn, obj)
     }
 
+    /**
+     * Like map, but uses object as a function of keys to values
+     * E.g.
+     *  o_map({name: 'Helen', id: '2'}, ['name']) -> ['Helen']
+     */
     function o_map(hash, keys_list) {
-        var k, key, len3, results1
-        results1 = []
-        for (k = 0, len3 = keys_list.length; k < len3; k++) {
-            key = keys_list[k]
-            results1.push(hash[key])
+        var len = keys_list.length,
+            results = Array(len),
+            i = -1;
+        for (; ++i < len;) {
+            results[i] = hash[ keys_list[i] ]
         }
-        return results1
+        return results
     }
 
     function o_match(criteria_obj, subject) {
@@ -2071,8 +2108,26 @@ define(function() {
         return array_to_join.join(join_string)
     }
 
+    /**
+     * Joins an array of lines to single string
+     * @param {array<string>} lines
+     * @return {string}
+     */
+    function str_join_lines(lines) {
+        return lines.join('\n')
+    }
+
     function str_split(split_str, string_to_split) {
         return string_to_split.split(split_str)
+    }
+
+    /**
+     * Splits a string by line breaks
+     * @param {string} string
+     * @return {array<string>}
+     */
+    function str_split_lines(string) {
+        return string.split('\n')
     }
 
     function tail(chars_to_drop, str) {
@@ -2174,7 +2229,9 @@ define(function() {
         return a + b
     }
 
-    var a_sum = partial(reduce, sum2, 0)
+    function a_sum(nums_array) {
+        return reduce(sum2, 0, nums_array)
+    }
 
     function set(prop_name, val, hash) {
         hash[prop_name] = val
@@ -2241,6 +2298,7 @@ define(function() {
     exports.Reduced              = Reduced
     exports.a_contains           = a_contains
     exports.a_each               = a_each
+    exports.a_each_idx           = a_each_idx
     exports.a_filter             = a_filter
     exports.a_find_index         = a_find_index
     exports.a_index_of           = a_index_of
@@ -2257,7 +2315,9 @@ define(function() {
     exports.bind                 = bind
     exports.bind_all             = bind_all
     exports.butlast              = butlast
+
     exports.cat                  = cat
+    exports.check_keys           = check_keys
     exports.clone                = clone
     exports.cloneassign          = cloneassign
     exports.clonedeep            = clonedeep
@@ -2281,6 +2341,7 @@ define(function() {
     exports.difference_sets      = difference_sets
     exports.drop                 = drop
     exports.drop_last            = drop_last
+
     exports.each                 = each
     exports.each_idx             = each_idx
     exports.equal                = equal
@@ -2312,9 +2373,10 @@ define(function() {
     exports.flow                 = flow
     exports.for_own              = for_own
     exports.format               = format
+
     exports.get                  = read
-    exports.check_keys           = check_keys
     exports.head                 = head
+    exports.inverse_object       = inverse_object
     exports.inc                  = inc
     exports.index_by             = index_by
     exports.index_by_id          = partial(index_by, 'id')
@@ -2335,11 +2397,13 @@ define(function() {
     exports.is_function          = is_function
     exports.is_mergeable         = is_mergeable
     exports.is_number            = is_number
+    exports.is_integer           = is_integer
     exports.is_object            = is_object
     exports.is_plain_object      = is_plain_object
     exports.is_string            = is_string
     exports.is_subset            = is_subset
     exports.is_zero              = is_zero
+
     exports.jquery_wrap_to_array = jquery_wrap_to_array
     exports.j2a                  = jquery_wrap_to_array
     exports.keys                 = keys
@@ -2377,6 +2441,7 @@ define(function() {
     exports.o_for_own            = o_for_own
     exports.o_map                = o_map
     exports.o_match              = o_match
+
     exports.partial              = partial
     exports.pbind                = pbind
     exports.periodically         = periodically
@@ -2392,6 +2457,7 @@ define(function() {
     exports.pull                 = pull
     exports.push                 = push
     exports.push_all             = push_all
+
     exports.range                = range
     exports.read                 = read
     exports.recurse              = recurse

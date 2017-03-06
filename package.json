@@ -1,23 +1,27 @@
-{ "name"        : "f-empower"
-, "version"     : "3.13.0"
-, "description" : "Utility functions designed for functional programming and composition"
-
-, "keywords"    : [ "functional"
-                  , "functional programming"
-                  , "functions"
-                  , "utility"
-                  , "utility belt"
-                  , "underscore"
-                  , "lodash" ]
-
-, "repository"  : { "type" : "git"
-                  , "url"  : "https://github.com/ognivo/f-empower" }
-
-, "devDependencies": { "fella": "1.x.x"
-                     , "f-empower": "3.x.x" }
-
-, "scripts"     : { "prepublish": "./build" }
-
-, "author"      : "Ivan Fedorov <sharp.maestro@gmail.com>"
-, "license"     : "MIT"
-, "main"        : "dist-cj/f-empower.js" }
+{
+  "name": "f-empower",
+  "version": "3.13.0",
+  "description": "Utility functions designed for functional programming and composition",
+  "keywords": [
+    "functional",
+    "functional programming",
+    "functions",
+    "utility",
+    "utility belt",
+    "underscore",
+    "lodash"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ognivo/f-empower"
+  },
+  "devDependencies": {
+    "uglify-js": "^2.8.7"
+  },
+  "scripts": {
+    "prepublish": "./build.sh"
+  },
+  "author": "Ivan Fedorov <sharp.maestro@gmail.com>",
+  "license": "MIT",
+  "main": "dist-cj/f-empower.js"
+}
