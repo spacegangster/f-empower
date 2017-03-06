@@ -252,7 +252,7 @@ define(function() {
     }
 
     function is_arguments(v) {
-        return '[object Arguments]' === (type_of2(v))
+        return '[object Arguments]' === type_of2(v)
     }
 
     function is_array_like(v) {
@@ -299,21 +299,24 @@ define(function() {
         return 'object' === typeof candidate
     }
 
-    function is_plain_object(subj) {
+    /**
+     * Checks subject for being plain old JavaScript object
+     * @return {boolean}
+     */
+    function is_plain_object(subject) {
         var ctor = null,
-            is_defnd = 'undefined' !== typeof subj,
-            is_objct = is_defnd && ('[object Object]' === to_string.call(subj)) && !(is_function(subj))
+            is_defnd = 'undefined' !== typeof subject,
+            is_objct = is_defnd && ('[object Object]' === to_string.call(subject)) && !(is_function(subject))
         //
-        if (!is_objct || (!hasOwnProperty.call(subj, 'constructor') &&
-                    ((ctor = subj.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
+        if (!is_objct || (!hasOwnProperty.call(subject, 'constructor') &&
+                    ((ctor = subject.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
             return false
         }
-        var latest_key = null
-        for (var key in subj) {
-            var val = subj[key]
+        var latest_key;
+        for (var key in subject) {
             latest_key = key
         }
-        return not_defined(key) || hasOwnProperty.call(subj, latest_key)
+        return not_defined(key) || hasOwnProperty.call(subject, latest_key)
     }
 
     function is_mergeable(item) {
@@ -494,7 +497,6 @@ define(function() {
             case 0:
             case 1:
                 throw new Error("Each doesn't have a signature of that arity")
-                break
             case 2:
                 return each2(fn, coll)
             case 3:
@@ -693,7 +695,6 @@ define(function() {
                     switch (count1(keys(some_criteria))) {
                         case 0:
                             throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                            break
                         case 1:
                             return filter_obj_1kv(some_criteria, array)
                         case 2:
@@ -730,7 +731,6 @@ define(function() {
                 switch (count1(keys(pred))) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                        break
                     case 1:
                         return find_index_obj_1kv(pred, array)
                     case 2:
@@ -957,8 +957,7 @@ define(function() {
         switch (arguments.length) {
             case 0:
             case 1:
-                throw new Error("Map doesn't have a signature of that arity")
-                break
+                throw new Error("`map` doesn't have a signature of that arity (0 or 1)")
             case 2:
                 switch (typeof mapper) {
                     case 'function':
@@ -1004,6 +1003,10 @@ define(function() {
         return each_idx2(partial(_async_mapper, err_fn, map_fn, res_arr, help_arr), items)
     }
 
+    /**
+     * Special array creation helper.
+     * V8 recommends to create small arrays fixed size, and large arrays with dynamic size
+     */
     function make_array(len) {
         return (len > THRESHOLD_LARGE_ARRAY_SIZE) && [] || new Array(len)
     }
@@ -1171,7 +1174,6 @@ define(function() {
                 switch (count1(keys(some_criteria))) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                        break
                     case 1:
                         return reject_obj_1kv(some_criteria, array)
                     case 2:
@@ -1405,9 +1407,12 @@ define(function() {
         return results1
     }
 
+    /**
+     * Writes a property `prop_name` of `dst_coll` to `dst_coll` objects
+     * from `src_coll` values
+     */
     function write(dst_coll, prop_name, src_coll) {
-        var dst, src,
-            idx = dst_coll.length
+        var idx = dst_coll.length
         while (--idx > -1) {
             dst_coll[idx][prop_name] = src_coll[idx]
         }
@@ -1511,16 +1516,21 @@ define(function() {
     }
 
     function clonedeep(src) {
-        var dst, stack_dst, stack_src
-        return _clonedeep(src, dst = (is_array(src)) && [] || {}, stack_dst = [dst], stack_src = [src])
+        return _clonedeep(
+            src,
+            is_array(src) && [] || {}, // destination object or array
+            [dst], // destination stack
+            [src]  // source object stack
+        )
     }
 
+    /**
+     * Shallow object clone
+     */
     function clone_obj(obj) {
-        var key, res, val
-        res = {}
+        var key, res = {}
         for (key in obj) {
-            val = obj[key]
-            res[key] = val
+            res[key] = obj[key]
         }
         return res
     }
@@ -1664,7 +1674,7 @@ define(function() {
      * Shallow equality check for objects and arrays
      */
     function equal2(o1, o2) {
-        if ((o1 == null) || (o1 == false)) { // special falsee trick
+        if ((o1 == null) || (o1 == false)) { // special falsee trick from CoffeeScript
             return o1 === o2
         }
         else if (is_object(o1) && is_object(o2)) {
@@ -2237,12 +2247,14 @@ define(function() {
         hash[prop_name] = val
     }
 
+    /**
+     * Raw measurement for function execution time
+     * @return {int} milliseconds for `fn` execution
+     */
     function time(fn) {
-        var time_end, time_start
-        time_start = Date.now()
+        var time_start = Date.now()
         fn()
-        time_end = Date.now()
-        return time_end - time_start
+        return Date.now() - time_start
     }
 
 
@@ -2388,6 +2400,7 @@ define(function() {
     exports.invoke               = invoke
     exports.invokem              = invokem
     exports.is_array             = is_array
+    exports.is_arguments         = is_arguments
     exports.is_boolean           = is_boolean
     exports.is_date              = is_date
     exports.is_defined           = is_defined
@@ -2476,23 +2489,27 @@ define(function() {
     exports.repeatf              = repeatf
     exports.rest                 = rest
     exports.reverse              = reverse
-    exports.second               = second
-    exports.set                  = set
-    exports.set_difference       = difference_sets
-    exports.set_symmetric_difference = set_symmetric_difference
 
-    exports.slice        = slice
-    exports.sort         = sort
-    exports.space        = space
-    exports.splice       = splice
-    exports.str          = str
-    exports.str_breplace = str_breplace
-    exports.str_drop     = tail
-    exports.str_join     = str_join
-    exports.str_split    = str_split
-    exports.str_take     = head
-    exports.sum2         = sum2
-    exports.sum          = a_sum
+    // S
+    exports.second                   = second
+    exports.set                      = set
+    exports.set_difference           = difference_sets
+    exports.set_symmetric_difference = set_symmetric_difference
+    exports.slice                    = slice
+    exports.sort                     = sort
+    exports.space                    = space
+    exports.splice                   = splice
+    exports.str                      = str
+    exports.str_breplace             = str_breplace
+    exports.str_drop                 = tail
+    exports.str_join                 = str_join
+    exports.str_join_lines           = str_join_lines
+    exports.str_split                = str_split
+    exports.str_split_lines          = str_split_lines
+    exports.str_take                 = head
+    exports.sum2                     = sum2
+    exports.sum                      = a_sum
+
     exports.take         = take
     exports.tail         = tail
     exports.third        = third

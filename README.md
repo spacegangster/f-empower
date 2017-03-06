@@ -1,17 +1,20 @@
 # f-empower
-#### Utility functions designed for functional programming and composition
+#### Utility belt inspired by Clojure
+
 Written with V8's optimizing compiler (Crankshaft) in mind (functional monomorphism
 is emphasized where possible).
 
 Inspired by Clojure standard functions and Underscore.
 
+Only 7.2k when minified and gzipped.
+
 CommonJS and AMD loaders are supported.
+
 
 ## Install
 #### using npm
 `npm install -s f-empower`
-#### using Bower
-`bower install -S f-empower`
+
 
 ## Use
 ### CommonJS (~ NodeJS)
