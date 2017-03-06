@@ -21,7 +21,7 @@
   "scripts": {
     "prepublish": "./build.sh"
   },
-  "author": "Ivan Fedorov <sharp.maestro@gmail.com>",
+  "author": "Ivan Fedorov <hello@spacegangster.io>",
   "license": "MIT",
-  "main": "dist-cj/f-empower.js"
+  "main": "./f-empower.js"
 }
