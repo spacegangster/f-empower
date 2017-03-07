@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 
+./node_modules/.bin/webpack
 ./node_modules/.bin/uglifyjs --compress --mangle -o f-empower.min.js -- f-empower.js
+./node_modules/.bin/uglifyjs --compress --mangle -o f-empower.umd..min.js -- f-empower.umd.js
 
 #./node_modules/.bin/uglifyjs --compress --mangle -o bundle.min.js -- bundle.js
 

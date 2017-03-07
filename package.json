@@ -19,6 +19,7 @@
     "babel": "^6.23.0",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.4.0",
+    "babel-plugin-transform-es2015-modules-umd": "^6.23.0",
     "uglify-js": "^2.8.7",
     "webpack": "^2.2.1"
   },

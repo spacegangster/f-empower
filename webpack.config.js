@@ -4,9 +4,9 @@
 const webpack = require('webpack')
 
 module.exports = {
-    entry: './usage-sample.js',
+    entry: './f-empower.js',
     output: {
-        filename: 'usage-sample-compiled.js'
+        filename: 'f-empower.umd.js'
     },
     module: {
         rules: [
@@ -19,32 +19,4 @@ module.exports = {
             },
         ]
     },
-    plugins: [
-        new webpack.EnvironmentPlugin({
-            NODE_ENV: 'development',
-        }),
-        new webpack.NamedModulesPlugin(),
-        new webpack.LoaderOptionsPlugin({
-            minimize: true,
-            debug: false
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false,
-                screw_ie8: true,
-                conditionals: true,
-                unused: true,
-                comparisons: true,
-                sequences: true,
-                dead_code: true,
-                evaluate: true,
-                if_return: true,
-                join_vars: true,
-            },
-            output: {
-                comments: false,
-            },
-        })
-    ]
-
 }
