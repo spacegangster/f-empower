@@ -1,5 +1,5 @@
+fn     = require '../f-empower.cjs'
 assert = require 'assert'
-fn     = require '../f-empower'
 
 log     = fn.bind(console.log, console)
 testing = fn.partial(log, "testing")
