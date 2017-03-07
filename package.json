@@ -16,7 +16,11 @@
     "url": "https://github.com/ognivo/f-empower"
   },
   "devDependencies": {
-    "uglify-js": "^2.8.7"
+    "babel": "^6.23.0",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.4.0",
+    "uglify-js": "^2.8.7",
+    "webpack": "^2.2.1"
   },
   "scripts": {
     "prepublish": "./build.sh"

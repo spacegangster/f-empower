@@ -2,6 +2,8 @@
 
 ./node_modules/.bin/uglifyjs --compress --mangle -o f-empower.min.js -- f-empower.js
 
+#./node_modules/.bin/uglifyjs --compress --mangle -o bundle.min.js -- bundle.js
+
 if [ "$(command -v gzip)" ]; then
     echo "Gzip found, doing it"
     gzip -k9f f-empower.min.js

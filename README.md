@@ -6,7 +6,7 @@ is emphasized where possible).
 
 Inspired by Clojure standard library functions and Underscore.
 
-Only 7.2k when minified and gzipped. (6.3k for Brotli)
+Only 7.2k when minified and gzipped (6.3k for Brotli). Tree-shaking-ready.
 
 CommonJS and AMD loaders are supported.
 
@@ -16,17 +16,21 @@ CommonJS and AMD loaders are supported.
 `npm install -s f-empower`
 
 
-## Use
-### CommonJS (~ NodeJS)
-```coffee
-functions = require "f-empower"
-{ apply
-  bind }  = functions
-array1 = [ 1, 2, 3 ]
-push_to_array1 = (bind array1.push, array1)
+## Usage
+### ES Modules
+```js
+import { map } from 'f-empower'
 
-(apply push_to_array1, [ 4, 5, 6 ])
-console.log(array1) # -> [ 1, 2, 3, 4, 5, 6 ]
+const ids   = [ 1, 3, 45 ]
+const names = ['Joe', 'Jane', 'Alex']
+const flowers = ['Rose', 'Iris', 'Sunflower', 'Cactus']
+
+map(Array, ids, names, flowers) // yields
+[ [1 , 'Joe' , 'Rose'     ],
+  [3 , 'Jane', 'Iris'     ],
+  [45, 'Alex', 'Sunflower'] ]
+// note, that cactus is not used
+
 ```
 ### AMD (~ RequireJS)
 ```coffee
