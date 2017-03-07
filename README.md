@@ -17,6 +17,9 @@ CommonJS and AMD loaders are supported.
 
 
 ## Usage
+Currently master branch is only compatible with ES modules.
+For UMD build please use `3.13.3` tag
+
 ### ES Modules
 ```js
 import { map } from 'f-empower'
