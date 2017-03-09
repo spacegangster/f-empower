@@ -55,15 +55,24 @@ test_filter = ->
             , (filter is_function, array_for_find) )
   log "ok"
   #
-  testing "filter with object"
+  testing "filter with object #1"
   (equal_deep [ {editor: 'vim', year: '1991'}
               , {editor: 'naa', year: '1991'} ]
             , (filter {year: '1991'}, array_for_find) )
+  #
+  testing "filter with object #2"
+  (equal_deep [ {editor: 'vim', year: '1991'} ]
+            , (filter {editor: 'vim', year: '1991'}, array_for_find) )
   log "ok"
   #
   testing "filter with string key"
   (equal_deep [ {editor: 'emacs', has_lisp: true} ]
             , (filter 'has_lisp', array_for_find) )
+  log "ok"
+  #
+  testing "filter with regexp"
+  (equal_deep [ "vim", "vimperator" ]
+            , (filter /vim/, [ "vim", "vimperator", 'emacs' ]) )
   log "ok"
 
 

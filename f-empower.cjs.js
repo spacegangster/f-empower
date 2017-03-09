@@ -684,41 +684,43 @@
     }
 
     function filter_obj_2kv(obj, array) {
-        var item, k, key1, key2, len3, ref, ref1, results1, val1, val2;
-        ref = keys(obj), key1 = ref[0], key2 = ref[1];
-        ref1 = [obj[key1], obj[key2]], val1 = ref1[0], val2 = ref1[1];
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
+        var o_keys = keys(obj),
+            _o_keys = _slicedToArray(o_keys, 2),
+            key1 = _o_keys[0],
+            key2 = _o_keys[1],
+            _ref = [obj[key1], obj[key2]],
+            val1 = _ref[0],
+            val2 = _ref[1],
+            results = [],
+            len = array.length;
+
+        var i = -1,
+            item;
+        while (++i < len) {
+            item = array[i];
             if (item[key1] === val1 && item[key2] === val2) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function filter_obj(obj, array) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (o_match(obj, item)) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function filter_re(regex, strings) {
-        var k, len3, results, string;
-        results = [];
-        for (k = 0, len3 = strings.length; k < len3; k++) {
-            string = strings[k];
-            if (regex.test(string)) {
-                results.push(string);
+                results.push(item);
             }
         }
         return results;
+    }
+
+    function filter_obj(obj, array) {
+        var results = [],
+            len = arr.length;
+        var i = -1;
+        while (++i < len) {
+            if (o_match(obj, arr[i])) {
+                results.push(arr[i]);
+            }
+        }
+        return results;
+    }
+
+    function filter_re(regex, strings) {
+        return filter_fn(function (str) {
+            return regex.test(str);
+        }, strings);
     }
 
     function filter(some_criteria, array) {
