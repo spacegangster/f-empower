@@ -19,7 +19,7 @@ CommonJS and AMD loaders are supported.
 ## Usage
 Master file is only compatible with ES modules. But allows patch imports and
 effective dead code elimination.
-For UMD build please use f-empower.cjs.js file.
+For UMD build please use f-empower.umd.js file.
 
 ### ES Modules
 ```js

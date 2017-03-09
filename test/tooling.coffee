@@ -1,4 +1,4 @@
-fn     = require '../f-empower.cjs'
+fn     = require '../f-empower.umd'
 assert = require 'assert'
 
 log     = fn.bind(console.log, console)

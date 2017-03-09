@@ -1,4 +1,4 @@
-f_empower = require '../f-empower.cjs'
+f_empower = require '../f-empower.umd'
 tooling   = require './tooling'
 
 { log

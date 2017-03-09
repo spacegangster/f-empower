@@ -1,81 +1,6 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
-
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-
-
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
-/******/ 		}
-/******/ 	};
-
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
-
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-    if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+(function (global, factory) {
+    if (typeof define === "function" && define.amd) {
+        define(['exports'], factory);
     } else if (typeof exports !== "undefined") {
         factory(exports);
     } else {
@@ -91,6 +16,44 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     Object.defineProperty(exports, "__esModule", {
         value: true
     });
+
+    var _slicedToArray = function () {
+        function sliceIterator(arr, i) {
+            var _arr = [];
+            var _n = true;
+            var _d = false;
+            var _e = undefined;
+
+            try {
+                for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                    _arr.push(_s.value);
+
+                    if (i && _arr.length === i) break;
+                }
+            } catch (err) {
+                _d = true;
+                _e = err;
+            } finally {
+                try {
+                    if (!_n && _i["return"]) _i["return"]();
+                } finally {
+                    if (_d) throw _e;
+                }
+            }
+
+            return _arr;
+        }
+
+        return function (arr, i) {
+            if (Array.isArray(arr)) {
+                return arr;
+            } else if (Symbol.iterator in Object(arr)) {
+                return sliceIterator(arr, i);
+            } else {
+                throw new TypeError("Invalid attempt to destructure non-iterable instance");
+            }
+        };
+    }();
 
     var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
         return typeof obj;
@@ -704,56 +667,54 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function filter_obj_1kv(obj, array) {
-        var entry = read_1kv(obj),
-            key = entry[0],
-            val = entry[1],
-            results = [],
-            item;
-        for (var i = -1, len = array.length; i < len; i++) {
-            item = array[i];
-            if (item[key] === val) {
-                results.push(item);
+        var _read_1kv = read_1kv(obj),
+            _read_1kv2 = _slicedToArray(_read_1kv, 2),
+            key = _read_1kv2[0],
+            val = _read_1kv2[1];
+
+        var results = [];
+        var len = array.length;
+        var i = -1;
+        while (++i < len) {
+            if (array[i][key] === val) {
+                results.push(array[i]);
             }
         }
         return results;
     }
 
     function filter_obj_2kv(obj, array) {
-        var item, k, key1, key2, len3, ref, ref1, results1, val1, val2;
-        ref = keys(obj), key1 = ref[0], key2 = ref[1];
-        ref1 = [obj[key1], obj[key2]], val1 = ref1[0], val2 = ref1[1];
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
+        var o_keys = keys(obj),
+            _o_keys = _slicedToArray(o_keys, 2),
+            key1 = _o_keys[0],
+            key2 = _o_keys[1],
+            _ref = [obj[key1], obj[key2]],
+            val1 = _ref[0],
+            val2 = _ref[1],
+            results = [],
+            len = array.length;
+
+        var i = -1,
+            item;
+        while (++i < len) {
+            item = array[i];
             if (item[key1] === val1 && item[key2] === val2) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function filter_obj(obj, array) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (o_match(obj, item)) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function filter_re(regex, strings) {
-        var k, len3, results, string;
-        results = [];
-        for (k = 0, len3 = strings.length; k < len3; k++) {
-            string = strings[k];
-            if (regex.test(string)) {
-                results.push(string);
+                results.push(item);
             }
         }
         return results;
+    }
+
+    function filter_obj(obj, array) {
+        return filter_fn(function (item) {
+            return o_match(obj, item);
+        }, array);
+    }
+
+    function filter_re(regex, strings) {
+        return filter_fn(function (str) {
+            return regex.test(str);
+        }, strings);
     }
 
     function filter(some_criteria, array) {
@@ -2049,11 +2010,16 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         return results;
     }
 
+    /**
+     * Tests the subject if its properties match each prop of criteria_obj.
+     *
+     */
     function o_match(criteria_obj, subject) {
-        var key, val;
-        for (key in criteria_obj) {
-            val = criteria_obj[key];
-            if (subject[key] !== val) {
+        var keys = keys(criteria_obj),
+            len = keys.length;
+        var i = -1;
+        while (++i < len) {
+            if (subject[keys[i]] !== criteria_obj[keys[i]]) {
                 return false;
             }
         }
@@ -2096,7 +2062,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function transform(fn, obj, keys) {
-        return keys && transform3(fn, obj, keys) || transform2(fn, obj);
+        return keys ? transform3(fn, obj, keys) : transform2(fn, obj);
     }
 
     function transform2(fn, obj) {
@@ -2130,8 +2096,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function zip_obj(keys, vals) {
-        var obj;
-        obj = {};
+        var obj = {};
         each(partial(o_set, obj), keys, vals);
         return obj;
     }
@@ -2351,8 +2316,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     /**
-     * Возвращает новую функцию, которая будет выполнятся каждый раз с задержкой.
-     * Новая функция будет возвращать id таймаута.
+     * Returns new function that will invoke the original function with a delay every time.
+     * Delayed function will return its `timeout_id`
      */
     function delayed(ms, payloadFunction) {
         return function () {
@@ -2607,6 +2572,3 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     exports.write = write;
     exports.zip_obj = zip_obj;
 });
-
-/***/ })
-/******/ ]);

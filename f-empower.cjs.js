@@ -706,15 +706,9 @@
     }
 
     function filter_obj(obj, array) {
-        var results = [],
-            len = arr.length;
-        var i = -1;
-        while (++i < len) {
-            if (o_match(obj, arr[i])) {
-                results.push(arr[i]);
-            }
-        }
-        return results;
+        return filter_fn(function (item) {
+            return o_match(obj, item);
+        }, array);
     }
 
     function filter_re(regex, strings) {
@@ -2016,11 +2010,16 @@
         return results;
     }
 
+    /**
+     * Tests the subject if its properties match each prop of criteria_obj.
+     *
+     */
     function o_match(criteria_obj, subject) {
-        var key, val;
-        for (key in criteria_obj) {
-            val = criteria_obj[key];
-            if (subject[key] !== val) {
+        var keys = keys(criteria_obj),
+            len = keys.length;
+        var i = -1;
+        while (++i < len) {
+            if (subject[keys[i]] !== criteria_obj[keys[i]]) {
                 return false;
             }
         }
@@ -2063,7 +2062,7 @@
     }
 
     function transform(fn, obj, keys) {
-        return keys && transform3(fn, obj, keys) || transform2(fn, obj);
+        return keys ? transform3(fn, obj, keys) : transform2(fn, obj);
     }
 
     function transform2(fn, obj) {
@@ -2097,8 +2096,7 @@
     }
 
     function zip_obj(keys, vals) {
-        var obj;
-        obj = {};
+        var obj = {};
         each(partial(o_set, obj), keys, vals);
         return obj;
     }
