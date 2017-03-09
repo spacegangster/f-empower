@@ -17,8 +17,9 @@ CommonJS and AMD loaders are supported.
 
 
 ## Usage
-Currently master branch is only compatible with ES modules.
-For UMD build please use `3.13.3` tag
+Master file is only compatible with ES modules. But allows patch imports and
+effective dead code elimination.
+For UMD build please use f-empower.cjs.js file.
 
 ### ES Modules
 ```js

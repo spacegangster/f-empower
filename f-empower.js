@@ -2031,8 +2031,7 @@ function vals(hash) {
 }
 
 function zip_obj(keys, vals) {
-    var obj
-    obj = {}
+    var obj = {}
     each(partial(o_set, obj), keys, vals)
     return obj
 }
