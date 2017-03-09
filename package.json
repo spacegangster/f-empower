@@ -32,5 +32,8 @@
   },
   "author": "Ivan Fedorov <hello@spacegangster.io>",
   "license": "MIT",
-  "main": "./f-empower.js"
+  "main": "./f-empower.js",
+  "dependencies": {
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0"
+  }
 }

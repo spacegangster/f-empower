@@ -1,4 +1,4 @@
-f_empower = require '../f-empower.umd'
+f_empower = require '../f-empower.cjs'
 tooling   = require './tooling'
 
 { bind

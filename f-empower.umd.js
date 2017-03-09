@@ -72,20 +72,20 @@
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [module, exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
     } else if (typeof exports !== "undefined") {
-        factory(module, exports);
+        factory(exports);
     } else {
         var mod = {
             exports: {}
         };
-        factory(mod, mod.exports);
+        factory(mod.exports);
         global.fEmpower = mod.exports;
     }
-})(this, function (module, exports) {
+})(this, function (exports) {
     'use strict';
 
     Object.defineProperty(exports, "__esModule", {
@@ -140,9 +140,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         };
     }
 
-    function partial() {
-        var args, fn;
-        fn = arguments[0];
+    function partial(fn, args) {
         args = slice(arguments, 1);
         return function () {
             return fn.apply(null, args.concat(slice(arguments)));
@@ -166,29 +164,29 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function bind_all() {
-        var props, this_arg;
-        props = butlast(arguments);
-        this_arg = last(arguments);
+        var props = butlast(arguments),
+            this_arg = last(arguments);
         return a_each(props, function (prop) {
             return this_arg[prop] = bind(this_arg[prop], this_arg);
         });
     }
 
-    function compose() {
-        var functions, item, k, len3;
-        functions = arguments;
-        for (k = 0, len3 = functions.length; k < len3; k++) {
-            item = functions[k];
+    function _assert_all_functions(functions) {
+        each2(function (item) {
             if (not_function(item)) {
                 throw Errors.NOT_FUNCTION;
             }
-        }
-        return function () {
-            var i, memo;
+        }, functions);
+    }
+
+    function compose(functions) {
+        functions = arguments;
+        _assert_all_functions(functions);
+        return function (memo) {
             memo = arguments;
-            i = functions.length;
-            while (--i >= 0) {
-                memo = [functions[i].apply(null, memo)];
+            var idx = functions.length;
+            while (--idx > -1) {
+                memo = [functions[idx].apply(null, memo)];
             }
             return first(memo);
         };
@@ -196,28 +194,27 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
     function complement(predicate) {
         return function () {
-            return !apply(predicate, arguments);
+            return !predicate.apply(null, arguments);
         };
     }
 
-    function debounce(debounce_timeout, fn) {
-        var exec, last_args, last_result, last_this, last_timeout_id;
+    function debounce(debounce_timeout, payload_fn) {
         if (arguments.length === 1) {
-            fn = debounce_timeout;
+            payload_fn = debounce_timeout;
             debounce_timeout = 0;
         }
-        last_result = void 0;
-        last_args = null;
-        last_timeout_id = null;
-        last_this = null;
-        exec = function exec() {
-            return last_result = fn.apply(last_this, last_args);
-        };
+        var last_result = void 0,
+            last_args = null,
+            last_timeout_id = null,
+            last_this = null;
+        function _exec_payload() {
+            return last_result = payload_fn.apply(last_this, last_args);
+        }
         return function () {
             last_args = slice(arguments);
             last_this = this;
             clearTimeout(last_timeout_id);
-            last_timeout_id = delay(debounce_timeout, exec);
+            last_timeout_id = delay(debounce_timeout, _exec_payload);
             return last_result;
         };
     }
@@ -237,20 +234,13 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         return setTimeout(fn, delay_ms);
     }
 
-    function flow() {
-        var functions, item, k, len3;
+    function flow(functions) {
         functions = arguments;
-        for (k = 0, len3 = functions.length; k < len3; k++) {
-            item = functions[k];
-            if (not_function(item)) {
-                throw Errors.NOT_FUNCTION;
-            }
-        }
+        _assert_all_functions(functions);
         return function () {
-            var i, len, memo;
-            memo = arguments;
-            len = functions.length;
-            i = -1;
+            var memo = arguments,
+                len = functions.length,
+                i = -1;
             while (++i < len) {
                 memo = [functions[i].apply(null, memo)];
             }
@@ -258,13 +248,14 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         };
     }
 
+    /**
+     * Returns a function that dispatches a call to all functions from `fns`
+     */
     function multicall(fns) {
         fns = compact(fns);
         return function () {
-            var fn, k, len3;
-            for (k = 0, len3 = fns.length; k < len3; k++) {
-                fn = fns[k];
-                fn.apply(this, arguments);
+            for (var i = -1, len = fns.length; ++i < len;) {
+                fns[i].apply(this, arguments);
             }
         };
     }
@@ -291,12 +282,18 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         });
     }
 
+    /**
+     * Wraps function `fn` is such way that its this context will be passed as first argument
+     */
     function pbind(fn) {
         return function () {
             return fn.apply(null, cat([this], slice(arguments)));
         };
     }
 
+    /**
+     * `ms` first wrapper of setInterval
+     */
     function set_interval(ms, fn) {
         if (!fn) {
             fn = ms;
@@ -306,37 +303,40 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function throttle(throttle_millis, fn) {
-        var last_args, last_result, locked, should_call;
-        locked = false;
-        should_call = false;
-        last_args = null;
-        last_result = null;
+        var locked = false,
+            should_call = false,
+            last_args = null,
+            last_result = null;
         return function () {
-            var _void_main;
             last_args = slice(arguments);
             if (locked) {
                 should_call = true;
                 return last_result;
             } else {
-                locked = true;
-                last_result = fn.apply(null, last_args);
-                _void_main = function void_main() {
-                    return delay(throttle_millis, function () {
+                var void_main = function void_main() {
+                    delay(throttle_millis, function () {
                         if (should_call) {
                             last_result = fn.apply(null, last_args);
                             should_call = false;
-                            return _void_main();
+                            void_main();
                         } else {
-                            return locked = false;
+                            locked = false;
                         }
                     });
                 };
-                _void_main();
+
+                locked = true;
+                last_result = fn.apply(null, last_args);
+
+                void_main();
                 return last_result;
             }
         };
     }
 
+    /**
+     * Checks if value is atomic, useful when you want to know if it is safe to copy by link
+     */
     function is_atomic(val) {
         switch (type_of2(val)) {
             case '[object Object]':
@@ -458,26 +458,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function contains(searched_item, array) {
-        var item, k, len3;
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (searched_item === item) {
-                return true;
-            }
-        }
-        return false;
+        return index_of(searched_item, array) > -1;
     }
 
     var not_contains = complement(contains);
     function a_contains(array, searched_item) {
-        var item, k, len3;
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (searched_item === item) {
-                return true;
-            }
-        }
-        return false;
+        return index_of(searched_item, array) > -1;
     }
 
     function a_each(array, fn) {
@@ -521,19 +507,16 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
             arr = pred;
             pred = true;
         }
-        return -1 < find_index(pred, arr);
+        return -1 < find_index_fn(pred, arr);
     }
 
+    /**
+     * Returns a new coll withouh any falsee members
+     */
     function compact(coll) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = coll.length; k < len3; k++) {
-            item = coll[k];
-            if (item) {
-                results1.push(item);
-            }
-        }
-        return results1;
+        return filter_fn(function (x) {
+            return x;
+        }, coll);
     }
 
     function count(pred, coll) {
@@ -563,12 +546,11 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function count_pred(pred, coll) {
-        var cnt, item, k, len3;
-        cnt = 0;
-        for (k = 0, len3 = coll.length; k < len3; k++) {
-            item = coll[k];
-            if (pred(item)) {
-                cnt++;
+        var cnt = 0,
+            idx = coll.length;
+        while (--idx > -1) {
+            if (pred(coll[idx])) {
+                ++cnt;
             }
         }
         return cnt;
@@ -579,8 +561,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function drop_last(chars_to_drop, string) {
-        var len;
-        len = string.length;
+        var len = string.length;
         if (chars_to_drop > len) {
             return "";
         } else {
@@ -603,18 +584,14 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function each2(fn, arr) {
-        var item, k, len3;
-        for (k = 0, len3 = arr.length; k < len3; k++) {
-            item = arr[k];
-            fn(item);
+        for (var i = -1, len = arr.length; ++i < len;) {
+            fn(arr[i]);
         }
     }
 
     function each3(fn, arr1, arr2) {
-        var i, length_of_shortest;
-        length_of_shortest = Math.min(count1(arr1), count1(arr2));
-        i = -1;
-        while (++i < length_of_shortest) {
+        var length_of_shortest = Math.min(arr1.length, arr2.length);
+        for (var i = -1; ++i < length_of_shortest;) {
             fn(arr1[i], arr2[i]);
         }
     }
@@ -648,21 +625,20 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function each_idx2(fn, arr) {
-        var i, len;
-        len = arr.length;
-        i = -1;
+        var len = arr.length,
+            i = -1;
         while (++i < len) {
             fn(arr[i], i);
         }
     }
 
-    function each_idxn() {
-        var args, arrs, fn, local_apply, local_pluck, shortest_len;
-        fn = first(arguments);
-        arrs = rest(arguments);
-        shortest_len = calc_shortest_length(arrs);
-        local_pluck = pluck;
-        local_apply = apply;
+    function each_idxn(fn, arrs) {
+        var arrs = rest(arguments),
+            shortest_len = calc_shortest_length(arrs),
+            local_pluck = pluck,
+            local_apply = apply,
+            i = -1,
+            args;
         while (++i < shortest_len) {
             args = local_pluck(i, arrs);
             args.push(i);
@@ -700,10 +676,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function filter_fn(fn, arr) {
-        var i, item, len, res;
-        res = [];
-        len = arr.length;
-        i = -1;
+        var res = [],
+            len = arr.length,
+            i = -1,
+            item;
         while (++i < len) {
             item = arr[i];
             if (fn(item)) {
@@ -728,16 +704,18 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function filter_obj_1kv(obj, array) {
-        var item, k, key, len3, ref, results1, val;
-        ref = read_1kv(obj), key = ref[0], val = ref[1];
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
+        var entry = read_1kv(obj),
+            key = entry[0],
+            val = entry[1],
+            results = [],
+            item;
+        for (var i = -1, len = array.length; i < len; i++) {
+            item = array[i];
             if (item[key] === val) {
-                results1.push(item);
+                results.push(item);
             }
         }
-        return results1;
+        return results;
     }
 
     function filter_obj_2kv(obj, array) {
@@ -1315,8 +1293,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     function remove(item, arr) {
-        var idx;
-        idx = index_of(item, arr);
+        var idx = index_of(item, arr);
         return idx !== -1 && remove_at(idx, arr);
     }
 
@@ -2629,238 +2606,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     exports.without = without;
     exports.write = write;
     exports.zip_obj = zip_obj;
-
-
-    var fns = {
-        a_contains: a_contains,
-        a_each: a_each,
-        a_each_idx: a_each_idx,
-        a_filter: a_filter,
-        a_find_index: a_find_index,
-        a_index_of: a_index_of,
-        a_map: a_map,
-        a_reduce: a_reduce,
-        a_reject: a_reject,
-        a_sum: a_sum,
-        and2: and2,
-        add2: add2,
-        any: any,
-        assign: assign,
-        assign_keys: assign_keys,
-        apply: apply,
-        bind: bind,
-        bind_all: bind_all,
-        butlast: butlast,
-
-        cat: cat,
-        check_keys: check_keys,
-        clone: clone,
-        cloneassign: cloneassign,
-        clonedeep: clonedeep,
-        clonedeep2: clonedeep2,
-        comma: comma,
-        compact: compact,
-        compose: compose,
-        complement: complement,
-        concat: concat,
-        contains: contains,
-        count: count,
-        create: create,
-
-        delayed: delayed,
-        debug_wrap: debug_wrap,
-        debounce: debounce,
-        dec: dec,
-        defaults: defaults,
-        delay: delay,
-        detect: detect,
-        diff: diff,
-        difference: difference,
-        difference_sets: difference_sets,
-        drop: drop,
-        drop_last: drop_last,
-
-        each: each,
-        each_idx: each_idx,
-        equal: equal,
-        equal_array_start: equal_array_start,
-        equal_val: equal_val,
-        equal_set: equal_set,
-        every: every,
-        extend: extend,
-
-        fastbind: fastbind,
-        first: first,
-        filter: filter,
-        filter_fn: filter_fn,
-        filter_obj: filter_obj,
-        filter_obj_1kv: filter_obj_1kv,
-        filter_obj_2kv: filter_obj_2kv,
-        filter_prop: filter_prop,
-        filter_re: filter_re,
-        find: find,
-        find_index: find_index,
-        find_index_fn: find_index_fn,
-        find_index_prop: find_index_prop,
-        find_index_obj_1kv: find_index_obj_1kv,
-        find_index_obj_2kv: find_index_obj_2kv,
-        find_index_obj: find_index_obj,
-        find_index_last: find_index_last,
-        flatten: flatten,
-        flattenp: flattenp,
-        flatten_path: flatten_path,
-        flow: flow,
-        for_own: for_own,
-        format: format,
-
-        head: head,
-
-        inverse_object: inverse_object,
-        inc: inc,
-        index_by: index_by,
-        index_by_id: index_by_id,
-        index_of: index_of,
-        insert_at: insert_at,
-        intersection: intersection,
-        interpose: interpose,
-        interval: interval,
-        invoke: invoke,
-        invokem: invokem,
-
-        is_array: is_array,
-        is_arguments: is_arguments,
-        is_boolean: is_boolean,
-        is_date: is_date,
-        is_defined: is_defined,
-        is_empty: is_empty,
-        is_empty$: is_empty$,
-        is_even: is_even,
-        is_function: is_function,
-        is_mergeable: is_mergeable,
-        is_number: is_number,
-        is_integer: is_integer,
-        is_object: is_object,
-        is_plain_object: is_plain_object,
-        is_string: is_string,
-        is_subset: is_subset,
-        is_zero: is_zero,
-
-        jquery_wrap_to_array: jquery_wrap_to_array,
-        j2a: j2a,
-        keys: keys,
-        last: last,
-        list: list,
-        list_compact: list_compact,
-        log_pipe: log_pipe,
-        map: map,
-        map_async: map_async,
-        magic: magic,
-        match: match,
-        matches: matches,
-        merge: merge,
-        merge_with: merge_with,
-        mk_regexp: mk_regexp,
-        multicall: multicall,
-        next: next,
-        no_operation: no_operation,
-        noop: noop,
-
-        not_array: not_array,
-        not_boolean: not_boolean,
-        not_contains: not_contains,
-        not_date: not_date,
-        not_defined: not_defined,
-        not_empty: not_empty,
-        not_empty$: not_empty$,
-        not_function: not_function,
-        not_number: not_number,
-        not_object: not_object,
-        not_string: not_string,
-        not_subset: not_subset,
-        not_zero: not_zero,
-
-        omit: omit,
-        omit_all: omit_all,
-        once: once,
-        o_for_own: o_for_own,
-        o_map: o_map,
-        o_match: o_match,
-
-        partial: partial,
-        pbind: pbind,
-        periodically: periodically,
-        pt: pt,
-        ptr: ptr,
-        partialr: partialr,
-        pick: pick,
-        pick_all: pick_all,
-        pipeline: pipeline,
-        pluck: pluck,
-        pluck_id: pluck_id,
-        prev: prev,
-        pull: pull,
-        push: push,
-        push_all: push_all,
-
-        range: range,
-        recurse: recurse,
-        reduce: reduce,
-        Reduced: Reduced,
-        reducer: reducer,
-        reject: reject,
-        reject_fn: reject_fn,
-        reject_obj: reject_obj,
-        reject_obj_1kv: reject_obj_1kv,
-        reject_obj_2kv: reject_obj_2kv,
-        reject_prop: reject_prop,
-        remap: remap,
-        remove: remove,
-        remove_at: remove_at,
-        repeat: repeat,
-        repeatf: repeatf,
-        rest: rest,
-        reverse: reverse,
-
-        second: second,
-        set: set,
-        set_difference: set_difference,
-        set_symmetric_difference: set_symmetric_difference,
-        slice: slice,
-        sort: sort,
-        space: space,
-        splice: splice,
-        str: str,
-        str_breplace: str_breplace,
-        str_drop: str_drop,
-        str_join: str_join,
-        str_join_lines: str_join_lines,
-        str_split: str_split,
-        str_split_lines: str_split_lines,
-        str_take: str_take,
-        sum2: sum2,
-        sum: sum,
-        sumn: sumn,
-
-        take: take,
-        tail: tail,
-        third: third,
-        throttle: throttle,
-        time: time,
-        transform: transform,
-        trim: trim,
-        update_in: update_in,
-        union: union,
-        unique: unique,
-        unshift: unshift,
-        vals: vals,
-        varynum: varynum,
-        without: without,
-        write: write,
-        zip_obj: zip_obj
-    };
-    if (module && module.exports) {
-        module.exports = fns;
-    }
 });
 
 /***/ })

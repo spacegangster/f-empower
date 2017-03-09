@@ -41,9 +41,7 @@ function bind(fn, this_arg) {
     }
 }
 
-function partial() {
-    var args, fn
-    fn = arguments[0]
+function partial(fn, args) {
     args = slice(arguments, 1)
     return function() {
         return fn.apply(null, args.concat(slice(arguments)))
@@ -67,29 +65,29 @@ function and_r(a, b) {
 }
 
 function bind_all() {
-    var props, this_arg
-    props = butlast(arguments)
-    this_arg = last(arguments)
+    var props = butlast(arguments),
+        this_arg = last(arguments)
     return a_each(props, function(prop) {
         return this_arg[prop] = bind(this_arg[prop], this_arg)
     })
 }
 
-function compose() {
-    var functions, item, k, len3
-    functions = arguments
-    for (k = 0, len3 = functions.length; k < len3; k++) {
-        item = functions[k]
+function _assert_all_functions(functions) {
+    each2(function (item) {
         if (not_function(item)) {
             throw Errors.NOT_FUNCTION
         }
-    }
-    return function() {
-        var i, memo
+    }, functions)
+}
+
+function compose(functions) {
+    functions = arguments
+    _assert_all_functions(functions)
+    return function(memo) {
         memo = arguments
-        i = functions.length
-        while (--i >= 0) {
-            memo = [functions[i].apply(null, memo)]
+        var idx = functions.length
+        while (--idx > -1) {
+            memo = [functions[idx].apply(null, memo)]
         }
         return first(memo)
     }
@@ -97,28 +95,27 @@ function compose() {
 
 function complement(predicate) {
     return function() {
-        return !(apply(predicate, arguments))
+        return !predicate.apply(null, arguments)
     }
 }
 
-function debounce(debounce_timeout, fn) {
-    var exec, last_args, last_result, last_this, last_timeout_id
+function debounce(debounce_timeout, payload_fn) {
     if (arguments.length === 1) {
-        fn = debounce_timeout
+        payload_fn = debounce_timeout
         debounce_timeout = 0
     }
-    last_result = void 0
-    last_args = null
-    last_timeout_id = null
-    last_this = null
-    exec = function() {
-        return last_result = fn.apply(last_this, last_args)
+    var last_result = void 0,
+        last_args = null,
+        last_timeout_id = null,
+        last_this = null
+    function _exec_payload() {
+        return last_result = payload_fn.apply(last_this, last_args)
     }
     return function() {
         last_args = slice(arguments)
         last_this = this
         clearTimeout(last_timeout_id)
-        last_timeout_id = delay(debounce_timeout, exec)
+        last_timeout_id = delay(debounce_timeout, _exec_payload)
         return last_result
     }
 }
@@ -138,20 +135,13 @@ function delay(delay_ms, fn) {
     return setTimeout(fn, delay_ms)
 }
 
-function flow() {
-    var functions, item, k, len3
+function flow(functions) {
     functions = arguments
-    for (k = 0, len3 = functions.length; k < len3; k++) {
-        item = functions[k]
-        if (not_function(item)) {
-            throw Errors.NOT_FUNCTION
-        }
-    }
+    _assert_all_functions(functions)
     return function() {
-        var i, len, memo
-        memo = arguments
-        len = functions.length
-        i = -1
+        var memo = arguments,
+            len = functions.length,
+            i = -1
         while (++i < len) {
             memo = [functions[i].apply(null, memo)]
         }
@@ -159,13 +149,14 @@ function flow() {
     }
 }
 
+/**
+ * Returns a function that dispatches a call to all functions from `fns`
+ */
 function multicall(fns) {
     fns = compact(fns)
     return function() {
-        var fn, k, len3
-        for (k = 0, len3 = fns.length; k < len3; k++) {
-            fn = fns[k]
-            fn.apply(this, arguments)
+        for (var i = -1, len = fns.length; ++i < len;) {
+            fns[i].apply(this, arguments)
         }
     }
 }
@@ -192,12 +183,18 @@ function periodically(interval, countdown, fn) {
     })
 }
 
+/**
+ * Wraps function `fn` is such way that its this context will be passed as first argument
+ */
 function pbind(fn) {
     return function() {
         return fn.apply(null, cat([this], slice(arguments)))
     }
 }
 
+/**
+ * `ms` first wrapper of setInterval
+ */
 function set_interval(ms, fn) {
     if (!fn) {
         fn = ms
@@ -207,13 +204,11 @@ function set_interval(ms, fn) {
 }
 
 function throttle(throttle_millis, fn) {
-    var last_args, last_result, locked, should_call
-    locked = false
-    should_call = false
-    last_args = null
-    last_result = null
+    var locked = false,
+        should_call = false,
+        last_args = null,
+        last_result = null
     return function() {
-        var void_main
         last_args = slice(arguments)
         if (locked) {
             should_call = true
@@ -221,14 +216,14 @@ function throttle(throttle_millis, fn) {
         } else {
             locked = true
             last_result = fn.apply(null, last_args)
-            void_main = function() {
-                return delay(throttle_millis, function() {
+            function void_main() {
+                delay(throttle_millis, function() {
                     if (should_call) {
                         last_result = fn.apply(null, last_args)
                         should_call = false
-                        return void_main()
+                        void_main()
                     } else {
-                        return locked = false
+                        locked = false
                     }
                 })
             }
@@ -238,6 +233,9 @@ function throttle(throttle_millis, fn) {
     }
 }
 
+/**
+ * Checks if value is atomic, useful when you want to know if it is safe to copy by link
+ */
 function is_atomic(val) {
     switch (type_of2(val)) {
         case '[object Object]':
@@ -360,26 +358,12 @@ function cat(array) {
 }
 
 function contains(searched_item, array) {
-    var item, k, len3
-    for (k = 0, len3 = array.length; k < len3; k++) {
-        item = array[k]
-        if (searched_item === item) {
-            return true
-        }
-    }
-    return false
+    return index_of(searched_item, array) > -1
 }
 
 var not_contains = complement(contains)
 function a_contains(array, searched_item) {
-    var item, k, len3
-    for (k = 0, len3 = array.length; k < len3; k++) {
-        item = array[k]
-        if (searched_item === item) {
-            return true
-        }
-    }
-    return false
+    return index_of(searched_item, array) > -1
 }
 
 function a_each(array, fn) {
@@ -423,19 +407,14 @@ function any(pred, arr) {
         arr = pred
         pred = true
     }
-    return -1 < find_index(pred, arr)
+    return -1 < find_index_fn(pred, arr)
 }
 
+/**
+ * Returns a new coll withouh any falsee members
+ */
 function compact(coll) {
-    var item, k, len3, results1
-    results1 = []
-    for (k = 0, len3 = coll.length; k < len3; k++) {
-        item = coll[k]
-        if (item) {
-            results1.push(item)
-        }
-    }
-    return results1
+    return filter_fn(x => x, coll)
 }
 
 function count(pred, coll) {
@@ -465,12 +444,11 @@ function count_obj(pred, coll) {
 }
 
 function count_pred(pred, coll) {
-    var cnt, item, k, len3
-    cnt = 0
-    for (k = 0, len3 = coll.length; k < len3; k++) {
-        item = coll[k]
-        if (pred(item)) {
-            cnt++
+    var cnt = 0,
+        idx = coll.length
+    while (--idx > -1) {
+        if (pred(coll[idx])) {
+            ++cnt
         }
     }
     return cnt
@@ -481,8 +459,7 @@ function drop(items_number_to_drop, array_like) {
 }
 
 function drop_last(chars_to_drop, string) {
-    var len
-    len = string.length
+    var len = string.length
     if (chars_to_drop > len) {
         return ""
     } else {
@@ -505,18 +482,14 @@ function each(fn, coll) {
 }
 
 function each2(fn, arr) {
-    var item, k, len3
-    for (k = 0, len3 = arr.length; k < len3; k++) {
-        item = arr[k]
-        fn(item)
+    for (var i = -1, len = arr.length; ++i < len;) {
+        fn(arr[i])
     }
 }
 
 function each3(fn, arr1, arr2) {
-    var i, length_of_shortest
-    length_of_shortest = Math.min(count1(arr1), count1(arr2))
-    i = -1
-    while (++i < length_of_shortest) {
+    var length_of_shortest = Math.min(arr1.length, arr2.length)
+    for (var i = -1; ++i < length_of_shortest;) {
         fn(arr1[i], arr2[i])
     }
 }
@@ -550,21 +523,20 @@ function each_idx(fn, arr) {
 }
 
 function each_idx2(fn, arr) {
-    var i, len
-    len = arr.length
-    i = -1
+    var len = arr.length,
+        i   = -1
     while (++i < len) {
         fn(arr[i], i)
     }
 }
 
-function each_idxn() {
-    var args, arrs, fn, local_apply, local_pluck, shortest_len
-    fn = first(arguments)
-    arrs = rest(arguments)
-    shortest_len = calc_shortest_length(arrs)
-    local_pluck = pluck
-    local_apply = apply
+function each_idxn(fn, arrs) {
+    var arrs         = rest(arguments),
+        shortest_len = calc_shortest_length(arrs),
+        local_pluck  = pluck,
+        local_apply  = apply,
+        i            = -1,
+        args
     while (++i < shortest_len) {
         args = local_pluck(i, arrs)
         args.push(i)
@@ -602,10 +574,10 @@ function first(array) {
 }
 
 function filter_fn(fn, arr) {
-    var i, item, len, res
-    res = []
-    len = arr.length
-    i = -1
+    var res = [],
+        len = arr.length,
+        i   = -1,
+        item
     while (++i < len) {
         item = arr[i]
         if (fn(item)) {
@@ -630,16 +602,16 @@ function filter_prop(prop_name, arr) {
 }
 
 function filter_obj_1kv(obj, array) {
-    var item, k, key, len3, ref, results1, val
-    ref = read_1kv(obj), key = ref[0], val = ref[1]
-    results1 = []
-    for (k = 0, len3 = array.length; k < len3; k++) {
-        item = array[k]
-        if (item[key] === val) {
-            results1.push(item)
+    const [key, val] = read_1kv(obj)
+    const results = []
+    const len = array.length
+    var i = -1
+    while (++i < len) {
+        if (array[i][key] === val) {
+            results.push(array[i])
         }
     }
-    return results1
+    return results
 }
 
 function filter_obj_2kv(obj, array) {
@@ -1218,8 +1190,7 @@ function remap3(fn, prop, arr) {
 }
 
 function remove(item, arr) {
-    var idx
-    idx = index_of(item, arr)
+    var idx = index_of(item, arr)
     return idx !== -1 && (remove_at(idx, arr))
 }
 
@@ -1282,7 +1253,7 @@ function union(arr1, arr2) {
     result = arr1.slice()
     for (k = 0, len3 = arr2.length; k < len3; k++) {
         item = arr2[k]
-        if (!(contains(item, arr1))) {
+        if (!contains(item, arr1)) {
             result.push(item)
         }
     }
@@ -2290,8 +2261,8 @@ function once(fn) {
 }
 
 /**
- * Возвращает новую функцию, которая будет выполнятся каждый раз с задержкой.
- * Новая функция будет возвращать id таймаута.
+ * Returns new function that will invoke the original function with a delay every time.
+ * Delayed function will return its `timeout_id`
  */
 function delayed(ms, payloadFunction) {
     return function() {
