@@ -634,8 +634,31 @@
         });
     }
 
-    function first(array) {
-        return array[0];
+    function filter(some_criteria, array) {
+        switch (typeof some_criteria === 'undefined' ? 'undefined' : _typeof(some_criteria)) {
+            case "string":
+                return filter_prop(some_criteria, array);
+            case "function":
+                return filter_fn(some_criteria, array);
+            case "object":
+                if (is_regexp(some_criteria)) {
+                    return filter_re(some_criteria, array);
+                } else {
+                    switch (count1(keys(some_criteria))) {
+                        case 0:
+                            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
+                        case 1:
+                            return filter_obj_1kv(some_criteria, array);
+                        case 2:
+                            return filter_obj_2kv(some_criteria, array);
+                        default:
+                            return filter_obj(some_criteria, array);
+                    }
+                }
+                break;
+            default:
+                throw Errors.UNEXPECTED_TYPE;
+        }
     }
 
     function filter_fn(fn, arr) {
@@ -684,10 +707,10 @@
     }
 
     function filter_obj_2kv(obj, array) {
-        var o_keys = keys(obj),
-            _o_keys = _slicedToArray(o_keys, 2),
-            key1 = _o_keys[0],
-            key2 = _o_keys[1],
+        var _keys2 = keys(obj),
+            _keys3 = _slicedToArray(_keys2, 2),
+            key1 = _keys3[0],
+            key2 = _keys3[1],
             _ref = [obj[key1], obj[key2]],
             val1 = _ref[0],
             val2 = _ref[1],
@@ -715,33 +738,6 @@
         return filter_fn(function (str) {
             return regex.test(str);
         }, strings);
-    }
-
-    function filter(some_criteria, array) {
-        switch (typeof some_criteria === 'undefined' ? 'undefined' : _typeof(some_criteria)) {
-            case "string":
-                return filter_prop(some_criteria, array);
-            case "function":
-                return filter_fn(some_criteria, array);
-            case "object":
-                if (is_regexp(some_criteria)) {
-                    return filter_re(some_criteria, array);
-                } else {
-                    switch (count1(keys(some_criteria))) {
-                        case 0:
-                            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
-                        case 1:
-                            return filter_obj_1kv(some_criteria, array);
-                        case 2:
-                            return filter_obj_2kv(some_criteria, array);
-                        default:
-                            return filter_obj(some_criteria, array);
-                    }
-                }
-                break;
-            default:
-                throw Errors.UNEXPECTED_TYPE;
-        }
     }
 
     function find(some_criteria, array) {
@@ -843,15 +839,8 @@
         return -1;
     }
 
-    function base_find_index_r(iter_fn, array) {
-        var i;
-        i = array.length;
-        while (--i > -1) {
-            if (iter_fn(array[i], i, array)) {
-                return i;
-            }
-        }
-        return -1;
+    function first(array) {
+        return array[0];
     }
 
     function equal_bool(b1, b2) {
@@ -876,7 +865,17 @@
     }
 
     function find_index_last(pred, array) {
-        return base_find_index_r(dispatch_find_index_matcher(pred), array);
+        return find_index_last_iter(dispatch_find_index_matcher(pred), array);
+    }
+
+    function find_index_last_iter(iter_fn, array) {
+        var i = array.length;
+        while (--i > -1) {
+            if (iter_fn(array[i], i, array)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     function flatten(arr) {
@@ -901,16 +900,19 @@
     }
 
     function list() {
-        var args;
-        return count1(args = arguments) && slice(args) || [];
+        var args = arguments;
+        return args.length > 0 ? slice(args) : [];
     }
 
+    /**
+     * Returns a list from its arguments, without falsee values
+     */
     function list_compact() {
-        var arg, k, len3, result;
-        result = [];
-        for (k = 0, len3 = arguments.length; k < len3; k++) {
-            arg = arguments[k];
-            if (!!arg) {
+        var result = [],
+            len = arguments.length,
+            k = -1;
+        while (++k < len) {
+            if (!!arguments[k]) {
                 result.push(arg);
             }
         }
@@ -1018,28 +1020,34 @@
     function _async_mapper(err_fn, map_fn, accumulator, report_arr, item, idx) {
         return map_fn(item, function (err, res) {
             if (err) {
-                return err_fn(err);
+                err_fn(err);
+                return;
             }
             accumulator[idx] = res;
-            return report_arr[idx] = true;
+            report_arr[idx] = true;
         });
     }
 
+    /**
+     * Does asynchronous map of a coll
+     * @param {function} map_fn(object: item, onresult: function(err, res))
+     * @param {array} items
+     * @param {function(err, res)} on_res
+     */
     function map_async(map_fn, items, on_res) {
-        var err_fn, help_arr, int_id, len, res_arr;
-        len = items.length;
-        help_arr = repeat(len, false);
-        res_arr = make_array(len);
-        int_id = set_interval(2, function () {
+        var len = items.length,
+            help_arr = repeat(len, false),
+            res_arr = make_array(len);
+        var int_id = set_interval(2, function () {
             if (every(help_arr)) {
                 clearInterval(int_id);
                 return on_res(null, res_arr);
             }
         });
-        err_fn = function err_fn(err) {
+        function err_fn(err) {
             clearInterval(int_id);
             return on_res(err);
-        };
+        }
         return each_idx2(partial(_async_mapper, err_fn, map_fn, res_arr, help_arr), items);
     }
 
@@ -1125,8 +1133,7 @@
     }
 
     function reducer(fn, val, arr) {
-        var idx;
-        idx = -1;
+        var idx = -1;
         if (!arr && is_array(val)) {
             arr = val;
             val = fn(last(arr), prelast(arr));
@@ -1138,69 +1145,6 @@
             val = fn(val, arr[idx]);
         }
         return val;
-    }
-
-    function reject_fn(fn, array) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (!fn(item)) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function reject_prop(prop_name, array) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (!item[prop_name]) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function reject_obj_1kv(one_kv_pair_object, array) {
-        var item, k, key, len3, ref, results1, val;
-        ref = read_1kv(one_kv_pair_object), key = ref[0], val = ref[1];
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (item[key] !== val) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function reject_obj_2kv(two_kv_pairs_object, array) {
-        var item, k, key1, key2, len3, ref, ref1, results1, val1, val2;
-        ref = keys(two_kv_pairs_object), key1 = ref[0], key2 = ref[1];
-        ref1 = [two_kv_pairs_object[key1], two_kv_pairs_object[key2]], val1 = ref1[0], val2 = ref1[1];
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (!(item[key1] === val1 && item[key2] === val2)) {
-                results1.push(item);
-            }
-        }
-        return results1;
-    }
-
-    function reject_obj(object, array) {
-        var item, k, len3, results1;
-        results1 = [];
-        for (k = 0, len3 = array.length; k < len3; k++) {
-            item = array[k];
-            if (!o_match(object, item)) {
-                results1.push(item);
-            }
-        }
-        return results1;
     }
 
     function reject(some_criteria, array) {
@@ -1226,6 +1170,53 @@
         }
     }
 
+    function reject_fn(fn, array) {
+        var results = [];
+        for (var k = -1, len = array.length; ++k < len;) {
+            if (!fn(array[k])) {
+                results.push(array[k]);
+            }
+        }
+        return results;
+    }
+
+    function reject_prop(prop_name, array) {
+        return filter_fn(function (x) {
+            return !x[prop_name];
+        }, array);
+    }
+
+    function reject_obj_1kv(one_kv_pair_object, array) {
+        var _read_1kv3 = read_1kv(one_kv_pair_object),
+            _read_1kv4 = _slicedToArray(_read_1kv3, 2),
+            key = _read_1kv4[0],
+            val = _read_1kv4[1];
+
+        return filter_fn(function (x) {
+            return x[key] !== val;
+        }, array);
+    }
+
+    function reject_obj_2kv(two_kv_pairs_object, array) {
+        var _keys4 = keys(obj),
+            _keys5 = _slicedToArray(_keys4, 2),
+            key1 = _keys5[0],
+            key2 = _keys5[1],
+            _ref2 = [obj[key1], obj[key2]],
+            val1 = _ref2[0],
+            val2 = _ref2[1];
+
+        return filter_fn(function (x) {
+            return item[key1] !== val1 || item[key2] !== val2;
+        }, array);
+    }
+
+    function reject_obj(object, array) {
+        return filter_fn(function (item) {
+            return !o_match(object, item);
+        }, array);
+    }
+
     function remap(fn, arr) {
         switch (arguments.length) {
             case 2:
@@ -1236,26 +1227,24 @@
     }
 
     function remap2(fn, arr) {
-        var item, item_idx, k, len3;
-        for (item_idx = k = 0, len3 = arr.length; k < len3; item_idx = ++k) {
-            item = arr[item_idx];
-            arr[item_idx] = fn(item);
+        for (var k = -1, len = arr.length; ++k < len;) {
+            arr[k] = fn(arr[k]);
         }
         return arr;
     }
 
     function remap3(fn, prop, arr) {
-        var item, item_idx, k, len3;
-        for (item_idx = k = 0, len3 = arr.length; k < len3; item_idx = ++k) {
-            item = arr[item_idx];
-            arr[item_idx][prop] = fn(item[prop]);
+        var item;
+        for (var k = -1, len = arr.length; ++k < len;) {
+            item = arr[k];
+            item[prop] = fn(item[prop]);
         }
         return arr;
     }
 
     function remove(item, arr) {
         var idx = index_of(item, arr);
-        return idx !== -1 && remove_at(idx, arr);
+        return idx > -1 && remove_at(idx, arr);
     }
 
     function remove_at(idx, arr) {
@@ -1263,8 +1252,7 @@
     }
 
     function repeat(times, value) {
-        var array;
-        array = make_array(times);
+        var array = make_array(times);
         while (--times > -1) {
             array[times] = value;
         }
@@ -1272,8 +1260,7 @@
     }
 
     function repeatf(times, fn) {
-        var array;
-        array = make_array(times);
+        var array = make_array(times);
         while (--times > -1) {
             array[times] = fn();
         }
@@ -1285,11 +1272,10 @@
     }
 
     function reverse(arr) {
-        var i, j, len, res;
-        len = arr.length;
-        i = 0;
-        j = len;
-        res = new Array(len);
+        var len = arr.length,
+            i = 0,
+            j = len,
+            res = new Array(len);
         while (--j > -1) {
             res[i] = arr[j];
             i += 1;
@@ -1312,15 +1298,7 @@
     }
 
     function union(arr1, arr2) {
-        var item, k, len3, result;
-        result = arr1.slice();
-        for (k = 0, len3 = arr2.length; k < len3; k++) {
-            item = arr2[k];
-            if (!contains(item, arr1)) {
-                result.push(item);
-            }
-        }
-        return result;
+        return arr1.concat(difference_sets(arr2, arr1));
     }
 
     function unshift(arr, item) {
@@ -1667,8 +1645,8 @@
     }
 
     function difference_objs_vals(o1, o2) {
-        var key, res, val1, val2;
-        res = {};
+        var res = {};
+        var key, val1, val2;
         for (key in o1) {
             val1 = o1[key];
             if (is_defined(val2 = o2[key]) && !equal2(val1, val2)) {
@@ -1802,22 +1780,26 @@
         return reduce(and_r, true, map(equal_val, arr1, arr2));
     }
 
+    /**
+     * Tests two objects for shallow equality
+     */
     function equal_object(o1, o2) {
-        var keys1, keys2, vals1, vals2;
-        keys1 = keys(o1);
-        keys2 = keys(o2);
-        if (keys1.length === keys2.length && equal_set(keys1, keys2)) {
-            vals1 = o_map(o1, keys1);
-            vals2 = o_map(o2, keys1);
-            return equal_array_start(vals1, vals2);
-        } else {
+        var keys1 = keys(o1),
+            keys2 = keys(o2);
+        if (!(keys1.length === keys2.length && equal_set(keys1, keys2))) {
             return false;
         }
+        var vals1 = o_map(o1, keys1),
+            vals2 = o_map(o2, keys1);
+        return equal_array_start(vals1, vals2);
     }
 
     function equal_set(keyset1, keyset2) {
-        var diff1, diff2, ref;
-        ref = set_symmetric_difference(keyset1, keyset2), diff1 = ref[0], diff2 = ref[1];
+        var _set_symmetric_differ = set_symmetric_difference(keyset1, keyset2),
+            _set_symmetric_differ2 = _slicedToArray(_set_symmetric_differ, 2),
+            diff1 = _set_symmetric_differ2[0],
+            diff2 = _set_symmetric_differ2[1];
+
         return is_empty(diff1) && is_empty(diff2);
     }
 
@@ -1830,13 +1812,9 @@
     }
 
     function flatten_path(prop, obj, opts) {
-        var res;
-        if (opts == null) {
-            opts = {
-                inlude_root: false
-            };
-        }
-        res = opts.include_root && [obj] || [];
+        opts = opts == null ? { include_root: false } : opts;
+        //
+        var res = opts.include_root && [obj] || [];
         while (obj = obj[prop]) {
             res.push(obj);
         }
@@ -1844,22 +1822,26 @@
     }
 
     function flattenp(key, root, arg1) {
-        var accumulator, include_root;
-        include_root = (arg1 != null ? arg1 : {
+        var include_root = (arg1 != null ? arg1 : {
             include_root: true
         }).include_root;
-        accumulator = include_root && [root] || [];
+        var accumulator = include_root && [root] || [];
         return flattenp_recursive(key, root, accumulator);
     }
 
+    /**
+     * Takes a key, an object and accumulator and recursively walks down the path
+     * to collect accumulator
+     * @param {string} key
+     * @param {object} root
+     * @param {array} accumulator
+     */
     function flattenp_recursive(key, root, accumulator) {
-        var children, k, len3, son;
         push_all(accumulator, root[key]);
-        if (children = root[key]) {
-            for (k = 0, len3 = children.length; k < len3; k++) {
-                son = children[k];
+        if (root[key]) {
+            each2(function (son) {
                 flattenp_recursive(key, son, accumulator);
-            }
+            }, root[key]);
         }
         return accumulator;
     }
@@ -1879,6 +1861,9 @@
         return accumulator;
     }
 
+    /**
+     * Returns new collection where each element is interposed with separator
+     */
     function interpose(sep, coll) {
         var coll_len = coll.length,
             seps_count = coll_len - 1,
@@ -2075,11 +2060,9 @@
     }
 
     function transform3(fn, obj, keys) {
-        var k, key, len3;
-        for (k = 0, len3 = keys.length; k < len3; k++) {
-            key = keys[k];
+        each2(function (key) {
             obj[key] = fn(obj[key]);
-        }
+        }, keys);
         return obj;
     }
 
@@ -2097,13 +2080,12 @@
 
     function zip_obj(keys, vals) {
         var obj = {};
-        each(partial(o_set, obj), keys, vals);
+        each3(partial(o_set, obj), keys, vals);
         return obj;
     }
 
     function format(template_str) {
-        var args;
-        args = rest(arguments);
+        var args = rest(arguments);
         return template_str.replace(/{(\d+)}/g, function (match, number) {
             return typeof args[number] !== 'undefined' && args[number] || match;
         });
@@ -2138,8 +2120,7 @@
     }
 
     function str_breplace(map, str) {
-        var regex;
-        regex = mk_regexp(str_join('|', keys(map)), 'ig');
+        var regex = mk_regexp(str_join('|', keys(map)), 'ig');
         return str.replace(regex, function (seq) {
             return map[seq] || seq;
         });
@@ -2187,24 +2168,12 @@
         return num + 1;
     }
 
-    function jquery_wrap_to_array(jquery_wrap) {
-        var i, results1, wrap_len;
-        wrap_len = jquery_wrap.length;
-        i = -1;
-        results1 = [];
-        while (++i < wrap_len) {
-            results1.push(jquery_wrap.eq(i));
-        }
-        return results1;
-    }
-
     function mk_regexp(rx_str, rx_settings) {
         rx_settings = rx_settings || "";
         return new RegExp(rx_str, rx_settings);
     }
 
     function range(start_idx, end_idx, step) {
-        var array, i, length;
         switch (arguments.length) {
             case 1:
                 end_idx = start_idx;
@@ -2214,15 +2183,13 @@
             case 2:
                 step = 1;
                 break;
-            case 3:
-                break;
             default:
-                throw new Error('Bad arguments length, available signatures are for arguments length 1, 2 and 3');
+                break;
         }
-        length = Math.ceil(Math.abs(end_idx - start_idx) / step);
-        array = new Array(length);
+        var length = Math.ceil(Math.abs(end_idx - start_idx) / step),
+            array = new Array(length),
+            i = -1;
         start_idx -= step;
-        i = -1;
         while (++i < length) {
             array[i] = start_idx += step;
         }
@@ -2234,31 +2201,27 @@
         return [key, obj_with_1kv_pair[key]];
     }
 
-    /*
-       This is a function that iterates with another function
-       over the nodes of a tree structure.
-       @param fn {function} function that operates on the node.
-       signature: son, parent, son_idx, depth
-       @param root {hash} a tree whose children lie in the children
-       list (i.e. ordered collection).
-       @param depth: indicates depth of recursion
-       */
-    function recurse(fn, root, depth) {
-        var children, idx, k, len3, len4, m, son;
-        if (depth == null) {
-            depth = 0;
+    /**
+     * Recursively walks over coll and applies the `fn`
+     * @param fn {function} function that operates on the node.
+     *  signature: son, parent, son_idx, depth
+     * @param parent {hash} a tree whose children lie in the children
+     *  list (i.e. ordered collection).
+     * @param depth: indicates depth of recursion
+     */
+    function recurse(fn, parent, depth) {
+        depth = depth == null ? 1 : depth + 1;
+        var children = parent.children,
+            len = children.length,
+            i = -1,
+            k = -1;
+        while (++i < len) {
+            fn(children[i], parent, i, depth);
         }
-        children = root.children;
-        depth++;
-        for (idx = k = 0, len3 = children.length; k < len3; idx = ++k) {
-            son = children[idx];
-            fn(son, root, idx, depth);
+        while (++k < len) {
+            recurse(fn, children[k], depth);
         }
-        for (m = 0, len4 = children.length; m < len4; m++) {
-            son = children[m];
-            recurse(fn, son, depth);
-        }
-        return root;
+        return parent;
     }
 
     function sum2(a, b) {
@@ -2346,9 +2309,7 @@
         re_filter = filter_re,
         index_by_id = partial(index_by, 'id'),
         interval = set_interval,
-        j2a = jquery_wrap_to_array,
-        // drop
-    magic = no_operation,
+        magic = no_operation,
         // drop
     noop = no_operation,
         pt = partial,
@@ -2465,8 +2426,6 @@
     exports.is_string = is_string;
     exports.is_subset = is_subset;
     exports.is_zero = is_zero;
-    exports.jquery_wrap_to_array = jquery_wrap_to_array;
-    exports.j2a = j2a;
     exports.keys = keys;
     exports.last = last;
     exports.list = list;
