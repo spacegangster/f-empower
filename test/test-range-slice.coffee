@@ -10,7 +10,19 @@ tooling   = require './tooling'
   print_json
   testing } = tooling
 
-{ range } = f_empower
+{ slice, range } = f_empower
+
+test_slice = ->
+  testing "slice"
+  arr = [0, 1, 2, 3, 4]
+  (equal_deep (slice arr)
+            , arr)
+  (equal_deep (slice arr, 1, 5)
+            , [1, 2, 3, 4])
+  (equal_deep (slice arr, 0, 3)
+            , [0, 1, 2])
+  log "ok"
+
 
 test_range = ->
   testing "range"
@@ -24,7 +36,8 @@ test_range = ->
 
 
 tests =
-  [ test_range ]
+  [ test_slice
+    test_range ]
 for test in tests
   test()
   newline()

@@ -6,12 +6,11 @@
  */
 
 
-var slice1 = [].slice,
-    hasOwnProperty = {}.hasOwnProperty
+const hasOwnProperty = {}.hasOwnProperty
 
-var THRESHOLD_LARGE_ARRAY_SIZE = 64000
+const THRESHOLD_LARGE_ARRAY_SIZE = 64000
 
-var Errors = {
+const Errors = {
     NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
     NOT_FUNCTION: new TypeError('Something is not function'),
     UNEXPECTED_TYPE: new TypeError('Unexpected type')
@@ -28,11 +27,43 @@ function Reduced(val) {
 var to_string = Object.prototype.toString,
     native_concat = Array.prototype.concat,
     native_index_of = Array.prototype.indexOf,
-    native_slice = Array.prototype.slice,
     is_array = Array.isArray
 
-function slice(array_or_arguments, start_idx, end_idx) {
-    return native_slice.call(array_or_arguments, start_idx, end_idx)
+/**
+ * Simple and full slice
+ */
+function __slice(array_like) {
+    var len = array_like.length,
+        result = new Array(len)
+    while (--len > -1) {
+        result[len] = array_like[len]
+    }
+    return result
+}
+
+/**
+ * Quick and unsafe slice
+ */
+function _slice(array_like, start, end) {
+    let idx = start - 1,
+        len = array_like.length
+    end = end == null ? len : end
+    const result = new Array(end - start)
+    while (++idx < end) {
+        result[idx - start] = array_like[idx]
+    }
+    return result
+}
+
+function slice(array_like, start, end) {
+    const length = array_like == null ? 0 : array_like.length
+    if (!length) {
+        return []
+    }
+    start = start == null ? 0 : start
+    end   = end == undefined ? length : end
+    end   = end > length ?  length : end
+    return _slice(array_like, start, end)
 }
 
 function bind(fn, this_arg) {
@@ -42,9 +73,9 @@ function bind(fn, this_arg) {
 }
 
 function partial(fn, args) {
-    args = slice(arguments, 1)
+    args = rest(arguments)
     return function() {
-        return fn.apply(null, args.concat(slice(arguments)))
+        return fn.apply(null, args.concat(__slice(arguments)))
     }
 }
 
@@ -112,7 +143,7 @@ function debounce(debounce_timeout, payload_fn) {
         return last_result = payload_fn.apply(last_this, last_args)
     }
     return function() {
-        last_args = slice(arguments)
+        last_args = __slice(arguments)
         last_this = this
         clearTimeout(last_timeout_id)
         last_timeout_id = delay(debounce_timeout, _exec_payload)
@@ -162,8 +193,9 @@ function multicall(fns) {
 }
 
 function no_operation() {}
+
 function partialr(fn, right_args) {
-    right_args = slice(arguments, 1)
+    right_args = _slice(arguments, 1)
     return function() {
         return apply(fn, cat(apply(list, arguments), right_args))
     }
@@ -188,7 +220,7 @@ function periodically(interval, countdown, fn) {
  */
 function pbind(fn) {
     return function() {
-        return fn.apply(null, cat([this], slice(arguments)))
+        return fn.apply(null, cat([this], __slice(arguments)))
     }
 }
 
@@ -209,7 +241,7 @@ function throttle(throttle_millis, fn) {
         last_args = null,
         last_result = null
     return function() {
-        last_args = slice(arguments)
+        last_args = __slice(arguments)
         if (locked) {
             should_call = true
             return last_result
@@ -349,12 +381,12 @@ var not_array     = complement(is_array),
     not_subset    = complement(is_subset),
     not_zero      = complement(is_zero)
 
-function butlast(array) {
-    return slice(array, 0, (count1(array)) - 1)
+function butlast(arr) {
+    return _slice(array, 0, arr.length - 1)
 }
 
 function cat(array) {
-    return native_concat.apply(array, slice(arguments, 1))
+    return native_concat.apply(array, _slice(arguments, 1))
 }
 
 function contains(searched_item, array) {
@@ -455,7 +487,7 @@ function count_pred(pred, coll) {
 }
 
 function drop(items_number_to_drop, array_like) {
-    return slice(array_like, items_number_to_drop)
+    return _slice(array_like, items_number_to_drop)
 }
 
 function drop_last(chars_to_drop, string) {
@@ -820,7 +852,7 @@ function last(list) {
 
 function list() {
     var args = arguments
-    return args.length > 0 ? slice(args) : []
+    return args.length > 0 ? __slice(args) : []
 }
 
 /**
@@ -933,7 +965,7 @@ function map(mapper, coll) {
         case 3:
             return map3(mapper, coll, arguments[2])
         default:
-            return apply(mapn, arguments)
+            return mapn(mapper, rest(arguments))
     }
 }
 
@@ -999,9 +1031,8 @@ function map3(fn, arr1, arr2) {
     return result
 }
 
-function mapn(fn) {
-    var arrs = rest(arguments),
-        shortest_len = apply(Math.min, map2(count1, arrs)),
+function mapn(fn, arrs) {
+    var shortest_len = apply(Math.min, map2(count1, arrs)),
         i = -1,
         local_pluck = pluck,
         local_apply = apply,
@@ -1169,7 +1200,7 @@ function repeatf(times, fn) {
 }
 
 function rest(arr) {
-    return slice(arr, 1)
+    return _slice(arr, 1)
 }
 
 function reverse(arr) {
@@ -1247,7 +1278,7 @@ function invoke1(method_name, arg, arr) {
 function invoken(method_name, arg1, arr) {
     var fn_args     = arguments,
         fn_args_len = fn_args.length,
-        args        = (3 < fn_args_len) ? slice(fn_args, 1, fn_args_len - 1) : [arg1],
+        args        = (3 < fn_args_len) ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
         arr         = fn_args[fn_args_len - 1],
         len         = arr.length,
         results     = make_array(len),
@@ -1290,7 +1321,7 @@ function invokem1(method_name, arg, arr) {
 function invokemn(method_name, arg1, arr) {
     var fn_args     = arguments,
         fn_args_len = fn_args.length,
-        args        = (3 < fn_args_len) ? slice(fn_args, 1, fn_args_len - 1) : [arg1],
+        args        = (3 < fn_args_len) ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
         arr         = fn_args[fn_args_len - 1],
         len         = arr.length,
         i           = -1
@@ -1417,7 +1448,7 @@ function assign_one(dst, src) {
 function clone(data) {
     if (is_object(data)) {
         if (is_array(data)) {
-            return slice(data)
+            return __slice(data)
         } else {
             return clone_obj(data)
         }
@@ -2019,15 +2050,15 @@ function matches(regexp, str) {
 }
 
 function comma() {
-    return str_join(',', slice(arguments))
+    return str_join(',', __slice(arguments))
 }
 
 function space() {
-    return str_join(' ', slice(arguments))
+    return str_join(' ', __slice(arguments))
 }
 
 function str() {
-    return str_join('', slice(arguments))
+    return str_join('', __slice(arguments))
 }
 
 function str_breplace(map, str) {
@@ -2195,7 +2226,7 @@ function once(fn) {
  */
 function delayed(ms, payloadFunction) {
     return function() {
-        var args = slice(arguments),
+        var args  = __slice(arguments),
             _this = this
         return setTimeout(function() {
             payloadFunction.apply(_this, args);
