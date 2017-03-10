@@ -423,8 +423,8 @@
     function contains(searched_item, array) {
         return index_of(searched_item, array) > -1;
     }
-
     var not_contains = complement(contains);
+
     function a_contains(array, searched_item) {
         return index_of(searched_item, array) > -1;
     }
@@ -1060,10 +1060,9 @@
     }
 
     function map2(fn, arr) {
-        var i, len, result;
-        i = -1;
-        len = count1(arr);
-        result = make_array(len);
+        var i = -1,
+            len = arr.length,
+            result = make_array(len);
         while (++i < len) {
             result[i] = fn(arr[i]);
         }
@@ -1071,33 +1070,27 @@
     }
 
     function map3(fn, arr1, arr2) {
-        var i, length_of_shortest, result;
-        length_of_shortest = Math.min(count1(arr1), count1(arr2));
-        i = -1;
-        result = make_array(length_of_shortest);
+        var length_of_shortest = Math.min(arr1.length, arr2.length),
+            i = -1,
+            result = make_array(length_of_shortest);
         while (++i < length_of_shortest) {
             result[i] = fn(arr1[i], arr2[i]);
         }
         return result;
     }
 
-    function mapn() {
-        var args, arrs, fn, i, local_apply, local_pluck, result, shortest_len;
-        args = arguments;
-        fn = first(args);
-        arrs = rest(args);
-        shortest_len = apply(Math.min, map2(count1, arrs));
-        i = -1;
-        local_pluck = pluck;
-        local_apply = apply;
-        result = make_array(shortest_len);
+    function mapn(fn) {
+        var arrs = rest(arguments),
+            shortest_len = apply(Math.min, map2(count1, arrs)),
+            i = -1,
+            local_pluck = pluck,
+            local_apply = apply,
+            result = make_array(shortest_len);
         while (++i < shortest_len) {
             result[i] = local_apply(fn, local_pluck(i, arrs));
         }
         return result;
     }
-
-    var not_contains = complement(contains);
 
     function prelast(array) {
         return array[count1(array) - 2];
@@ -1113,15 +1106,18 @@
         return arr;
     }
 
+    /**
+     * Classic reduce, with two signatures
+     * (fn, arr), (fn, initial_value, arr)
+     */
     function reduce(fn, val, array) {
-        var idx, len;
-        idx = -1;
+        var idx = -1;
         if (!array && is_array_like(val)) {
             array = val;
             val = fn(first(array), second(array));
             idx = 1;
         }
-        len = count1(array);
+        var len = array.length;
         while (++idx < len && (!val || val.constructor !== ReducedClass)) {
             val = fn(val, array[idx]);
         }
@@ -1132,6 +1128,9 @@
         }
     }
 
+    /**
+     * Reduce right
+     */
     function reducer(fn, val, arr) {
         var idx = -1;
         if (!arr && is_array(val)) {
@@ -1322,104 +1321,89 @@
         }
     }
 
-    function invoke0(method_name, coll) {
-        var i, len, results;
-        len = coll.length;
-        results = make_array(len);
-        i = -1;
+    function invoke0(method_name, arr) {
+        var len = arr.length,
+            results = make_array(len),
+            i = -1;
         while (++i < len) {
-            results[i] = coll[i][method_name]();
+            results[i] = arr[i][method_name]();
         }
         return results;
     }
 
-    function invoke1(method_name, arg, coll) {
-        var i, item, len, results;
-        len = coll.length;
-        results = make_array(len);
-        i = -1;
+    function invoke1(method_name, arg, arr) {
+        var len = arr.length,
+            results = make_array(len),
+            i = -1;
         while (++i < len) {
-            item = coll[i];
-            results[i] = item[method_name].call(item, arg);
+            results[i] = arr[i][method_name](arg);
         }
         return results;
     }
 
-    function invoken() {
-        var args, coll, i, item, k, len, method_name, results;
-        method_name = arguments[0], args = 3 <= arguments.length ? slice1.call(arguments, 1, k = arguments.length - 1) : (k = 1, []), coll = arguments[k++];
-        len = coll.length;
-        results = make_array(len);
-        i = -1;
+    function invoken(method_name, arg1, arr) {
+        var fn_args = arguments,
+            fn_args_len = fn_args.length,
+            args = 3 < fn_args_len ? slice(fn_args, 1, fn_args_len - 1) : [arg1],
+            arr = fn_args[fn_args_len - 1],
+            len = arr.length,
+            results = make_array(len),
+            i = -1,
+            item;
         while (++i < len) {
-            item = coll[i];
+            item = arr[i];
             results[i] = item[method_name].apply(item, args);
         }
         return results;
     }
 
-    function invokem(method_name, coll) {
+    function invokem(method_name, arr) {
         switch (arguments.length) {
             case 2:
-                return invokem0(method_name, coll);
+                return invokem0(method_name, arr);
             case 3:
-                return invokem1(method_name, coll, arguments[2]);
+                return invokem1(method_name, arr, arguments[2]);
             default:
                 return invokemn.apply(null, arguments);
         }
     }
 
-    function invokem1(method_name, arg, coll) {
-        var i, item, len;
-        i = -1;
-        len = coll.length;
+    function invokem0(method_name, arr) {
+        var i = -1,
+            len = arr.length;
         while (++i < len) {
-            item = coll[i];
-            item[method_name].call(item, arg);
+            arr[i][method_name]();
         }
     }
 
-    function invokem0(method_name, coll) {
-        var i, len;
-        i = -1;
-        len = coll.length;
+    function invokem1(method_name, arg, arr) {
+        var i = -1,
+            len = arr.length;
         while (++i < len) {
-            coll[i][method_name]();
+            arr[i][method_name](arg);
         }
     }
 
-    function invokemn() {
-        var args, coll, i, item, k, len, method_name;
-        method_name = arguments[0], args = 3 <= arguments.length ? slice1.call(arguments, 1, k = arguments.length - 1) : (k = 1, []), coll = arguments[k++];
-        i = -1;
-        len = coll.length;
+    function invokemn(method_name, arg1, arr) {
+        var fn_args = arguments,
+            fn_args_len = fn_args.length,
+            args = 3 < fn_args_len ? slice(fn_args, 1, fn_args_len - 1) : [arg1],
+            arr = fn_args[fn_args_len - 1],
+            len = arr.length,
+            i = -1;
         while (++i < len) {
-            item = coll[i];
-            item[method_name].apply(item, args);
+            arr[i][method_name].apply(arr[i], args);
         }
     }
 
     function pluck(key, coll) {
-        var i, len, result;
-        len = count1(coll);
-        result = make_array(len);
-        i = -1;
+        var len = coll.length,
+            result = make_array(len),
+            i = -1;
         while (++i < len) {
             result[i] = coll[i][key];
         }
         return result;
-    }
-
-    function varynum(numbers_arr, start_with_one) {
-        var k, len3, number, results1, variator;
-        variator = start_with_one && -1 || 1;
-        results1 = [];
-        for (k = 0, len3 = numbers_arr.length; k < len3; k++) {
-            number = numbers_arr[k];
-            variator *= -1;
-            results1.push(number * variator);
-        }
-        return results1;
     }
 
     /**
@@ -1449,51 +1433,63 @@
         }
     }
 
+    /**
+     * Returns a set of elements compared on equality by prop value
+     * Works only for atomic values, like string or numeric ids
+     */
     function unique_by_prop(prop_name, arr) {
-        var help_hash, out;
-        help_hash = {};
-        out = [];
-        a_each(arr, function (item) {
-            var prop_val;
-            prop_val = item[prop_name];
-            if (!help_hash[prop_val]) {
+        var help_hash = {},
+            out = [];
+        each2(function (item) {
+            var prop_val = item[prop_name];
+            if (help_hash[prop_val] === void 0) {
                 help_hash[prop_val] = true;
-                return out.push(item);
+                out.push(item);
             }
-        });
+        }, arr);
         return out;
     }
 
+    /**
+     * Faster unique for atomic values
+     */
     function unique_plain(arr) {
-        var help_hash, out;
-        help_hash = {};
-        out = [];
-        a_each(arr, function (val) {
-            if (!help_hash[val]) {
+        var help_hash = {},
+            out = [];
+        each2(function (val) {
+            if (help_hash[val] === void 0) {
                 help_hash[val] = true;
-                return out.push(val);
+                out.push(val);
             }
-        });
+        }, arr);
         return out;
     }
 
+    /**
+     * Returns a function that will operate as function of keys of the object
+     * @param {object} o
+     */
     function wrap_invoke_obj(o) {
         return function (key) {
             return o[key];
         };
     }
 
-    function assign(dest, sources) {
-        if (dest == null) {
-            dest = {};
-        }
-        return reduce(assign_one, dest, drop(1, arguments));
+    /**
+     * Assigns multiple objects to `dst`
+     */
+    function assign(dst, sources) {
+        dst = dst == null ? {} : dst;
+        return reduce(assign_one, dst, rest(arguments));
     }
 
+    /**
+     * Assigns only selected keys
+     */
     function assign_keys(keys, dst, src) {
-        var i, key, l;
-        i = -1;
-        l = keys.length;
+        var i = -1,
+            l = keys.length,
+            key;
         while (++i < l) {
             key = keys[i];
             if (void 0 !== src[key]) {
@@ -1503,13 +1499,14 @@
         return dst;
     }
 
-    function assign_one(dest, src) {
-        var key, val;
-        for (key in src) {
-            val = src[key];
-            dest[key] = val;
+    function assign_one(dst, src) {
+        var keys = keys(src),
+            i = -1,
+            l = keys.length;
+        while (++i < l) {
+            dst[keys[i]] = src[keys[i]];
         }
-        return dest;
+        return dst;
     }
 
     function clone(data) {
@@ -1536,15 +1533,10 @@
     }
 
     /**
-     * Shallow object clone
+     * Shallow clone for object
      */
     function clone_obj(obj) {
-        var key,
-            res = {};
-        for (key in obj) {
-            res[key] = obj[key];
-        }
-        return res;
+        return assign_one({}, obj);
     }
 
     function _clonedeep(src, dst, stack_dst, stack_src) {
@@ -1571,40 +1563,47 @@
     }
 
     function _clonedeep2(src) {
-        var child_dst, cur_dst, cur_key_idx, cur_keys, cur_src, dst, key, ref, stack_act, stack_dst, stack_src, val, val_idx;
-        dst = is_array(src) && [] || {};
-        cur_src = src;
-        cur_dst = dst;
-        stack_src = [src];
-        stack_dst = [dst];
-        stack_act = [];
-        cur_keys = is_array(cur_src) && range(count1(cur_src)) || reverse(keys(cur_src));
-        cur_key_idx = count1(cur_keys);
-        while (--cur_key_idx >= 0) {
-            key = cur_keys[cur_key_idx];
-            val = cur_src[key];
+        var dst = is_array(src) ? [] : {},
+            cur_src = src,
+            cur_dst = dst,
+            stack_src = [src],
+            stack_dst = [dst],
+            stack_act = [],
+            cur_keys = is_array(cur_src) ? range(cur_src.length) : reverse(keys(cur_src)),
+            cur_key_idx = cur_keys.length;
+        //
+        while (--cur_key_idx > -1) {
+            var key = cur_keys[cur_key_idx],
+                val = cur_src[key];
             if (is_atomic(val)) {
                 cur_dst[key] = val;
             } else if (is_date(val)) {
                 cur_dst[key] = new Date(val.getTime());
             } else {
-                val_idx = index_of(val, stack_src);
-                if (val_idx === -1) {
-                    child_dst = is_array(val) && [] || {};
+                var val_idx = index_of(val, stack_src);
+                if (val_idx < 0) {
+                    var child_dst = is_array(val) && [] || {};
                     cur_dst[key] = child_dst;
                     stack_act.push([cur_src, cur_dst, cur_keys, cur_key_idx]);
                     cur_src = val;
                     cur_dst = child_dst;
-                    cur_keys = is_array(cur_src) && range(count1(cur_src)) || reverse(keys(cur_src));
-                    cur_key_idx = count1(cur_keys);
+                    cur_keys = is_array(cur_src) ? range(cur_src.length) : reverse(keys(cur_src));
+                    cur_key_idx = cur_keys.length;
                     stack_src.push(cur_src);
                     stack_dst.push(cur_dst);
                 } else {
                     cur_dst[key] = stack_dst[val_idx];
                 }
             }
-            while (is_zero(cur_key_idx) && not_zero(count1(stack_act))) {
-                ref = stack_act.pop(), cur_src = ref[0], cur_dst = ref[1], cur_keys = ref[2], cur_key_idx = ref[3];
+            while (0 === cur_key_idx && stack_act.length > 0) {
+                var _stack_act$pop = stack_act.pop();
+
+                var _stack_act$pop2 = _slicedToArray(_stack_act$pop, 4);
+
+                cur_src = _stack_act$pop2[0];
+                cur_dst = _stack_act$pop2[1];
+                cur_keys = _stack_act$pop2[2];
+                cur_key_idx = _stack_act$pop2[3];
             }
         }
         return dst;
@@ -1614,22 +1613,20 @@
         return new ctor(arg);
     }
 
-    function defaults(dest) {
-        if (dest == null) {
-            dest = {};
+    function defaults(dst) {
+        if (dst == null) {
+            dst = {};
         }
-        return reduce(defaults2, dest, rest(arguments));
+        return reduce(defaults2, dst, rest(arguments));
     }
 
-    function defaults2(dest, source) {
-        var key, val;
-        for (key in source) {
-            val = source[key];
-            if ('undefined' === typeof dest[key]) {
-                dest[key] = val;
+    function defaults2(dst, src) {
+        for_own(function (key, value) {
+            if (dst[key] === void 0) {
+                dst[key] = value;
             }
-        }
-        return dest;
+        }, src);
+        return dst;
     }
 
     function difference(o1, o2) {
@@ -1644,12 +1641,18 @@
         }
     }
 
+    /**
+     * Calculate an object with keys and values that differ between obj
+     */
     function difference_objs_vals(o1, o2) {
-        var res = {};
-        var key, val1, val2;
-        for (key in o1) {
-            val1 = o1[key];
-            if (is_defined(val2 = o2[key]) && !equal2(val1, val2)) {
+        var o1_keys = keys(o1),
+            idx = o1_keys.length,
+            res = {};
+        while (--idx > -1) {
+            var key = o1_keys[idx],
+                val1 = o1[key],
+                val2 = o2[key];
+            if (val2 !== void 0 && !equal2(val1, val2)) {
                 res[key] = val1;
             }
         }
@@ -1847,9 +1850,9 @@
     }
 
     function for_own(fn, obj) {
-        a_each(keys(obj), function (key) {
+        each2(function (key) {
             fn(key, obj[key]);
-        });
+        }, keys(obj));
     }
 
     function index_by(index_prop, list_to_index, accumulator) {
@@ -2526,7 +2529,6 @@
     exports.unique = unique;
     exports.unshift = unshift;
     exports.vals = vals;
-    exports.varynum = varynum;
     exports.without = without;
     exports.write = write;
     exports.zip_obj = zip_obj;
