@@ -1027,8 +1027,8 @@ function mapn(fn, arrs) {
     var shortest_len = Math.min.apply(Math, pluck('length', arrs)),
         local_pluck  = pluck,
         local_apply  = apply,
-        result       = make_array(shortest_len)
-        i            = -1,
+        result       = make_array(shortest_len),
+        i            = -1
     while (++i < shortest_len) {
         result[i] = local_apply(fn, local_pluck(i, arrs))
     }
