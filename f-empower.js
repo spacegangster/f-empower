@@ -80,8 +80,12 @@ function partial(fn, args) {
     }
 }
 
-function apply(fn, args_list) {
-    return fn.apply(this, args_list)
+/**
+ * @param {function} fn - payload function
+ * @param {Array} args
+ */
+function apply(fn, args) {
+    return fn.apply(this, args)
 }
 
 function add2(a, b) {
@@ -191,7 +195,7 @@ function no_operation() {}
 function partialr(fn, right_args) {
     right_args = _slice(arguments, 1)
     return function() {
-        return apply(fn, cat(apply(list, arguments), right_args))
+        return apply(fn, cat(arguments, right_args))
     }
 }
 
@@ -234,6 +238,19 @@ function throttle(throttle_millis, fn) {
         should_call = false,
         last_args = null,
         last_result = null
+
+    function void_main() {
+        delay(throttle_millis, function() {
+            if (should_call) {
+                last_result = fn.apply(null, last_args)
+                should_call = false
+                void_main()
+            } else {
+                locked = false
+            }
+        })
+    }
+
     return function() {
         last_args = __slice(arguments)
         if (locked) {
@@ -242,17 +259,6 @@ function throttle(throttle_millis, fn) {
         } else {
             locked = true
             last_result = fn.apply(null, last_args)
-            function void_main() {
-                delay(throttle_millis, function() {
-                    if (should_call) {
-                        last_result = fn.apply(null, last_args)
-                        should_call = false
-                        void_main()
-                    } else {
-                        locked = false
-                    }
-                })
-            }
             void_main()
             return last_result
         }
@@ -334,7 +340,7 @@ function is_plain_object(subject) {
                 ((ctor = subject.constructor) && (is_function(ctor)) && !(ctor instanceof ctor)))) {
         return false
     }
-    var latest_key;
+    var latest_key
     for (var key in subject) {
         latest_key = key
     }
@@ -379,8 +385,23 @@ function butlast(arr) {
     return _slice(arr, 0, arr.length - 1)
 }
 
+/**
+ * Concatenates arbitrary number of arrays or array-like objects
+ */
 function cat(arr) {
-    return native_concat.apply(arr, rest(arguments))
+    const arrs = __slice(arguments),
+        res = [],
+        arrs_count = arrs.length
+    let i = -1
+    while (++i < arrs_count) {
+        let arr = arrs[i],
+            arr_len = arr.length,
+            k = -1
+        while (++k < arr_len) {
+            res.push(arr[k])
+        }
+    }
+    return res
 }
 
 function contains(searched_item, arr) {
@@ -534,7 +555,7 @@ function eachn(fn) {
         shortest_len = calc_shortest_length(arrs),
         local_pluck  = pluck,
         local_apply  = apply,
-        i            = -1;
+        i            = -1
     while (++i < shortest_len) {
         local_apply(fn, local_pluck(i, arrs))
     }
@@ -557,8 +578,8 @@ function each_idx2(fn, arr) {
 }
 
 function each_idxn(fn, arrs) {
-    var arrs         = rest(arguments),
-        shortest_len = calc_shortest_length(arrs),
+    arrs = rest(arguments)
+    var shortest_len = calc_shortest_length(arrs),
         local_pluck  = pluck,
         local_apply  = apply,
         i            = -1,
@@ -616,7 +637,6 @@ function filter(some_criteria, arr) {
                 return filter_obj(some_criteria, arr)
             }
         }
-        break
     default:
         throw Errors.UNEXPECTED_TYPE
     }
@@ -665,9 +685,9 @@ function filter_obj_1kv(obj, arr) {
 
 function filter_obj_2kv(obj, arr) {
     const [key1, key2] = keys(obj),
-          [val1, val2] = [obj[key1], obj[key2]],
-          results = [],
-          len = arr.length
+        [val1, val2] = [obj[key1], obj[key2]],
+        results = [],
+        len = arr.length
     var i = -1, item
     while (++i < len) {
         item = arr[i]
@@ -713,7 +733,6 @@ function find_index(pred, arr) {
         default:
             return find_index_obj(pred, arr)
         }
-        break
     default:
         throw Errors.UNEXPECTED_TYPE
     }
@@ -721,7 +740,7 @@ function find_index(pred, arr) {
 
 function find_index_fn(fn, arr) {
     var len = arr.length,
-        idx = -1;
+        idx = -1
     while (++idx < len) {
         if (fn(arr[idx])) {
             return idx
@@ -842,22 +861,10 @@ function list() {
 
 /**
  * Returns a list from its arguments, without falsee values
+ * @signature ...args
  */
 function list_compact() {
-    var result = [],
-        len = arguments.length,
-        k = -1
-    while (++k < len) {
-        if (!!arguments[k]) {
-            result.push(arg)
-        }
-    }
-    return result
-}
-
-function log_pipe(val) {
-    console.log.apply(console, val)
-    return val
+    return compact(arguments)
 }
 
 function next(arr, item) {
@@ -892,7 +899,7 @@ function sort(criterion, arr) {
         case 'string':
             return sort_prop(criterion, arr)
         case 'array':
-            return sort_multi(criterion, arr)
+            throw new Error('f-empower.sort: array type criterias aren\'t supported yet')
         case 'function':
             return sort_fn(criterion, arr)
         }
@@ -905,7 +912,7 @@ function sort(criterion, arr) {
 function sort_prop(prop, arr) {
     var sort_suitable_arr = map(partial(_suit_sort, prop), arr),
         need_string_comparison = is_string(arr[0][prop]),
-        compare_fn = need_string_comparison && _compare_string || _compare_numeric;
+        compare_fn = need_string_comparison && _compare_string || _compare_numeric
     return pluck('val', sort_suitable_arr.sort(compare_fn))
 }
 
@@ -927,7 +934,6 @@ function _compare_string(obj1, obj2) {
     return native_locale_compare.call(obj1.criteria, obj2.criteria)
 }
 
-function sort_multi(props_arr, arr) {}
 function sort_fn(compare_fn, arr) {
     return arr.sort(compare_fn)
 }
@@ -1099,7 +1105,6 @@ function reject(some_criteria, arr) {
         default:
             return reject_obj(some_criteria, arr)
         }
-        break
     default:
         throw Errors.UNEXPECTED_TYPE
     }
@@ -1124,8 +1129,8 @@ function reject_obj_1kv(one_kv_pair_object, arr) {
  */
 function reject_obj_2kv(obj, arr) {
     const [key1, key2] = keys(obj),
-          [val1, val2] = [obj[key1], obj[key2]]
-    return filter_fn(x => item[key1] !== val1 || item[key2] !== val2, arr)
+        [val1, val2] = [obj[key1], obj[key2]]
+    return filter_fn(item => item[key1] !== val1 || item[key2] !== val2, arr)
 }
 
 function reject_obj(object, arr) {
@@ -1262,13 +1267,13 @@ function invoken(method_name, arg1, arr) {
     var fn_args     = arguments,
         fn_args_len = fn_args.length,
         args        = (3 < fn_args_len) ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
-        arr         = fn_args[fn_args_len - 1],
-        len         = arr.length,
-        results     = make_array(len),
-        i           = -1,
-        item
+        i           = -1
+    //
+    arr = fn_args[fn_args_len - 1]
+    const len   = arr.length,
+        results = make_array(len)
     while (++i < len) {
-        item = arr[i]
+        let item = arr[i]
         results[i] = item[method_name].apply(item, args)
     }
     return results
@@ -1305,9 +1310,9 @@ function invokemn(method_name, arg1, arr) {
     var fn_args     = arguments,
         fn_args_len = fn_args.length,
         args        = (3 < fn_args_len) ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
-        arr         = fn_args[fn_args_len - 1],
-        len         = arr.length,
         i           = -1
+    arr = fn_args[fn_args_len - 1]
+    const len = arr.length
     while (++i < len) {
         arr[i][method_name].apply(arr[i], args)
     }
@@ -1399,8 +1404,9 @@ function wrap_invoke_obj(o) {
 
 /**
  * Assigns multiple objects to `dst`
+ * @signature (object: dst, {array<object>}: ...sources)
  */
-function assign(dst, sources) {
+function assign(dst) {
     dst = dst == null ? {} : dst
     return reduce(assign_one, dst, rest(arguments))
 }
@@ -1444,8 +1450,11 @@ function clone(data) {
     }
 }
 
-function cloneassign(dst, var_src) {
-    return reduce(assign_one, clonedeep(dst), drop(1, arguments))
+/**
+ * @signature (object: dst, {array<object>}: ...sources)
+ */
+function cloneassign(dst) {
+    return reduce(assign_one, clonedeep(dst), rest(arguments))
 }
 
 function clonedeep(src) {
@@ -1782,11 +1791,12 @@ function for_own(fn, obj) {
     }, keys(obj))
 }
 
-function index_by(index_prop, list_to_index, accumulator) {
+function index_by(index_prop, arr_to_index, accumulator) {
     accumulator = accumulator || {}
-    var idx = list_to_index.length
+    var idx = arr_to_index.length
     while (--idx > -1) {
-        accumulator[item[index_prop]] = list_to_index[idx]
+        let item = arr_to_index[idx]
+        accumulator[item[index_prop]] = item
     }
     return accumulator
 }
@@ -2367,9 +2377,9 @@ export {
 
     keys,
     last,
+    last_index_of,
     list,
     list_compact,
-    log_pipe,
     map,
     map_async,
     magic,

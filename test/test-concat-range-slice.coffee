@@ -10,7 +10,16 @@ tooling   = require './tooling'
   print_json
   testing } = tooling
 
-{ slice, range } = f_empower
+{ cat, slice, range } = f_empower
+
+test_cat = ->
+  testing "cat (concat)"
+  arr = [0, 1, 2, 3, 4]
+  (equal_deep (cat [0], [1], [2, 3, 4])
+            , arr)
+  (equal_deep (() => cat(arguments, [3, 4]))(0, 1, 2)
+            , arr)
+  log "ok"
 
 test_slice = ->
   testing "slice"
@@ -36,7 +45,8 @@ test_range = ->
 
 
 tests =
-  [ test_slice
+  [ test_cat
+    test_slice
     test_range ]
 for test in tests
   test()

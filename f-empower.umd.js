@@ -142,8 +142,12 @@
         };
     }
 
-    function apply(fn, args_list) {
-        return fn.apply(this, args_list);
+    /**
+     * @param {function} fn - payload function
+     * @param {Array} args
+     */
+    function apply(fn, args) {
+        return fn.apply(this, args);
     }
 
     function add2(a, b) {
@@ -214,13 +218,6 @@
         };
     }
 
-    function debug_wrap(fn) {
-        return function () {
-            debugger;
-            return fn.apply(null, arguments);
-        };
-    }
-
     function delay(delay_ms, fn) {
         if (arguments.length === 1) {
             fn = delay_ms;
@@ -260,14 +257,14 @@
     function partialr(fn, right_args) {
         right_args = _slice(arguments, 1);
         return function () {
-            return apply(fn, cat(apply(list, arguments), right_args));
+            return apply(fn, cat(arguments, right_args));
         };
     }
 
     function periodically(interval, countdown, fn) {
         var interval_id;
         if (not_number(countdown) || countdown < 1) {
-            throw new Error("Bad countdown");
+            throw new Error('Bad countdown');
         }
         return interval_id = set_interval(interval, function () {
             fn();
@@ -303,27 +300,27 @@
             should_call = false,
             last_args = null,
             last_result = null;
+
+        function void_main() {
+            delay(throttle_millis, function () {
+                if (should_call) {
+                    last_result = fn.apply(null, last_args);
+                    should_call = false;
+                    void_main();
+                } else {
+                    locked = false;
+                }
+            });
+        }
+
         return function () {
             last_args = __slice(arguments);
             if (locked) {
                 should_call = true;
                 return last_result;
             } else {
-                var void_main = function void_main() {
-                    delay(throttle_millis, function () {
-                        if (should_call) {
-                            last_result = fn.apply(null, last_args);
-                            should_call = false;
-                            void_main();
-                        } else {
-                            locked = false;
-                        }
-                    });
-                };
-
                 locked = true;
                 last_result = fn.apply(null, last_args);
-
                 void_main();
                 return last_result;
             }
@@ -420,7 +417,7 @@
     }
 
     function is_string(item) {
-        return "string" === type_of(item);
+        return 'string' === type_of(item);
     }
 
     function is_subset(subset, superset) {
@@ -449,8 +446,23 @@
         return _slice(arr, 0, arr.length - 1);
     }
 
+    /**
+     * Concatenates arbitrary number of arrays or array-like objects
+     */
     function cat(arr) {
-        return native_concat.apply(arr, rest(arguments));
+        var arrs = __slice(arguments),
+            res = [],
+            arrs_count = arrs.length;
+        var i = -1;
+        while (++i < arrs_count) {
+            var _arr = arrs[i],
+                arr_len = _arr.length,
+                k = -1;
+            while (++k < arr_len) {
+                res.push(_arr[k]);
+            }
+        }
+        return res;
     }
 
     function contains(searched_item, arr) {
@@ -561,7 +573,7 @@
     function drop_last(chars_to_drop, string) {
         var len = string.length;
         if (chars_to_drop > len) {
-            return "";
+            return '';
         } else {
             return string.substring(0, len - chars_to_drop);
         }
@@ -571,7 +583,7 @@
         switch (arguments.length) {
             case 0:
             case 1:
-                throw new Error("Each doesn't have a signature of that arity");
+                throw new Error('Each doesn\'t have a signature of that arity');
             case 2:
                 return each2(fn, arr);
             case 3:
@@ -631,8 +643,8 @@
     }
 
     function each_idxn(fn, arrs) {
-        var arrs = rest(arguments),
-            shortest_len = calc_shortest_length(arrs),
+        arrs = rest(arguments);
+        var shortest_len = calc_shortest_length(arrs),
             local_pluck = pluck,
             local_apply = apply,
             i = -1,
@@ -671,11 +683,11 @@
 
     function filter(some_criteria, arr) {
         switch (typeof some_criteria === 'undefined' ? 'undefined' : _typeof(some_criteria)) {
-            case "string":
+            case 'string':
                 return filter_prop(some_criteria, arr);
-            case "function":
+            case 'function':
                 return filter_fn(some_criteria, arr);
-            case "object":
+            case 'object':
                 if (is_regexp(some_criteria)) {
                     return filter_re(some_criteria, arr);
                 } else {
@@ -690,7 +702,6 @@
                             return filter_obj(some_criteria, arr);
                     }
                 }
-                break;
             default:
                 throw Errors.UNEXPECTED_TYPE;
         }
@@ -784,14 +795,14 @@
 
     function find_index(pred, arr) {
         switch (typeof pred === 'undefined' ? 'undefined' : _typeof(pred)) {
-            case "string":
+            case 'string':
                 return find_index_prop(pred, arr);
-            case "function":
+            case 'function':
                 return find_index_fn(pred, arr);
-            case "boolean":
-            case "number":
+            case 'boolean':
+            case 'number':
                 return index_of(pred, arr);
-            case "object":
+            case 'object':
                 switch (count1(keys(pred))) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
@@ -802,7 +813,6 @@
                     default:
                         return find_index_obj(pred, arr);
                 }
-                break;
             default:
                 throw Errors.UNEXPECTED_TYPE;
         }
@@ -859,8 +869,8 @@
         var len = arr.length;
         var idx = -1;
         while (++idx < len) {
-            var _item = arr[idx];
-            if (_item[key1] === val1 && _item[key2] === val2) {
+            var item = arr[idx];
+            if (item[key1] === val1 && item[key2] === val2) {
                 return idx;
             }
         }
@@ -894,7 +904,7 @@
             case 'number':
                 return partial(equal_number, pred);
             default:
-                throw new Error("No matcher for " + (typeof pred === 'undefined' ? 'undefined' : _typeof(pred)) + " yet");
+                throw new Error('No matcher for ' + (typeof pred === 'undefined' ? 'undefined' : _typeof(pred)) + ' yet');
         }
     }
 
@@ -944,22 +954,10 @@
 
     /**
      * Returns a list from its arguments, without falsee values
+     * @signature ...args
      */
     function list_compact() {
-        var result = [],
-            len = arguments.length,
-            k = -1;
-        while (++k < len) {
-            if (!!arguments[k]) {
-                result.push(arg);
-            }
-        }
-        return result;
-    }
-
-    function log_pipe(val) {
-        console.log.apply(console, val);
-        return val;
+        return compact(arguments);
     }
 
     function next(arr, item) {
@@ -991,11 +989,11 @@
                     return slice(arr);
                 }
                 switch (type_of(criterion)) {
-                    case "string":
+                    case 'string':
                         return sort_prop(criterion, arr);
-                    case "array":
-                        return sort_multi(criterion, arr);
-                    case "function":
+                    case 'array':
+                        throw new Error('f-empower.sort: array type criterias aren\'t supported yet');
+                    case 'function':
                         return sort_fn(criterion, arr);
                 }
         }
@@ -1028,7 +1026,6 @@
         return native_locale_compare.call(obj1.criteria, obj2.criteria);
     }
 
-    function sort_multi(props_arr, arr) {}
     function sort_fn(compare_fn, arr) {
         return arr.sort(compare_fn);
     }
@@ -1037,7 +1034,7 @@
         switch (arguments.length) {
             case 0:
             case 1:
-                throw new Error("`map` doesn't have a signature of that arity (0 or 1)");
+                throw new Error('`map` doesn\'t have a signature of that arity (0 or 1)');
             case 2:
                 switch (typeof mapper === 'undefined' ? 'undefined' : _typeof(mapper)) {
                     case 'function':
@@ -1185,11 +1182,11 @@
 
     function reject(some_criteria, arr) {
         switch (typeof some_criteria === 'undefined' ? 'undefined' : _typeof(some_criteria)) {
-            case "string":
+            case 'string':
                 return reject_prop(some_criteria, arr);
-            case "function":
+            case 'function':
                 return reject_fn(some_criteria, arr);
-            case "object":
+            case 'object':
                 switch (count1(keys(some_criteria))) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH;
@@ -1200,7 +1197,6 @@
                     default:
                         return reject_obj(some_criteria, arr);
                 }
-                break;
             default:
                 throw Errors.UNEXPECTED_TYPE;
         }
@@ -1240,7 +1236,7 @@
             val1 = _ref3[0],
             val2 = _ref3[1];
 
-        return filter_fn(function (x) {
+        return filter_fn(function (item) {
             return item[key1] !== val1 || item[key2] !== val2;
         }, arr);
     }
@@ -1380,13 +1376,13 @@
         var fn_args = arguments,
             fn_args_len = fn_args.length,
             args = 3 < fn_args_len ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
-            arr = fn_args[fn_args_len - 1],
-            len = arr.length,
-            results = make_array(len),
-            i = -1,
-            item;
+            i = -1;
+        //
+        arr = fn_args[fn_args_len - 1];
+        var len = arr.length,
+            results = make_array(len);
         while (++i < len) {
-            item = arr[i];
+            var item = arr[i];
             results[i] = item[method_name].apply(item, args);
         }
         return results;
@@ -1423,9 +1419,9 @@
         var fn_args = arguments,
             fn_args_len = fn_args.length,
             args = 3 < fn_args_len ? _slice(fn_args, 1, fn_args_len - 1) : [arg1],
-            arr = fn_args[fn_args_len - 1],
-            len = arr.length,
             i = -1;
+        arr = fn_args[fn_args_len - 1];
+        var len = arr.length;
         while (++i < len) {
             arr[i][method_name].apply(arr[i], args);
         }
@@ -1467,7 +1463,7 @@
             } else if (is_number(arr[0]) || is_string(arr[0])) {
                 return unique_plain(arr);
             } else {
-                throw Error("only propped uniq and plain number or string uniqueing supported");
+                throw Error('Only propped uniq and plain number or string uniqueing supported');
             }
         }
     }
@@ -1516,8 +1512,9 @@
 
     /**
      * Assigns multiple objects to `dst`
+     * @signature (object: dst, {array<object>}: ...sources)
      */
-    function assign(dst, sources) {
+    function assign(dst) {
         dst = dst == null ? {} : dst;
         return reduce(assign_one, dst, rest(arguments));
     }
@@ -1560,8 +1557,11 @@
         }
     }
 
-    function cloneassign(dst, var_src) {
-        return reduce(assign_one, clonedeep(dst), drop(1, arguments));
+    /**
+     * @signature (object: dst, {array<object>}: ...sources)
+     */
+    function cloneassign(dst) {
+        return reduce(assign_one, clonedeep(dst), rest(arguments));
     }
 
     function clonedeep(src) {
@@ -1676,7 +1676,7 @@
                 return difference_objs_vals(o1, o2);
             }
         } else {
-            throw new TypeError("Tried to find difference between not objects");
+            throw new TypeError('Tried to find difference between not objects');
         }
     }
 
@@ -1894,11 +1894,12 @@
         }, keys(obj));
     }
 
-    function index_by(index_prop, list_to_index, accumulator) {
+    function index_by(index_prop, arr_to_index, accumulator) {
         accumulator = accumulator || {};
-        var idx = list_to_index.length;
+        var idx = arr_to_index.length;
         while (--idx > -1) {
-            accumulator[item[index_prop]] = list_to_index[idx];
+            var item = arr_to_index[idx];
+            accumulator[item[index_prop]] = item;
         }
         return accumulator;
     }
@@ -2211,7 +2212,7 @@
     }
 
     function mk_regexp(rx_str, rx_settings) {
-        rx_settings = rx_settings || "";
+        rx_settings = rx_settings || '';
         return new RegExp(rx_str, rx_settings);
     }
 
@@ -2397,7 +2398,6 @@
     exports.count = count;
     exports.create = create;
     exports.delayed = delayed;
-    exports.debug_wrap = debug_wrap;
     exports.debounce = debounce;
     exports.dec = dec;
     exports.defaults = defaults;
@@ -2470,9 +2470,9 @@
     exports.is_zero = is_zero;
     exports.keys = keys;
     exports.last = last;
+    exports.last_index_of = last_index_of;
     exports.list = list;
     exports.list_compact = list_compact;
-    exports.log_pipe = log_pipe;
     exports.map = map;
     exports.map_async = map_async;
     exports.magic = magic;
