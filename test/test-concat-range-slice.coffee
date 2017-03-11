@@ -10,7 +10,7 @@ tooling   = require './tooling'
   print_json
   testing } = tooling
 
-{ cat, slice, range } = f_empower
+{ cat, slice, range, reverse } = f_empower
 
 test_cat = ->
   testing "cat (concat)"
@@ -32,10 +32,22 @@ test_slice = ->
             , [0, 1, 2])
   log "ok"
 
-
 test_range = ->
   testing "range"
   (equal_deep (range 5)
+            , [0, 1, 2, 3, 4])
+  (equal_deep (range 1, 5)
+            , [1, 2, 3, 4])
+  (equal_deep (range 1, 5, 2)
+            , [1, 3])
+  testing "range(4, -1, -1)"
+  (equal_deep (range 4, -1, -1)
+            , [4, 3, 2, 1, 0])
+  log "ok"
+
+test_reverse = ->
+  testing "reverse"
+  (equal_deep (reverse (range 4, -1, -1))
             , [0, 1, 2, 3, 4])
   (equal_deep (range 1, 5)
             , [1, 2, 3, 4])
@@ -47,7 +59,8 @@ test_range = ->
 tests =
   [ test_cat
     test_slice
-    test_range ]
+    test_range
+    test_reverse ]
 for test in tests
   test()
   newline()

@@ -1265,9 +1265,8 @@
     }
 
     function remap3(fn, prop, arr) {
-        var item;
         for (var k = -1, len = arr.length; ++k < len;) {
-            item = arr[k];
+            var item = arr[k];
             item[prop] = fn(item[prop]);
         }
         return arr;
@@ -1282,6 +1281,11 @@
         return splice(arr, idx, 1);
     }
 
+    /**
+     * @param {int} times
+     * @param {mixed} value
+     * @return {Array} an array with `value` repeated n `times`
+     */
     function repeat(times, value) {
         var arr = make_array(times);
         while (--times > -1) {
@@ -1304,12 +1308,12 @@
 
     function reverse(arr) {
         var len = arr.length,
-            i = 0,
+            i = -1,
             j = len,
             res = new Array(len);
         while (--j > -1) {
+            ++i;
             res[i] = arr[j];
-            i += 1;
         }
         return res;
     }
@@ -2237,7 +2241,7 @@
             default:
                 break;
         }
-        var length = Math.ceil(Math.abs(end_idx - start_idx) / step),
+        var length = Math.floor(Math.abs(end_idx - start_idx) / Math.abs(step)),
             arr = new Array(length),
             i = -1;
         start_idx -= step;
