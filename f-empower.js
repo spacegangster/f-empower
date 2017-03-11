@@ -11,7 +11,7 @@ const hasOwnProperty = {}.hasOwnProperty
 const THRESHOLD_LARGE_ARRAY_SIZE = 64000
 
 const Errors = {
-    NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion hash'),
+    NO_KEY_VALUE_PAIR_IN_HASH: new Error('No key value pair in a criterion obj'),
     NOT_FUNCTION: new TypeError('Something is not function'),
     UNEXPECTED_TYPE: new TypeError('Unexpected type')
 }
@@ -25,7 +25,6 @@ function Reduced(val) {
 }
 
 var to_string            = Object.prototype.toString,
-    native_concat        = Array.prototype.concat,
     native_last_index_of = Array.prototype.lastIndexOf,
     native_index_of      = Array.prototype.indexOf,
     is_array             = Array.isArray
@@ -218,7 +217,7 @@ function periodically(interval, countdown, fn) {
  */
 function pbind(fn) {
     return function() {
-        return fn.apply(null, cat([this], __slice(arguments)))
+        return fn.apply(null, unshift(__slice(arguments), this))
     }
 }
 
@@ -354,6 +353,8 @@ function is_mergeable(item) {
 function is_regexp(item) {
     return '[object RegExp]' === type_of2(item)
 }
+const not_regexp = complement(is_regexp)
+
 
 function is_string(item) {
     return 'string' === type_of(item)
@@ -387,8 +388,9 @@ function butlast(arr) {
 
 /**
  * Concatenates arbitrary number of arrays or array-like objects
+ * @signature {Array<Array>} ...arrs
  */
-function cat(arr) {
+function cat() {
     const arrs = __slice(arguments),
         res = [],
         arrs_count = arrs.length
@@ -1364,12 +1366,12 @@ function unique(prop, arr) {
  * Works only for atomic values, like string or numeric ids
  */
 function unique_by_prop(prop_name, arr) {
-    var help_hash = {},
+    var help_obj = {},
         out       = []
     each2(function(item) {
         const prop_val = item[prop_name]
-        if (help_hash[prop_val] === void 0) {
-            help_hash[prop_val] = true
+        if (help_obj[prop_val] === void 0) {
+            help_obj[prop_val] = true
             out.push(item)
         }
     }, arr)
@@ -1380,11 +1382,11 @@ function unique_by_prop(prop_name, arr) {
  * Faster unique for atomic values
  */
 function unique_plain(arr) {
-    var help_hash = {},
+    var help_obj = {},
         out       = []
     each2(function(val) {
-        if (help_hash[val] === void 0) {
-            help_hash[val] = true
+        if (help_obj[val] === void 0) {
+            help_obj[val] = true
             out.push(val)
         }
     }, arr)
@@ -1849,8 +1851,8 @@ function inverse_object(obj) {
     return res
 }
 
-function keys(hash) {
-    return Object.keys(hash)
+function keys(obj) {
+    return Object.keys(obj)
 }
 
 function merge(dst, src) {
@@ -1908,10 +1910,18 @@ function merge_with(fn, o1, o2) {
     return res
 }
 
-function omit(obj, props) {
+/**
+ * @signature (object: obj, Array<string>: props_to_omit)
+ * @return {object} new object based on src, but without enlisted props
+ */
+function omit(obj) {
     return omit_all(obj, rest(arguments))
 }
 
+/**
+ * Same as omit, but keys should be specified in array, not function arguments
+ * @return {object} new object based on src, but without enlisted props
+ */
 function omit_all(obj, props_arr) {
     const desired_keys = difference_sets(keys(obj), props_arr)
     return pick_all(obj, desired_keys)
@@ -1922,16 +1932,16 @@ function o_for_own(obj, fn) {
 }
 
 /**
- * Like map, but uses object as a function of keys to values
+ * Like map, but uses the object as a function of keys to values
  * E.g.
  *  o_map({name: 'Helen', id: '2'}, ['name']) -> ['Helen']
  */
-function o_map(hash, keys_list) {
+function o_map(obj, keys_list) {
     var len = keys_list.length,
         results = Array(len),
-        i = -1;
-    for (; ++i < len;) {
-        results[i] = hash[ keys_list[i] ]
+        i = -1
+    while(++i < len) {
+        results[i] = obj[keys_list[i]]
     }
     return results
 }
@@ -1956,9 +1966,9 @@ function o_set(obj, key, val) {
     return obj[key] = val
 }
 
-function pull(key, hash) {
-    var val = hash[key]
-    delete hash[key]
+function pull(key, obj) {
+    var val = obj[key]
+    delete obj[key]
     return val
 }
 
@@ -1966,7 +1976,7 @@ function pull(key, hash) {
  * @param {object} obj
  * @param {...string} props
  */
-function pick(obj, props) {
+function pick(obj) {
     return pick_all(obj, rest(arguments))
 }
 
@@ -1976,10 +1986,9 @@ function pick(obj, props) {
  */
 function pick_all(obj, props) {
     var res = {},
-        idx = props.length,
-        prop;
+        idx = props.length
     while (--idx > -1) {
-        prop = props[idx]
+        let prop = props[idx]
         if (obj[prop] !== void 0) {
             res[prop] = obj[prop]
         }
@@ -2013,8 +2022,8 @@ function update_in(obj, key, update_fn) {
     return obj
 }
 
-function vals(hash) {
-    return o_map(hash, keys(hash))
+function vals(obj) {
+    return o_map(obj, keys(obj))
 }
 
 function zip_obj(keys, vals) {
@@ -2039,8 +2048,8 @@ function match(regexp, source_str) {
 }
 
 function matches(regexp, str) {
-    if ('string' === (type_of(regexp))) {
-        return (mk_regexp(regexp)).test(str)
+    if (is_string(regexp)) {
+        return new RegExp(regexp).test(str)
     } else {
         return regexp.test(str)
     }
@@ -2142,11 +2151,11 @@ function read_1kv(obj_with_1kv_pair) {
 
 /**
  * Recursively walks over the array and applies the `fn`
- * @param fn {function} function that operates on the node.
+ * @param {function} fn function that operates on the node.
  *  signature: son, parent, son_idx, depth
- * @param parent {hash} a tree whose children lie in the children
+ * @param {object} parent a tree whose children lie in the children
  *  list (i.e. ordered collection).
- * @param depth: indicates depth of recursion
+ * @param {int} depth: stores the depth of the recursion
  */
 function recurse(fn, parent, depth) {
     depth = depth == null ? 1 : (depth + 1)
@@ -2180,8 +2189,8 @@ function a_sum(nums_array) {
     return reduce(sum2, 0, nums_array)
 }
 
-function set(prop_name, val, hash) {
-    hash[prop_name] = val
+function set(prop_name, val, obj) {
+    obj[prop_name] = val
 }
 
 /**
@@ -2194,18 +2203,6 @@ function time(fn) {
     return Date.now() - time_start
 }
 
-
-
-var toStringTester = Object.prototype.toString
-
-var ToStringFootprints = {
-    REGEXP: '[object RegExp]'
-}
-
-function is_regexp(mixedValue) {
-    return ToStringFootprints.REGEXP === toStringTester.call(mixedValue)
-}
-var not_regexp = complement(is_regexp)
 
 function once(fn) {
     var run = false
@@ -2226,21 +2223,14 @@ function delayed(ms, payloadFunction) {
         var args  = __slice(arguments),
             _this = this
         return setTimeout(function() {
-            payloadFunction.apply(_this, args);
+            payloadFunction.apply(_this, args)
         }, ms)
     }
 }
 
-function matches(matched_str, regexp_or_str) {
-    if ( not_regexp(regexp_or_str) ) {
-        regexp_or_str = new RegExp(regexp_or_str)
-    }
-    return regexp_or_str.test(matched_str)
-}
-
 
 // Aliases
-const select_keys    = pick_all,
+const select_keys  = pick_all,
     clonedeep2     = _clonedeep2,
     concat         = cat,
     detect         = find,
@@ -2258,7 +2248,7 @@ const select_keys    = pick_all,
     set_difference = difference_sets,
     str_drop       = tail,
     str_take       = head,
-    sum            = a_sum;
+    sum            = a_sum
 
 
 
@@ -2403,6 +2393,7 @@ export {
     not_function,
     not_number,
     not_object,
+    not_regexp,
     not_string,
     not_subset,
     not_zero,
@@ -2435,6 +2426,7 @@ export {
     reduce,
     Reduced,
     reduce_r,
+    re_filter,
     reject,
     reject_fn,
     reject_obj,
@@ -2450,6 +2442,7 @@ export {
     reverse,
 
     second,
+    select_keys,
     set,
     set_difference,
     set_symmetric_difference,
