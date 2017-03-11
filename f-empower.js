@@ -100,11 +100,11 @@ function and_r(a, b) {
 }
 
 function bind_all() {
-    var props = butlast(arguments),
+    var props    = butlast(arguments),
         this_arg = last(arguments)
-    return a_each(props, function(prop) {
-        return this_arg[prop] = bind(this_arg[prop], this_arg)
-    })
+    each2(function(prop) {
+        this_arg[prop] = bind(this_arg[prop], this_arg)
+    }, props)
 }
 
 function _assert_all_functions(functions) {
