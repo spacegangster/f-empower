@@ -23,16 +23,16 @@ For UMD build please use f-empower.umd.js file.
 
 ### ES Modules
 ```js
-import { map } from 'f-empower'
+import { map, range } from 'f-empower'
 
-const ids   = [ 1, 3, 45 ]
+const ids   = range(1, 6, 2)
 const names = ['Joe', 'Jane', 'Alex']
 const flowers = ['Rose', 'Iris', 'Sunflower', 'Cactus']
 
 map(Array, ids, names, flowers) // yields
-[ [1 , 'Joe' , 'Rose'     ],
-  [3 , 'Jane', 'Iris'     ],
-  [45, 'Alex', 'Sunflower'] ]
+[ [1, 'Joe' , 'Rose'     ],
+  [3, 'Jane', 'Iris'     ],
+  [5, 'Alex', 'Sunflower'] ]
 // note, that cactus is not used
 
 ```
