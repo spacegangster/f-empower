@@ -444,22 +444,22 @@ function any(pred, arr) {
 }
 
 /**
- * Returns a new coll withouh any falsee members
+ * @return {Array} Returns new array withouh any falsee members
  */
-function compact(coll) {
-    return filter_fn(x => x, coll)
+function compact(arr) {
+    return filter_fn(x => x, arr)
 }
 
-function count(pred, coll) {
-    if (!coll) {
+function count(pred, arr) {
+    if (!arr) {
         return count1(pred)
     } else if (!pred) {
-        return coll.length
+        return arr.length
     } else {
         if (is_function(pred)) {
-            return count_pred(pred, coll)
+            return count_pred(pred, arr)
         } else {
-            return count_obj(pred, coll)
+            return count_obj(pred, arr)
         }
     }
 }
@@ -472,15 +472,15 @@ function count1(o) {
     }
 }
 
-function count_obj(pred, coll) {
-    return (filter(pred, coll)).length
+function count_obj(pred_obj, arr) {
+    return reduce(((cnt, item) => o_match(pred_obj, item) ? cnt + 1 : cnt), 0, arr)
 }
 
-function count_pred(pred, coll) {
+function count_pred(pred, arr) {
     var cnt = 0,
-        idx = coll.length
+        idx = arr.length
     while (--idx > -1) {
-        if (pred(coll[idx])) {
+        if (pred(arr[idx])) {
             ++cnt
         }
     }
@@ -500,15 +500,15 @@ function drop_last(chars_to_drop, string) {
     }
 }
 
-function each(fn, coll) {
+function each(fn, arr) {
     switch (arguments.length) {
         case 0:
         case 1:
             throw new Error("Each doesn't have a signature of that arity")
         case 2:
-            return each2(fn, coll)
+            return each2(fn, arr)
         case 3:
-            return each3(fn, coll, arguments[2])
+            return each3(fn, arr, arguments[2])
         default:
             return eachn.apply(null, arguments)
     }
@@ -585,20 +585,20 @@ function check_true(val) {
     return val === true
 }
 
-function every(pred, coll) {
-    if (!coll) {
-        coll = pred
+function every(pred, arr) {
+    if (!arr) {
+        arr = pred
         pred = check_true
     }
-    if (is_empty(coll)) {
+    if (is_empty(arr)) {
         return true
     }
-    return every_fn(pred, coll)
+    return every_fn(pred, arr)
 }
 
-function every_fn(fn, coll) {
-    return a_reduce(coll, true, function(v1, v2) {
-        return (v1 && (fn(v2))) || Reduced(false)
+function every_fn(fn, arr) {
+    return a_reduce(arr, true, function(v1, v2) {
+        return (v1 && fn(v2)) || Reduced(false)
     })
 }
 
@@ -612,7 +612,7 @@ function filter(some_criteria, arr) {
             if (is_regexp(some_criteria)) {
                 return filter_re(some_criteria, arr)
             } else {
-                switch (count1(keys(some_criteria))) {
+                switch (keys(some_criteria).length) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
                     case 1:
@@ -939,7 +939,7 @@ function sort_fn(compare_fn, arr) {
     return arr.sort(compare_fn)
 }
 
-function map(mapper, coll) {
+function map(mapper, arr) {
     switch (arguments.length) {
         case 0:
         case 1:
@@ -947,15 +947,15 @@ function map(mapper, coll) {
         case 2:
             switch (typeof mapper) {
                 case 'function':
-                    return map2(mapper, coll)
+                    return map2(mapper, arr)
                 case 'string':
-                    return pluck(mapper, coll)
+                    return pluck(mapper, arr)
                 case 'object':
-                    return o_map(mapper, coll)
+                    return o_map(mapper, arr)
             }
             break
         case 3:
-            return map3(mapper, coll, arguments[2])
+            return map3(mapper, arr, arguments[2])
         default:
             return mapn(mapper, rest(arguments))
     }
@@ -973,9 +973,9 @@ function _async_mapper(err_fn, map_fn, accumulator, report_arr, item, idx) {
 }
 
 /**
- * Does asynchronous map of a coll
+ * Does asynchronous map of an array
  * @param {function} map_fn(object: item, onresult: function(err, res))
- * @param {array} items
+ * @param {Array} items
  * @param {function(err, res)} on_res
  */
 function map_async(map_fn, items, on_res) {
@@ -1127,7 +1127,7 @@ function reject_obj_1kv(one_kv_pair_object, arr) {
 
 /**
  * @param {object} an object with just two key-value pairs
- * @return {array} arr
+ * @return {Array} arr
  */
 function reject_obj_2kv(obj, arr) {
     const [key1, key2] = keys(obj),
@@ -1234,12 +1234,12 @@ function without(item, arr) {
     return arr
 }
 
-function invoke(method_name, coll) {
+function invoke(method_name, arr) {
     switch (arguments.length) {
         case 2:
-            return invoke0(method_name, coll)
+            return invoke0(method_name, arr)
         case 3:
-            return invoke1(method_name, coll, arguments[2])
+            return invoke1(method_name, arr, arguments[2])
         default:
             return invoken.apply(null, arguments)
     }
@@ -1320,12 +1320,12 @@ function invokemn(method_name, arg1, arr) {
     }
 }
 
-function pluck(key, coll) {
-    var len = coll.length,
+function pluck(key, arr) {
+    var len = arr.length,
         result = make_array(len),
         i = -1
     while (++i < len) {
-        result[i] = coll[i][key]
+        result[i] = arr[i][key]
     }
     return result
 }
@@ -1343,8 +1343,8 @@ function write(dst_coll, prop_name, src_coll) {
 }
 
 /**
- * @signature (array: arr)
- * @signature (string: prop, array: arr)
+ * @signature (Array: arr)
+ * @signature (string: prop, Array: arr)
  */
 function unique(prop, arr) {
     if (arr) {
@@ -1773,7 +1773,7 @@ function flattenp(key, root, arg1) {
  * to collect accumulator
  * @param {string} key
  * @param {object} root
- * @param {array} accumulator
+ * @param {Array} accumulator
  */
 function flattenp_recursive(key, root, accumulator) {
     push_all(accumulator, root[key])
@@ -1801,15 +1801,15 @@ function index_by(index_prop, list_to_index, accumulator) {
 /**
  * Returns new collection where each element is interposed with separator
  */
-function interpose(sep, coll) {
-    var coll_len   = coll.length,
+function interpose(sep, arr) {
+    var coll_len   = arr.length,
         seps_count = coll_len - 1,
         new_len    = coll_len + seps_count,
         new_res    = make_array(new_len),
         i_coll     = -1,
         i_res      = 0
     while (++i_coll < coll_len) {
-        new_res[i_res] = coll[i_coll]
+        new_res[i_res] = arr[i_coll]
         if ((i_res + 1) < new_len) {
             new_res[i_res + 1] = sep
         }
@@ -1820,8 +1820,8 @@ function interpose(sep, coll) {
 
 /**
  * Returns a new set which will be an instersection of set1 and set2
- * @param {array} set1
- * @param {array} set2
+ * @param {Array} set1
+ * @param {Array} set2
  * @param {function} contains_fn
  */
 function intersection(set1, set2, contains_fn) {
@@ -1969,7 +1969,7 @@ function pick(obj, props) {
 
 /**
  * @param {object} obj
- * @param {array<string>} props
+ * @param {Array<string>} props
  */
 function pick_all(obj, props) {
     var res = {},
@@ -2068,7 +2068,7 @@ function str_join(join_string, array_to_join) {
 
 /**
  * Joins an array of lines to single string
- * @param {array<string>} lines
+ * @param {Array<string>} lines
  * @return {string}
  */
 function str_join_lines(lines) {
@@ -2082,7 +2082,7 @@ function str_split(split_str, string_to_split) {
 /**
  * Splits a string by line breaks
  * @param {string} string
- * @return {array<string>}
+ * @return {Array<string>}
  */
 function str_split_lines(string) {
     return string.split('\n')
@@ -2138,7 +2138,7 @@ function read_1kv(obj_with_1kv_pair) {
 }
 
 /**
- * Recursively walks over coll and applies the `fn`
+ * Recursively walks over the array and applies the `fn`
  * @param fn {function} function that operates on the node.
  *  signature: son, parent, son_idx, depth
  * @param parent {hash} a tree whose children lie in the children
