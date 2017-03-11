@@ -24,10 +24,11 @@ function Reduced(val) {
     return new ReducedClass(val)
 }
 
-var to_string = Object.prototype.toString,
-    native_concat = Array.prototype.concat,
-    native_index_of = Array.prototype.indexOf,
-    is_array = Array.isArray
+var to_string            = Object.prototype.toString,
+    native_concat        = Array.prototype.concat,
+    native_last_index_of = Array.prototype.lastIndexOf,
+    native_index_of      = Array.prototype.indexOf,
+    is_array             = Array.isArray
 
 /**
  * Simple and full slice
@@ -382,56 +383,56 @@ var not_array     = complement(is_array),
     not_zero      = complement(is_zero)
 
 function butlast(arr) {
-    return _slice(array, 0, arr.length - 1)
+    return _slice(arr, 0, arr.length - 1)
 }
 
-function cat(array) {
-    return native_concat.apply(array, _slice(arguments, 1))
+function cat(arr) {
+    return native_concat.apply(arr, rest(arguments))
 }
 
-function contains(searched_item, array) {
-    return index_of(searched_item, array) > -1
+function contains(searched_item, arr) {
+    return index_of(searched_item, arr) > -1
 }
 const not_contains = complement(contains)
 
-function a_contains(array, searched_item) {
-    return index_of(searched_item, array) > -1
+function a_contains(arr, searched_item) {
+    return index_of(searched_item, arr) > -1
 }
 
-function a_each(array, fn) {
-    each(fn, array)
+function a_each(arr, fn) {
+    each(fn, arr)
 }
 
-function a_each_idx(array, fn) {
-    each_idx(fn, array)
+function a_each_idx(arr, fn) {
+    each_idx(fn, arr)
 }
 
-function a_filter(array, fn) {
-    return filter(fn, array)
+function a_filter(arr, fn) {
+    return filter(fn, arr)
 }
 
-function a_find_index(array, pred) {
-    return find_index(pred, array)
+function a_find_index(arr, pred) {
+    return find_index(pred, arr)
 }
 
-function a_index_of(array, item) {
-    return array.indexOf(item)
+function a_index_of(arr, item) {
+    return arr.indexOf(item)
 }
 
-function a_map(array, fn) {
-    return map(fn, array)
+function a_map(arr, fn) {
+    return map(fn, arr)
 }
 
-function a_reduce(array, val, fn) {
+function a_reduce(arr, val, fn) {
     if (is_function(val)) {
-        return reduce(val, array)
+        return reduce(val, arr)
     } else {
-        return reduce(fn, val, array)
+        return reduce(fn, val, arr)
     }
 }
 
-function a_reject(array, fn) {
-    return reject(fn, array)
+function a_reject(arr, fn) {
+    return reject(fn, arr)
 }
 
 function any(pred, arr) {
@@ -601,25 +602,25 @@ function every_fn(fn, coll) {
     })
 }
 
-function filter(some_criteria, array) {
+function filter(some_criteria, arr) {
     switch (typeof some_criteria) {
         case "string":
-            return filter_prop(some_criteria, array)
+            return filter_prop(some_criteria, arr)
         case "function":
-            return filter_fn(some_criteria, array)
+            return filter_fn(some_criteria, arr)
         case "object":
             if (is_regexp(some_criteria)) {
-                return filter_re(some_criteria, array)
+                return filter_re(some_criteria, arr)
             } else {
                 switch (count1(keys(some_criteria))) {
                     case 0:
                         throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
                     case 1:
-                        return filter_obj_1kv(some_criteria, array)
+                        return filter_obj_1kv(some_criteria, arr)
                     case 2:
-                        return filter_obj_2kv(some_criteria, array)
+                        return filter_obj_2kv(some_criteria, arr)
                     default:
-                        return filter_obj(some_criteria, array)
+                        return filter_obj(some_criteria, arr)
                 }
             }
             break
@@ -656,27 +657,27 @@ function filter_prop(prop_name, arr) {
     return res
 }
 
-function filter_obj_1kv(obj, array) {
+function filter_obj_1kv(obj, arr) {
     const [key, val] = read_1kv(obj)
     const results = []
-    const len = array.length
+    const len = arr.length
     var i = -1
     while (++i < len) {
-        if (array[i][key] === val) {
-            results.push(array[i])
+        if (arr[i][key] === val) {
+            results.push(arr[i])
         }
     }
     return results
 }
 
-function filter_obj_2kv(obj, array) {
+function filter_obj_2kv(obj, arr) {
     const [key1, key2] = keys(obj),
           [val1, val2] = [obj[key1], obj[key2]],
           results = [],
-          len = array.length
+          len = arr.length
     var i = -1, item
     while (++i < len) {
-        item = array[i]
+        item = arr[i]
         if (item[key1] === val1 && item[key2] === val2) {
             results.push(item)
         }
@@ -684,40 +685,40 @@ function filter_obj_2kv(obj, array) {
     return results
 }
 
-function filter_obj(obj, array) {
-    return filter_fn(item => o_match(obj, item), array)
+function filter_obj(obj, arr) {
+    return filter_fn(item => o_match(obj, item), arr)
 }
 
 function filter_re(regex, strings) {
     return filter_fn(str => regex.test(str), strings)
 }
 
-function find(some_criteria, array) {
-    var item_idx = find_index(some_criteria, array)
+function find(some_criteria, arr) {
+    var item_idx = find_index(some_criteria, arr)
     if (item_idx > -1) {
-        return array[item_idx]
+        return arr[item_idx]
     }
 }
 
-function find_index(pred, array) {
+function find_index(pred, arr) {
     switch (typeof pred) {
         case "string":
-            return find_index_prop(pred, array)
+            return find_index_prop(pred, arr)
         case "function":
-            return find_index_fn(pred, array)
+            return find_index_fn(pred, arr)
         case "boolean":
         case "number":
-            return index_of(pred, array)
+            return index_of(pred, arr)
         case "object":
             switch (count1(keys(pred))) {
                 case 0:
                     throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
                 case 1:
-                    return find_index_obj_1kv(pred, array)
+                    return find_index_obj_1kv(pred, arr)
                 case 2:
-                    return find_index_obj_2kv(pred, array)
+                    return find_index_obj_2kv(pred, arr)
                 default:
-                    return find_index_obj(pred, array)
+                    return find_index_obj(pred, arr)
             }
             break
         default:
@@ -725,53 +726,47 @@ function find_index(pred, array) {
     }
 }
 
-function find_index_fn(fn, array) {
-    var idx, item, k, len3
-    for (idx = k = 0, len3 = array.length; k < len3; idx = ++k) {
-        item = array[idx]
-        if (fn(item)) {
+function find_index_fn(fn, arr) {
+    var len = arr.length,
+        idx = -1;
+    while (++idx < len) {
+        if (fn(arr[idx])) {
             return idx
         }
     }
     return -1
 }
 
-function find_index_prop(prop_name, array) {
-    var idx, item, k, len3
-    for (idx = k = 0, len3 = array.length; k < len3; idx = ++k) {
-        item = array[idx]
-        if (item[prop_name]) {
+function find_index_prop(prop_name, arr) {
+    var len = arr.length,
+        idx = -1
+    while (++idx < len) {
+        if (arr[idx][prop_name]) {
             return idx
         }
     }
     return -1
 }
 
-function find_index_obj_1kv(obj_with_1kv_pair, array) {
-    const kvpair1 = read_1kv(obj_with_1kv_pair)
-    const key = kvpair1[0]
-    const val = kvpair1[1]
-    const len = array.length
+function find_index_obj_1kv(obj_with_1kv_pair, arr) {
+    const [key, val] = read_1kv(obj_with_1kv_pair)
+    const len = arr.length
     var idx = -1
     while (++idx < len) {
-        if (array[idx][key] === val) {
+        if (arr[idx][key] === val) {
             return idx
         }
     }
     return -1
 }
 
-function find_index_obj_2kv(obj_with_2kv_pair, array) {
-    const o_keys = keys(obj_with_2kv_pair)
-    const o_vals = vals(obj_with_2kv_pair)
-    const key1 = o_keys[0],
-        key2 = o_keys[1],
-        val1 = o_vals[0],
-        val2 = o_vals[1]
-    const len = array.length
-    var idx = -1, item
+function find_index_obj_2kv(obj_with_2kv_pair, arr) {
+    const [key1, key2] = keys(obj_with_2kv_pair)
+    const [val1, val2] = [obj_with_2kv_pair[key1], obj_with_2kv_pair[key2]]
+    const len = arr.length
+    var idx = -1
     while (++idx < len) {
-        item = array[idx]
+        let item = arr[idx]
         if (item[key1] === val1 && item[key2] === val2) {
             return idx
         }
@@ -779,19 +774,12 @@ function find_index_obj_2kv(obj_with_2kv_pair, array) {
     return -1
 }
 
-function find_index_obj(obj, array) {
-    var idx, item, k, len3
-    for (idx = k = 0, len3 = array.length; k < len3; idx = ++k) {
-        item = array[idx]
-        if (o_match(obj, item)) {
-            return idx
-        }
-    }
-    return -1
+function find_index_obj(obj, arr) {
+    return find_index_fn(item => o_match(obj, item), arr)
 }
 
-function first(array) {
-    return array[0]
+function first(arr) {
+    return arr[0]
 }
 
 function equal_bool(b1, b2) {
@@ -815,14 +803,14 @@ function dispatch_find_index_matcher(pred) {
     }
 }
 
-function find_index_last(pred, array) {
-    return find_index_last_iter(dispatch_find_index_matcher(pred), array)
+function find_index_last(pred, arr) {
+    return find_index_last_iter(dispatch_find_index_matcher(pred), arr)
 }
 
-function find_index_last_iter(iter_fn, array) {
-    var i = array.length
+function find_index_last_iter(iter_fn, arr) {
+    var i = arr.length
     while (--i > -1) {
-        if (iter_fn(array[i], i, array)) {
+        if (iter_fn(arr[i], i, arr)) {
             return i
         }
     }
@@ -837,8 +825,12 @@ function flatten(arr) {
     }
 }
 
-function index_of(item, array) {
-    return native_index_of.call(array, item)
+function index_of(item, arr, from_index) {
+    return native_index_of.call(arr, item, from_index)
+}
+
+function last_index_of(item, arr, from_index) {
+    return native_last_index_of.call(arr, item, from_index)
 }
 
 function insert_at(items, idx, item) {
@@ -1032,19 +1024,19 @@ function map3(fn, arr1, arr2) {
 }
 
 function mapn(fn, arrs) {
-    var shortest_len = apply(Math.min, map2(count1, arrs)),
-        i = -1,
-        local_pluck = pluck,
-        local_apply = apply,
-        result = make_array(shortest_len)
+    var shortest_len = Math.min.apply(Math, pluck('length', arrs)),
+        local_pluck  = pluck,
+        local_apply  = apply,
+        result       = make_array(shortest_len)
+        i            = -1,
     while (++i < shortest_len) {
         result[i] = local_apply(fn, local_pluck(i, arrs))
     }
     return result
 }
 
-function prelast(array) {
-    return array[(count1(array)) - 2]
+function prelast(arr) {
+    return arr[arr.length - 2]
 }
 
 function push(arr, item) {
@@ -1061,16 +1053,16 @@ function push_all(arr, items_to_push_arr) {
  * Classic reduce, with two signatures
  * (fn, arr), (fn, initial_value, arr)
  */
-function reduce(fn, val, array) {
+function reduce(fn, val, arr) {
     var idx = -1
-    if (!array && (is_array_like(val))) {
-        array = val
-        val = fn(first(array), second(array))
+    if (!arr && is_array_like(val)) {
+        arr = val
+        val = fn(arr[0], arr[1])
         idx = 1
     }
-    const len = array.length
+    const len = arr.length
     while (++idx < len && (!val || val.constructor !== ReducedClass)) {
-        val = fn(val, array[idx])
+        val = fn(val, arr[idx])
     }
     if (val && val.constructor === ReducedClass) {
         return val.val
@@ -1082,14 +1074,14 @@ function reduce(fn, val, array) {
 /**
  * Reduce right
  */
-function reducer(fn, val, arr) {
+function reduce_r(fn, val, arr) {
     var idx = -1
-    if (!arr && (is_array(val))) {
+    if (!arr && is_array(val)) {
         arr = val
         val = fn(last(arr), prelast(arr))
-        idx = (count1(arr)) - 2
+        idx = arr.length - 2
     } else {
-        idx = count1(arr)
+        idx = arr.length
     }
     while (--idx > -1) {
         val = fn(val, arr[idx])
@@ -1097,22 +1089,22 @@ function reducer(fn, val, arr) {
     return val
 }
 
-function reject(some_criteria, array) {
+function reject(some_criteria, arr) {
     switch (typeof some_criteria) {
         case "string":
-            return reject_prop(some_criteria, array)
+            return reject_prop(some_criteria, arr)
         case "function":
-            return reject_fn(some_criteria, array)
+            return reject_fn(some_criteria, arr)
         case "object":
             switch (count1(keys(some_criteria))) {
                 case 0:
                     throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
                 case 1:
-                    return reject_obj_1kv(some_criteria, array)
+                    return reject_obj_1kv(some_criteria, arr)
                 case 2:
-                    return reject_obj_2kv(some_criteria, array)
+                    return reject_obj_2kv(some_criteria, arr)
                 default:
-                    return reject_obj(some_criteria, array)
+                    return reject_obj(some_criteria, arr)
             }
             break
         default:
@@ -1120,33 +1112,31 @@ function reject(some_criteria, array) {
     }
 }
 
-function reject_fn(fn, array) {
-    var results = []
-    for (var k = -1, len = array.length; ++k < len;) {
-        if (!fn(array[k])) {
-            results.push(array[k])
-        }
-    }
-    return results
+function reject_fn(fn, arr) {
+    return filter_fn(complement(fn), arr)
 }
 
-function reject_prop(prop_name, array) {
-    return filter_fn(x => !x[prop_name], array)
+function reject_prop(prop_name, arr) {
+    return filter_fn(x => !x[prop_name], arr)
 }
 
-function reject_obj_1kv(one_kv_pair_object, array) {
+function reject_obj_1kv(one_kv_pair_object, arr) {
     const [key, val] = read_1kv(one_kv_pair_object)
-    return filter_fn(x => x[key] !== val, array)
+    return filter_fn(x => x[key] !== val, arr)
 }
 
-function reject_obj_2kv(two_kv_pairs_object, array) {
+/**
+ * @param {object} an object with just two key-value pairs
+ * @return {array} arr
+ */
+function reject_obj_2kv(obj, arr) {
     const [key1, key2] = keys(obj),
           [val1, val2] = [obj[key1], obj[key2]]
-    return filter_fn(x => item[key1] !== val1 || item[key2] !== val2, array)
+    return filter_fn(x => item[key1] !== val1 || item[key2] !== val2, arr)
 }
 
-function reject_obj(object, array) {
-    return filter_fn(item => !o_match(object, item), array)
+function reject_obj(object, arr) {
+    return filter_fn(item => !o_match(object, item), arr)
 }
 
 function remap(fn, arr) {
@@ -1184,19 +1174,19 @@ function remove_at(idx, arr) {
 }
 
 function repeat(times, value) {
-    var array = make_array(times)
+    var arr = make_array(times)
     while (--times > -1) {
-        array[times] = value
+        arr[times] = value
     }
-    return array
+    return arr
 }
 
 function repeatf(times, fn) {
-    var array = make_array(times)
+    var arr = make_array(times)
     while (--times > -1) {
-        array[times] = fn()
+        arr[times] = fn()
     }
-    return array
+    return arr
 }
 
 function rest(arr) {
@@ -1218,8 +1208,8 @@ function reverse(arr) {
 
 var splice = bind(Function.prototype.call, Array.prototype.splice)
 
-function second(array) {
-    return array[1]
+function second(arr) {
+    return arr[1]
 }
 
 function take(items_number_to_take, array_like) {
@@ -1352,15 +1342,19 @@ function write(dst_coll, prop_name, src_coll) {
     return dst_coll
 }
 
-function unique(prop, array) {
-    if (array) {
-        return unique_by_prop(prop, array)
+/**
+ * @signature (array: arr)
+ * @signature (string: prop, array: arr)
+ */
+function unique(prop, arr) {
+    if (arr) {
+        return unique_by_prop(prop, arr)
     } else {
-        array = prop
-        if (is_empty(array)) {
+        arr = prop
+        if (is_empty(arr)) {
             return []
-        } else if ((is_number(array[0])) || (is_string(array[0]))) {
-            return unique_plain(array)
+        } else if (is_number(arr[0]) || is_string(arr[0])) {
+            return unique_plain(arr)
         } else {
             throw Error("only propped uniq and plain number or string uniqueing supported")
         }
@@ -2129,13 +2123,13 @@ function range(start_idx, end_idx, step) {
         break
     }
     var length = Math.ceil((Math.abs(end_idx - start_idx)) / step),
-        array = new Array(length),
+        arr = new Array(length),
         i = -1
     start_idx -= step
     while (++i < length) {
-        array[i] = (start_idx += step)
+        arr[i] = (start_idx += step)
     }
-    return array
+    return arr
 }
 
 function read_1kv(obj_with_1kv_pair) {
@@ -2438,7 +2432,7 @@ export {
     recurse,
     reduce,
     Reduced,
-    reducer,
+    reduce_r,
     reject,
     reject_fn,
     reject_obj,

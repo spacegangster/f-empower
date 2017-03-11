@@ -1112,7 +1112,6 @@
     }
 
     function mapn(fn, arrs) {
-        console.log('mapn', fn, arrs);
         var shortest_len = apply(Math.min, map2(count1, arrs)),
             i = -1,
             local_pluck = pluck,
