@@ -152,13 +152,6 @@ function debounce(debounce_timeout, payload_fn) {
     }
 }
 
-function debug_wrap(fn) {
-    return function() {
-        debugger
-        return fn.apply(null, arguments)
-    }
-}
-
 function delay(delay_ms, fn) {
     if (arguments.length === 1) {
         fn = delay_ms
@@ -204,8 +197,8 @@ function partialr(fn, right_args) {
 
 function periodically(interval, countdown, fn) {
     var interval_id
-    if ((not_number(countdown)) || (countdown < 1)) {
-        throw new Error("Bad countdown")
+    if (not_number(countdown) || (countdown < 1)) {
+        throw new Error('Bad countdown')
     }
     return interval_id = set_interval(interval, function() {
         fn()
@@ -271,12 +264,12 @@ function throttle(throttle_millis, fn) {
  */
 function is_atomic(val) {
     switch (type_of2(val)) {
-        case '[object Object]':
-        case '[object Array]':
-        case '[object Date]':
-            return false
-        default:
-            return true
+    case '[object Object]':
+    case '[object Array]':
+    case '[object Date]':
+        return false
+    default:
+        return true
     }
 }
 
@@ -353,11 +346,11 @@ function is_mergeable(item) {
 }
 
 function is_regexp(item) {
-    return '[object RegExp]' === (type_of2(item))
+    return '[object RegExp]' === type_of2(item)
 }
 
 function is_string(item) {
-    return "string" === (type_of(item))
+    return 'string' === type_of(item)
 }
 
 function is_subset(subset, superset) {
@@ -494,7 +487,7 @@ function drop(items_number_to_drop, array_like) {
 function drop_last(chars_to_drop, string) {
     var len = string.length
     if (chars_to_drop > len) {
-        return ""
+        return ''
     } else {
         return string.substring(0, len - chars_to_drop)
     }
@@ -502,15 +495,15 @@ function drop_last(chars_to_drop, string) {
 
 function each(fn, arr) {
     switch (arguments.length) {
-        case 0:
-        case 1:
-            throw new Error("Each doesn't have a signature of that arity")
-        case 2:
-            return each2(fn, arr)
-        case 3:
-            return each3(fn, arr, arguments[2])
-        default:
-            return eachn.apply(null, arguments)
+    case 0:
+    case 1:
+        throw new Error('Each doesn\'t have a signature of that arity')
+    case 2:
+        return each2(fn, arr)
+    case 3:
+        return each3(fn, arr, arguments[2])
+    default:
+        return eachn.apply(null, arguments)
     }
 }
 
@@ -604,28 +597,28 @@ function every_fn(fn, arr) {
 
 function filter(some_criteria, arr) {
     switch (typeof some_criteria) {
-        case "string":
-            return filter_prop(some_criteria, arr)
-        case "function":
-            return filter_fn(some_criteria, arr)
-        case "object":
-            if (is_regexp(some_criteria)) {
-                return filter_re(some_criteria, arr)
-            } else {
-                switch (keys(some_criteria).length) {
-                    case 0:
-                        throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                    case 1:
-                        return filter_obj_1kv(some_criteria, arr)
-                    case 2:
-                        return filter_obj_2kv(some_criteria, arr)
-                    default:
-                        return filter_obj(some_criteria, arr)
-                }
+    case 'string':
+        return filter_prop(some_criteria, arr)
+    case 'function':
+        return filter_fn(some_criteria, arr)
+    case 'object':
+        if (is_regexp(some_criteria)) {
+            return filter_re(some_criteria, arr)
+        } else {
+            switch (keys(some_criteria).length) {
+            case 0:
+                throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+            case 1:
+                return filter_obj_1kv(some_criteria, arr)
+            case 2:
+                return filter_obj_2kv(some_criteria, arr)
+            default:
+                return filter_obj(some_criteria, arr)
             }
-            break
-        default:
-            throw Errors.UNEXPECTED_TYPE
+        }
+        break
+    default:
+        throw Errors.UNEXPECTED_TYPE
     }
 }
 
@@ -702,27 +695,27 @@ function find(some_criteria, arr) {
 
 function find_index(pred, arr) {
     switch (typeof pred) {
-        case "string":
-            return find_index_prop(pred, arr)
-        case "function":
-            return find_index_fn(pred, arr)
-        case "boolean":
-        case "number":
-            return index_of(pred, arr)
-        case "object":
-            switch (count1(keys(pred))) {
-                case 0:
-                    throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                case 1:
-                    return find_index_obj_1kv(pred, arr)
-                case 2:
-                    return find_index_obj_2kv(pred, arr)
-                default:
-                    return find_index_obj(pred, arr)
-            }
-            break
+    case 'string':
+        return find_index_prop(pred, arr)
+    case 'function':
+        return find_index_fn(pred, arr)
+    case 'boolean':
+    case 'number':
+        return index_of(pred, arr)
+    case 'object':
+        switch (count1(keys(pred))) {
+        case 0:
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+        case 1:
+            return find_index_obj_1kv(pred, arr)
+        case 2:
+            return find_index_obj_2kv(pred, arr)
         default:
-            throw Errors.UNEXPECTED_TYPE
+            return find_index_obj(pred, arr)
+        }
+        break
+    default:
+        throw Errors.UNEXPECTED_TYPE
     }
 }
 
@@ -792,14 +785,14 @@ function equal_number(n1, n2) {
 
 function dispatch_find_index_matcher(pred) {
     switch (typeof pred) {
-        case 'function':
-            return pred
-        case 'boolean':
-            return partial(equal_bool, pred)
-        case 'number':
-            return partial(equal_number, pred)
-        default:
-            throw new Error("No matcher for " + (typeof pred) + " yet")
+    case 'function':
+        return pred
+    case 'boolean':
+        return partial(equal_bool, pred)
+    case 'number':
+        return partial(equal_number, pred)
+    default:
+        throw new Error('No matcher for ' + (typeof pred) + ' yet')
     }
 }
 
@@ -889,20 +882,20 @@ function type_of2(val) {
  */
 function sort(criterion, arr) {
     switch (arguments.length) {
-        case 1:
-            return criterion.sort()
-        case 2:
-            if (2 > arr.length) {
-                return slice(arr)
-            }
-            switch (type_of(criterion)) {
-                case "string":
-                    return sort_prop(criterion, arr)
-                case "array":
-                    return sort_multi(criterion, arr)
-                case "function":
-                    return sort_fn(criterion, arr)
-            }
+    case 1:
+        return criterion.sort()
+    case 2:
+        if (2 > arr.length) {
+            return slice(arr)
+        }
+        switch (type_of(criterion)) {
+        case 'string':
+            return sort_prop(criterion, arr)
+        case 'array':
+            return sort_multi(criterion, arr)
+        case 'function':
+            return sort_fn(criterion, arr)
+        }
     }
 }
 
@@ -941,23 +934,23 @@ function sort_fn(compare_fn, arr) {
 
 function map(mapper, arr) {
     switch (arguments.length) {
-        case 0:
-        case 1:
-            throw new Error("`map` doesn't have a signature of that arity (0 or 1)")
-        case 2:
-            switch (typeof mapper) {
-                case 'function':
-                    return map2(mapper, arr)
-                case 'string':
-                    return pluck(mapper, arr)
-                case 'object':
-                    return o_map(mapper, arr)
-            }
-            break
-        case 3:
-            return map3(mapper, arr, arguments[2])
-        default:
-            return mapn(mapper, rest(arguments))
+    case 0:
+    case 1:
+        throw new Error('`map` doesn\'t have a signature of that arity (0 or 1)')
+    case 2:
+        switch (typeof mapper) {
+        case 'function':
+            return map2(mapper, arr)
+        case 'string':
+            return pluck(mapper, arr)
+        case 'object':
+            return o_map(mapper, arr)
+        }
+        break
+    case 3:
+        return map3(mapper, arr, arguments[2])
+    default:
+        return mapn(mapper, rest(arguments))
     }
 }
 
@@ -1091,24 +1084,24 @@ function reduce_r(fn, val, arr) {
 
 function reject(some_criteria, arr) {
     switch (typeof some_criteria) {
-        case "string":
-            return reject_prop(some_criteria, arr)
-        case "function":
-            return reject_fn(some_criteria, arr)
-        case "object":
-            switch (count1(keys(some_criteria))) {
-                case 0:
-                    throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
-                case 1:
-                    return reject_obj_1kv(some_criteria, arr)
-                case 2:
-                    return reject_obj_2kv(some_criteria, arr)
-                default:
-                    return reject_obj(some_criteria, arr)
-            }
-            break
+    case 'string':
+        return reject_prop(some_criteria, arr)
+    case 'function':
+        return reject_fn(some_criteria, arr)
+    case 'object':
+        switch (count1(keys(some_criteria))) {
+        case 0:
+            throw Errors.NO_KEY_VALUE_PAIR_IN_HASH
+        case 1:
+            return reject_obj_1kv(some_criteria, arr)
+        case 2:
+            return reject_obj_2kv(some_criteria, arr)
         default:
-            throw Errors.UNEXPECTED_TYPE
+            return reject_obj(some_criteria, arr)
+        }
+        break
+    default:
+        throw Errors.UNEXPECTED_TYPE
     }
 }
 
@@ -1141,10 +1134,10 @@ function reject_obj(object, arr) {
 
 function remap(fn, arr) {
     switch (arguments.length) {
-        case 2:
-            return remap2(fn, arr)
-        case 3:
-            return remap3(fn, arguments[1], arguments[2])
+    case 2:
+        return remap2(fn, arr)
+    case 3:
+        return remap3(fn, arguments[1], arguments[2])
     }
 }
 
@@ -1236,12 +1229,12 @@ function without(item, arr) {
 
 function invoke(method_name, arr) {
     switch (arguments.length) {
-        case 2:
-            return invoke0(method_name, arr)
-        case 3:
-            return invoke1(method_name, arr, arguments[2])
-        default:
-            return invoken.apply(null, arguments)
+    case 2:
+        return invoke0(method_name, arr)
+    case 3:
+        return invoke1(method_name, arr, arguments[2])
+    default:
+        return invoken.apply(null, arguments)
     }
 }
 
@@ -1283,12 +1276,12 @@ function invoken(method_name, arg1, arr) {
 
 function invokem(method_name, arr) {
     switch (arguments.length) {
-        case 2:
-            return invokem0(method_name, arr)
-        case 3:
-            return invokem1(method_name, arr, arguments[2])
-        default:
-            return invokemn.apply(null, arguments)
+    case 2:
+        return invokem0(method_name, arr)
+    case 3:
+        return invokem1(method_name, arr, arguments[2])
+    default:
+        return invokemn.apply(null, arguments)
     }
 }
 
@@ -1356,7 +1349,7 @@ function unique(prop, arr) {
         } else if (is_number(arr[0]) || is_string(arr[0])) {
             return unique_plain(arr)
         } else {
-            throw Error("only propped uniq and plain number or string uniqueing supported")
+            throw Error('Only propped uniq and plain number or string uniqueing supported')
         }
     }
 }
@@ -1567,7 +1560,7 @@ function difference(o1, o2) {
             return difference_objs_vals(o1, o2)
         }
     } else {
-        throw new TypeError("Tried to find difference between not objects")
+        throw new TypeError('Tried to find difference between not objects')
     }
 }
 
@@ -2105,7 +2098,7 @@ function inc(num) {
 }
 
 function mk_regexp(rx_str, rx_settings) {
-    rx_settings = rx_settings || ""
+    rx_settings = rx_settings || ''
     return new RegExp(rx_str, rx_settings)
 }
 
@@ -2296,7 +2289,6 @@ export {
     create,
 
     delayed,
-    debug_wrap,
     debounce,
     dec,
     defaults,
