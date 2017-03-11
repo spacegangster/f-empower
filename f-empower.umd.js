@@ -1349,15 +1349,15 @@
     function invoke(method_name, arr) {
         switch (arguments.length) {
             case 2:
-                return invoke0(method_name, arr);
+                return invoke2(method_name, arr);
             case 3:
-                return invoke1(method_name, arr, arguments[2]);
+                return invoke3(method_name, arr, arguments[2]);
             default:
                 return invoken.apply(null, arguments);
         }
     }
 
-    function invoke0(method_name, arr) {
+    function invoke2(method_name, arr) {
         var len = arr.length,
             results = make_array(len),
             i = -1;
@@ -1367,7 +1367,7 @@
         return results;
     }
 
-    function invoke1(method_name, arg, arr) {
+    function invoke3(method_name, arg, arr) {
         var len = arr.length,
             results = make_array(len),
             i = -1;
@@ -1396,15 +1396,15 @@
     function invokem(method_name, arr) {
         switch (arguments.length) {
             case 2:
-                return invokem0(method_name, arr);
+                return invokem2(method_name, arr);
             case 3:
-                return invokem1(method_name, arr, arguments[2]);
+                return invokem3(method_name, arr, arguments[2]);
             default:
                 return invokemn.apply(null, arguments);
         }
     }
 
-    function invokem0(method_name, arr) {
+    function invokem2(method_name, arr) {
         var i = -1,
             len = arr.length;
         while (++i < len) {
@@ -1412,7 +1412,7 @@
         }
     }
 
-    function invokem1(method_name, arg, arr) {
+    function invokem3(method_name, arg, arr) {
         var i = -1,
             len = arr.length;
         while (++i < len) {
