@@ -1436,11 +1436,11 @@ function assign_keys(keys, dst, src) {
 }
 
 function assign_one(dst, src) {
-    var keys = keys(src),
+    var src_keys = keys(src),
         i = -1,
-        l = keys.length
+        l = src_keys.length
     while (++i < l) {
-        dst[keys[i]] = src[keys[i]]
+        dst[src_keys[i]] = src[src_keys[i]]
     }
     return dst
 
@@ -1957,11 +1957,11 @@ function o_map(obj, keys_list) {
  *
  */
 function o_match(criteria_obj, subject) {
-    const keys = keys(criteria_obj),
-        len = keys.length
+    const o_keys = keys(criteria_obj),
+        len = o_keys.length
     var i = -1
     while (++i < len) {
-        if (subject[keys[i]] !== criteria_obj[keys[i]]) {
+        if (subject[o_keys[i]] !== criteria_obj[o_keys[i]]) {
             return false
         }
     }
